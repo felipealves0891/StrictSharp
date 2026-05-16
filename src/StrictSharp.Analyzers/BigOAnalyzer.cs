@@ -67,6 +67,10 @@ namespace StrictSharp.Analyzers
         {
             if (statement is BlockSyntax block) return AnalyzeBlock(block);
             if (statement is IfStatementSyntax ifStatement) return AnalyzeIf(ifStatement);
+            if (statement is ForStatementSyntax forStatement) return AnalyzeFor(forStatement);
+            if (statement is WhileStatementSyntax whileStatement) return AnalyzeWhile(whileStatement);
+            if (statement is DoStatementSyntax doStatement) return AnalyzeDo(doStatement);
+            if (statement is ForEachStatementSyntax forEachStatement) return AnalyzeForEach(forEachStatement);
 
             return BigOComplexity.Constant;
         }
@@ -82,13 +86,65 @@ namespace StrictSharp.Analyzers
             return BigOComplexity.AddSequential(whenTrue, whenFalse);
         }
 
+        private static BigOComplexity AnalyzeFor(ForStatementSyntax forStatement)
+        {
+            var iteration = AnalyzeLoopCondition(forStatement.Condition);
+            return BigOComplexity.Multiply(iteration, AnalyzeStatement(forStatement.Statement));
+        }
+
+        private static BigOComplexity AnalyzeWhile(WhileStatementSyntax whileStatement)
+        {
+            var iteration = AnalyzeLoopCondition(whileStatement.Condition);
+            return BigOComplexity.Multiply(iteration, AnalyzeStatement(whileStatement.Statement));
+        }
+
+        private static BigOComplexity AnalyzeDo(DoStatementSyntax doStatement)
+        {
+            var iteration = AnalyzeLoopCondition(doStatement.Condition);
+            return BigOComplexity.Multiply(iteration, AnalyzeStatement(doStatement.Statement));
+        }
+
+        private static BigOComplexity AnalyzeForEach(ForEachStatementSyntax forEachStatement)
+        {
+            var iteration = AnalyzeCollection(forEachStatement.Expression);
+            return BigOComplexity.Multiply(iteration, AnalyzeStatement(forEachStatement.Statement));
+        }
+
+        private static BigOComplexity AnalyzeLoopCondition(ExpressionSyntax condition)
+        {
+            if (condition == null) return BigOComplexity.Unknown;
+            if (!(condition is BinaryExpressionSyntax binary)) return BigOComplexity.Unknown;
+            if (IsConstantExpression(binary.Right)) return BigOComplexity.Constant;
+            if (IsConstantExpression(binary.Left)) return BigOComplexity.Constant;
+
+            return BigOComplexity.Linear;
+        }
+
+        private static BigOComplexity AnalyzeCollection(ExpressionSyntax expression)
+        {
+            if (IsConstantExpression(expression)) return BigOComplexity.Constant;
+            if (expression is IdentifierNameSyntax) return BigOComplexity.Linear;
+            if (expression is MemberAccessExpressionSyntax) return BigOComplexity.Linear;
+
+            return BigOComplexity.Unknown;
+        }
+
+        private static bool IsConstantExpression(ExpressionSyntax expression)
+        {
+            if (expression is LiteralExpressionSyntax) return true;
+            if (expression is ArrayCreationExpressionSyntax) return true;
+            if (expression is ImplicitArrayCreationExpressionSyntax) return true;
+
+            return false;
+        }
+
         private static void ReportIfNeeded(
             SyntaxNodeAnalysisContext context,
             SyntaxNode node,
             BigOComplexity complexity)
         {
             if (complexity.IsUnknown) return;
-            if (complexity.CompareTo(BigOComplexity.Quadratic) < 0) return;
+            if (complexity.CompareTo(BigOComplexity.Linear) < 0) return;
 
             context.ReportDiagnostic(Diagnostic.Create(Rule, node.GetLocation(), complexity.ToString()));
         }

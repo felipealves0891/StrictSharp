@@ -58,6 +58,7 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 AllocationInsideLoopAnalyzerTests.cs
 AnonymousFunctionAnalyzerTests.cs
 BigOAnalyzerStage2Tests.cs
+BigOAnalyzerStage3Tests.cs
 BigOComplexityTests.cs
 HeavyObjectWithoutCachingAnalyzerTests.cs
 HiddenBoxingAnalyzerTests.cs
