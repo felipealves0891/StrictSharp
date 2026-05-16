@@ -52,7 +52,7 @@ namespace StrictSharp.Analyzers
             var recursion = AnalyzeDirectRecursion(method, symbol, context.SemanticModel);
             if (!recursion.IsUnknown)
             {
-            ReportIfNeeded(context, method.Body, recursion);
+                ReportIfNeeded(context, method.Body, recursion);
                 return;
             }
 
@@ -86,6 +86,7 @@ namespace StrictSharp.Analyzers
             if (statement is WhileStatementSyntax whileStatement) return AnalyzeWhile(whileStatement, state);
             if (statement is DoStatementSyntax doStatement) return AnalyzeDo(doStatement, state);
             if (statement is ForEachStatementSyntax forEachStatement) return AnalyzeForEach(forEachStatement, state);
+            if (statement is SwitchStatementSyntax switchStatement) return AnalyzeSwitch(switchStatement, state);
 
             return AnalyzeInvocations(statement, state);
         }
@@ -131,6 +132,21 @@ namespace StrictSharp.Analyzers
             var complexity = BigOComplexity.Multiply(iteration, AnalyzeStatement(forEachStatement.Statement, state).Complexity);
 
             return new ComplexityAnalysis(complexity, forEachStatement);
+        }
+
+        private static ComplexityAnalysis AnalyzeSwitch(SwitchStatementSyntax switchStatement, AnalysisState state)
+        {
+            var result = ComplexityAnalysis.Constant(switchStatement);
+            foreach (var section in switchStatement.Sections)
+            {
+                var sectionResult = ComplexityAnalysis.Constant(section);
+                foreach (var statement in section.Statements)
+                    sectionResult = ComplexityAnalysis.AddSequential(sectionResult, AnalyzeStatement(statement, state));
+
+                result = ComplexityAnalysis.AddSequential(result, sectionResult);
+            }
+
+            return result;
         }
 
         private static BigOComplexity AnalyzeForIteration(ForStatementSyntax forStatement)
@@ -339,6 +355,7 @@ namespace StrictSharp.Analyzers
         {
             var symbol = state.SemanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
             if (symbol == null) return BigOComplexity.Unknown;
+            if (IsKnownLinearApi(symbol)) return BigOComplexity.Linear;
             if (!IsLocalMethod(symbol, state.CurrentSymbol)) return BigOComplexity.Constant;
             if (IsSameMethod(symbol, state.CurrentSymbol)) return BigOComplexity.Unknown;
             if (!state.Enter(symbol)) return BigOComplexity.Unknown;
@@ -363,6 +380,24 @@ namespace StrictSharp.Analyzers
             }
 
             return BigOComplexity.Unknown;
+        }
+
+        private static bool IsKnownLinearApi(IMethodSymbol symbol)
+        {
+            if (symbol.ContainingType == null) return false;
+            if (symbol.ContainingType.ToDisplayString() != "System.Linq.Enumerable") return false;
+
+            switch (symbol.Name)
+            {
+                case "Where":
+                case "Select":
+                case "Any":
+                case "FirstOrDefault":
+                case "Count":
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private static bool IsLocalMethod(IMethodSymbol symbol, ISymbol currentSymbol)
