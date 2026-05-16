@@ -88,19 +88,19 @@ namespace StrictSharp.Analyzers
 
         private static BigOComplexity AnalyzeFor(ForStatementSyntax forStatement)
         {
-            var iteration = AnalyzeLoopCondition(forStatement.Condition);
+            var iteration = AnalyzeForIteration(forStatement);
             return BigOComplexity.Multiply(iteration, AnalyzeStatement(forStatement.Statement));
         }
 
         private static BigOComplexity AnalyzeWhile(WhileStatementSyntax whileStatement)
         {
-            var iteration = AnalyzeLoopCondition(whileStatement.Condition);
+            var iteration = AnalyzeWhileIteration(whileStatement.Condition, whileStatement.Statement);
             return BigOComplexity.Multiply(iteration, AnalyzeStatement(whileStatement.Statement));
         }
 
         private static BigOComplexity AnalyzeDo(DoStatementSyntax doStatement)
         {
-            var iteration = AnalyzeLoopCondition(doStatement.Condition);
+            var iteration = AnalyzeWhileIteration(doStatement.Condition, doStatement.Statement);
             return BigOComplexity.Multiply(iteration, AnalyzeStatement(doStatement.Statement));
         }
 
@@ -108,6 +108,26 @@ namespace StrictSharp.Analyzers
         {
             var iteration = AnalyzeCollection(forEachStatement.Expression);
             return BigOComplexity.Multiply(iteration, AnalyzeStatement(forEachStatement.Statement));
+        }
+
+        private static BigOComplexity AnalyzeForIteration(ForStatementSyntax forStatement)
+        {
+            var variable = GetLimitVariable(forStatement.Condition);
+            if (HasLogarithmicIncrementor(forStatement, variable))
+                return BigOComplexity.LogarithmicOf(variable);
+
+            return AnalyzeLoopCondition(forStatement.Condition);
+        }
+
+        private static BigOComplexity AnalyzeWhileIteration(
+            ExpressionSyntax condition,
+            StatementSyntax statement)
+        {
+            var variable = GetLimitVariable(condition);
+            if (HasLogarithmicMutation(statement, variable))
+                return BigOComplexity.LogarithmicOf(variable);
+
+            return AnalyzeLoopCondition(condition);
         }
 
         private static BigOComplexity AnalyzeLoopCondition(ExpressionSyntax condition)
@@ -132,6 +152,14 @@ namespace StrictSharp.Analyzers
             return BigOComplexity.Unknown;
         }
 
+        private static string GetLimitVariable(ExpressionSyntax condition)
+        {
+            var binary = condition as BinaryExpressionSyntax;
+            if (binary == null) return null;
+
+            return GetLimitVariable(binary);
+        }
+
         private static string GetLimitVariable(BinaryExpressionSyntax binary)
         {
             var right = GetVariableName(binary.Right);
@@ -146,6 +174,64 @@ namespace StrictSharp.Analyzers
             if (expression is MemberAccessExpressionSyntax memberAccess) return memberAccess.Name.Identifier.ValueText;
 
             return null;
+        }
+
+        private static bool HasLogarithmicIncrementor(ForStatementSyntax forStatement, string variable)
+        {
+            foreach (var incrementor in forStatement.Incrementors)
+            {
+                if (IsLogarithmicAssignment(incrementor, null)) return true;
+            }
+
+            return false;
+        }
+
+        private static bool HasLogarithmicMutation(StatementSyntax statement, string variable)
+        {
+            if (string.IsNullOrEmpty(variable)) return false;
+
+            foreach (var node in statement.DescendantNodesAndSelf())
+            {
+                if (node is ExpressionSyntax expression && IsLogarithmicAssignment(expression, variable))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsLogarithmicAssignment(ExpressionSyntax expression, string variable)
+        {
+            var assignment = expression as AssignmentExpressionSyntax;
+            if (assignment == null) return false;
+            if (!IsMultiplicativeAssignment(assignment)) return false;
+            if (!IsConstantGreaterThanOne(assignment.Right)) return false;
+
+            return IsVariable(assignment.Left, variable);
+        }
+
+        private static bool IsMultiplicativeAssignment(AssignmentExpressionSyntax assignment)
+        {
+            return assignment.IsKind(SyntaxKind.MultiplyAssignmentExpression)
+                || assignment.IsKind(SyntaxKind.DivideAssignmentExpression);
+        }
+
+        private static bool IsConstantGreaterThanOne(ExpressionSyntax expression)
+        {
+            var literal = expression as LiteralExpressionSyntax;
+            if (literal == null) return false;
+            if (!(literal.Token.Value is int value)) return false;
+
+            return value > 1;
+        }
+
+        private static bool IsVariable(ExpressionSyntax expression, string variable)
+        {
+            if (string.IsNullOrEmpty(variable)) return true;
+
+            var identifier = expression as IdentifierNameSyntax;
+            if (identifier == null) return false;
+
+            return identifier.Identifier.ValueText == variable;
         }
 
         private static bool IsConstantExpression(ExpressionSyntax expression)
@@ -163,7 +249,7 @@ namespace StrictSharp.Analyzers
             BigOComplexity complexity)
         {
             if (complexity.IsUnknown) return;
-            if (complexity.CompareTo(BigOComplexity.Linear) < 0) return;
+            if (complexity.CompareTo(BigOComplexity.Logarithmic) < 0) return;
 
             context.ReportDiagnostic(Diagnostic.Create(Rule, node.GetLocation(), complexity.ToString()));
         }

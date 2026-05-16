@@ -20,7 +20,11 @@ namespace StrictSharp.Analyzers
 
         public static BigOComplexity Constant { get; } = new BigOComplexity(BigOComplexityKind.Constant);
 
+        public static BigOComplexity Logarithmic { get; } = new BigOComplexity(BigOComplexityKind.Logarithmic);
+
         public static BigOComplexity Linear { get; } = new BigOComplexity(BigOComplexityKind.Linear);
+
+        public static BigOComplexity Linearithmic { get; } = new BigOComplexity(BigOComplexityKind.Linearithmic);
 
         public static BigOComplexity Quadratic { get; } = new BigOComplexity(BigOComplexityKind.Quadratic);
 
@@ -45,6 +49,11 @@ namespace StrictSharp.Analyzers
             return new BigOComplexity(BigOComplexityKind.Linear, variable);
         }
 
+        public static BigOComplexity LogarithmicOf(string variable)
+        {
+            return new BigOComplexity(BigOComplexityKind.Logarithmic, variable);
+        }
+
         public static BigOComplexity AddSequential(BigOComplexity left, BigOComplexity right)
         {
             if (left._kind == BigOComplexityKind.Unknown) return Unknown;
@@ -60,6 +69,7 @@ namespace StrictSharp.Analyzers
             if (left._kind == BigOComplexityKind.Constant) return right;
             if (right._kind == BigOComplexityKind.Constant) return left;
             if (IsLinearPair(left, right)) return MultiplyLinear(left, right);
+            if (IsLinearAndLogarithmic(left, right)) return Linearithmic;
             if (IsLinearAndQuadratic(left, right)) return Polynomial;
 
             return Unknown;
@@ -71,8 +81,12 @@ namespace StrictSharp.Analyzers
             {
                 case BigOComplexityKind.Constant:
                     return "O(1)";
+                case BigOComplexityKind.Logarithmic:
+                    return "O(log n)";
                 case BigOComplexityKind.Linear:
                     return "O(n)";
+                case BigOComplexityKind.Linearithmic:
+                    return "O(n log n)";
                 case BigOComplexityKind.Product:
                     return "O(n*m)";
                 case BigOComplexityKind.Quadratic:
@@ -88,6 +102,12 @@ namespace StrictSharp.Analyzers
         {
             return left._kind == BigOComplexityKind.Linear
                 && right._kind == BigOComplexityKind.Linear;
+        }
+
+        private static bool IsLinearAndLogarithmic(BigOComplexity left, BigOComplexity right)
+        {
+            return left._kind == BigOComplexityKind.Linear && right._kind == BigOComplexityKind.Logarithmic
+                || right._kind == BigOComplexityKind.Linear && left._kind == BigOComplexityKind.Logarithmic;
         }
 
         private static BigOComplexity MultiplyLinear(BigOComplexity left, BigOComplexity right)
@@ -124,8 +144,12 @@ namespace StrictSharp.Analyzers
             {
                 case BigOComplexityKind.Constant:
                     return 0;
+                case BigOComplexityKind.Logarithmic:
+                    return 1;
                 case BigOComplexityKind.Linear:
                     return 2;
+                case BigOComplexityKind.Linearithmic:
+                    return 3;
                 case BigOComplexityKind.Product:
                     return 4;
                 case BigOComplexityKind.Quadratic:
@@ -141,7 +165,9 @@ namespace StrictSharp.Analyzers
     internal enum BigOComplexityKind
     {
         Constant,
+        Logarithmic,
         Linear,
+        Linearithmic,
         Product,
         Quadratic,
         Polynomial,
