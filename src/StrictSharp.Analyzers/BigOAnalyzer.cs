@@ -13,6 +13,7 @@ namespace StrictSharp.Analyzers
     public sealed class BigOAnalyzer : DiagnosticAnalyzer
     {
         public const string DiagnosticId = "PERF009";
+        private const string MinimumComplexityOption = "strictsharp_big_o_minimum_complexity";
         private static readonly LocalizableString Title = "Big O complexity";
         private static readonly LocalizableString MessageFormat = "This code has inferred complexity '{0}'";
         private static readonly LocalizableString Description = "Algorithms with high asymptotic cost may not scale as input grows.";
@@ -51,11 +52,11 @@ namespace StrictSharp.Analyzers
             var recursion = AnalyzeDirectRecursion(method, symbol, context.SemanticModel);
             if (!recursion.IsUnknown)
             {
-                ReportIfNeeded(context, method.Body, recursion);
+            ReportIfNeeded(context, method.Body, recursion);
                 return;
             }
 
-            ReportIfNeeded(context, method.Body, AnalyzeBlock(method.Body, state));
+            ReportIfNeeded(context, AnalyzeBlock(method.Body, state));
         }
 
         private static void AnalyzeConstructor(SyntaxNodeAnalysisContext context)
@@ -65,19 +66,19 @@ namespace StrictSharp.Analyzers
 
             var symbol = context.SemanticModel.GetDeclaredSymbol(constructor);
             var state = new AnalysisState(context.SemanticModel, symbol);
-            ReportIfNeeded(context, constructor.Body, AnalyzeBlock(constructor.Body, state));
+            ReportIfNeeded(context, AnalyzeBlock(constructor.Body, state));
         }
 
-        private static BigOComplexity AnalyzeBlock(BlockSyntax block, AnalysisState state)
+        private static ComplexityAnalysis AnalyzeBlock(BlockSyntax block, AnalysisState state)
         {
-            var result = BigOComplexity.Constant;
+            var result = ComplexityAnalysis.Constant(block);
             foreach (var statement in block.Statements)
-                result = BigOComplexity.AddSequential(result, AnalyzeStatement(statement, state));
+                result = ComplexityAnalysis.AddSequential(result, AnalyzeStatement(statement, state));
 
             return result;
         }
 
-        private static BigOComplexity AnalyzeStatement(StatementSyntax statement, AnalysisState state)
+        private static ComplexityAnalysis AnalyzeStatement(StatementSyntax statement, AnalysisState state)
         {
             if (statement is BlockSyntax block) return AnalyzeBlock(block, state);
             if (statement is IfStatementSyntax ifStatement) return AnalyzeIf(ifStatement, state);
@@ -89,39 +90,47 @@ namespace StrictSharp.Analyzers
             return AnalyzeInvocations(statement, state);
         }
 
-        private static BigOComplexity AnalyzeIf(IfStatementSyntax ifStatement, AnalysisState state)
+        private static ComplexityAnalysis AnalyzeIf(IfStatementSyntax ifStatement, AnalysisState state)
         {
             var whenTrue = AnalyzeStatement(ifStatement.Statement, state);
-            var whenFalse = BigOComplexity.Constant;
+            var whenFalse = ComplexityAnalysis.Constant(ifStatement);
 
             if (ifStatement.Else != null)
                 whenFalse = AnalyzeStatement(ifStatement.Else.Statement, state);
 
-            return BigOComplexity.AddSequential(whenTrue, whenFalse);
+            return ComplexityAnalysis.AddSequential(whenTrue, whenFalse);
         }
 
-        private static BigOComplexity AnalyzeFor(ForStatementSyntax forStatement, AnalysisState state)
+        private static ComplexityAnalysis AnalyzeFor(ForStatementSyntax forStatement, AnalysisState state)
         {
             var iteration = AnalyzeForIteration(forStatement);
-            return BigOComplexity.Multiply(iteration, AnalyzeStatement(forStatement.Statement, state));
+            var complexity = BigOComplexity.Multiply(iteration, AnalyzeStatement(forStatement.Statement, state).Complexity);
+
+            return new ComplexityAnalysis(complexity, forStatement);
         }
 
-        private static BigOComplexity AnalyzeWhile(WhileStatementSyntax whileStatement, AnalysisState state)
+        private static ComplexityAnalysis AnalyzeWhile(WhileStatementSyntax whileStatement, AnalysisState state)
         {
             var iteration = AnalyzeWhileIteration(whileStatement.Condition, whileStatement.Statement);
-            return BigOComplexity.Multiply(iteration, AnalyzeStatement(whileStatement.Statement, state));
+            var complexity = BigOComplexity.Multiply(iteration, AnalyzeStatement(whileStatement.Statement, state).Complexity);
+
+            return new ComplexityAnalysis(complexity, whileStatement);
         }
 
-        private static BigOComplexity AnalyzeDo(DoStatementSyntax doStatement, AnalysisState state)
+        private static ComplexityAnalysis AnalyzeDo(DoStatementSyntax doStatement, AnalysisState state)
         {
             var iteration = AnalyzeWhileIteration(doStatement.Condition, doStatement.Statement);
-            return BigOComplexity.Multiply(iteration, AnalyzeStatement(doStatement.Statement, state));
+            var complexity = BigOComplexity.Multiply(iteration, AnalyzeStatement(doStatement.Statement, state).Complexity);
+
+            return new ComplexityAnalysis(complexity, doStatement);
         }
 
-        private static BigOComplexity AnalyzeForEach(ForEachStatementSyntax forEachStatement, AnalysisState state)
+        private static ComplexityAnalysis AnalyzeForEach(ForEachStatementSyntax forEachStatement, AnalysisState state)
         {
             var iteration = AnalyzeCollection(forEachStatement.Expression);
-            return BigOComplexity.Multiply(iteration, AnalyzeStatement(forEachStatement.Statement, state));
+            var complexity = BigOComplexity.Multiply(iteration, AnalyzeStatement(forEachStatement.Statement, state).Complexity);
+
+            return new ComplexityAnalysis(complexity, forEachStatement);
         }
 
         private static BigOComplexity AnalyzeForIteration(ForStatementSyntax forStatement)
@@ -310,15 +319,15 @@ namespace StrictSharp.Analyzers
             return value > 0;
         }
 
-        private static BigOComplexity AnalyzeInvocations(SyntaxNode node, AnalysisState state)
+        private static ComplexityAnalysis AnalyzeInvocations(SyntaxNode node, AnalysisState state)
         {
-            var result = BigOComplexity.Constant;
+            var result = ComplexityAnalysis.Constant(node);
             foreach (var invocation in node.DescendantNodesAndSelf())
             {
                 if (!(invocation is InvocationExpressionSyntax invocationExpression)) continue;
 
                 var cost = AnalyzeInvocation(invocationExpression, state);
-                result = BigOComplexity.AddSequential(result, cost);
+                result = ComplexityAnalysis.AddSequential(result, new ComplexityAnalysis(cost, invocationExpression));
             }
 
             return result;
@@ -350,7 +359,7 @@ namespace StrictSharp.Analyzers
             {
                 var method = reference.GetSyntax() as MethodDeclarationSyntax;
                 if (method != null && method.Body != null)
-                    return AnalyzeBlock(method.Body, state);
+                    return AnalyzeBlock(method.Body, state).Complexity;
             }
 
             return BigOComplexity.Unknown;
@@ -375,9 +384,78 @@ namespace StrictSharp.Analyzers
             BigOComplexity complexity)
         {
             if (complexity.IsUnknown) return;
-            if (complexity.CompareTo(BigOComplexity.Logarithmic) < 0) return;
+            if (complexity.CompareTo(GetMinimumComplexity(context, node)) < 0) return;
 
             context.ReportDiagnostic(Diagnostic.Create(Rule, node.GetLocation(), complexity.ToString()));
+        }
+
+        private static void ReportIfNeeded(
+            SyntaxNodeAnalysisContext context,
+            ComplexityAnalysis analysis)
+        {
+            ReportIfNeeded(context, analysis.Node, analysis.Complexity);
+        }
+
+        private static BigOComplexity GetMinimumComplexity(
+            SyntaxNodeAnalysisContext context,
+            SyntaxNode node)
+        {
+            var options = context.Options.AnalyzerConfigOptionsProvider.GetOptions(node.SyntaxTree);
+            if (!options.TryGetValue(MinimumComplexityOption, out var value))
+                return BigOComplexity.Logarithmic;
+
+            return ParseMinimumComplexity(value);
+        }
+
+        private static BigOComplexity ParseMinimumComplexity(string value)
+        {
+            switch (value)
+            {
+                case "O(log n)":
+                    return BigOComplexity.Logarithmic;
+                case "O(n)":
+                    return BigOComplexity.Linear;
+                case "O(n log n)":
+                    return BigOComplexity.Linearithmic;
+                case "O(n*m)":
+                    return BigOComplexity.Product;
+                case "O(n^2)":
+                    return BigOComplexity.Quadratic;
+                case "O(n^c)":
+                    return BigOComplexity.Polynomial;
+                case "O(c^n)":
+                    return BigOComplexity.Exponential;
+                default:
+                    return BigOComplexity.Logarithmic;
+            }
+        }
+
+        private readonly struct ComplexityAnalysis
+        {
+            public ComplexityAnalysis(BigOComplexity complexity, SyntaxNode node)
+            {
+                Complexity = complexity;
+                Node = node;
+            }
+
+            public BigOComplexity Complexity { get; }
+
+            public SyntaxNode Node { get; }
+
+            public static ComplexityAnalysis Constant(SyntaxNode node)
+            {
+                return new ComplexityAnalysis(BigOComplexity.Constant, node);
+            }
+
+            public static ComplexityAnalysis AddSequential(
+                ComplexityAnalysis left,
+                ComplexityAnalysis right)
+            {
+                var complexity = BigOComplexity.AddSequential(left.Complexity, right.Complexity);
+                if (complexity.CompareTo(left.Complexity) == 0) return new ComplexityAnalysis(complexity, left.Node);
+
+                return new ComplexityAnalysis(complexity, right.Node);
+            }
         }
 
         private sealed class AnalysisState
