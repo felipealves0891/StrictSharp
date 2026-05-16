@@ -5,10 +5,17 @@ namespace StrictSharp.Analyzers
     public readonly struct BigOComplexity : IComparable<BigOComplexity>
     {
         private readonly BigOComplexityKind _kind;
+        private readonly string _variable;
 
         private BigOComplexity(BigOComplexityKind kind)
+            : this(kind, null)
+        {
+        }
+
+        private BigOComplexity(BigOComplexityKind kind, string variable)
         {
             _kind = kind;
+            _variable = variable;
         }
 
         public static BigOComplexity Constant { get; } = new BigOComplexity(BigOComplexityKind.Constant);
@@ -16,6 +23,10 @@ namespace StrictSharp.Analyzers
         public static BigOComplexity Linear { get; } = new BigOComplexity(BigOComplexityKind.Linear);
 
         public static BigOComplexity Quadratic { get; } = new BigOComplexity(BigOComplexityKind.Quadratic);
+
+        public static BigOComplexity Product { get; } = new BigOComplexity(BigOComplexityKind.Product);
+
+        public static BigOComplexity Polynomial { get; } = new BigOComplexity(BigOComplexityKind.Polynomial);
 
         public static BigOComplexity Unknown { get; } = new BigOComplexity(BigOComplexityKind.Unknown);
 
@@ -27,6 +38,11 @@ namespace StrictSharp.Analyzers
         public int CompareTo(BigOComplexity other)
         {
             return GetRank(_kind).CompareTo(GetRank(other._kind));
+        }
+
+        public static BigOComplexity LinearOf(string variable)
+        {
+            return new BigOComplexity(BigOComplexityKind.Linear, variable);
         }
 
         public static BigOComplexity AddSequential(BigOComplexity left, BigOComplexity right)
@@ -43,7 +59,8 @@ namespace StrictSharp.Analyzers
             if (right._kind == BigOComplexityKind.Unknown) return Unknown;
             if (left._kind == BigOComplexityKind.Constant) return right;
             if (right._kind == BigOComplexityKind.Constant) return left;
-            if (left._kind == BigOComplexityKind.Linear && right._kind == BigOComplexityKind.Linear) return Quadratic;
+            if (IsLinearPair(left, right)) return MultiplyLinear(left, right);
+            if (IsLinearAndQuadratic(left, right)) return Polynomial;
 
             return Unknown;
         }
@@ -56,11 +73,49 @@ namespace StrictSharp.Analyzers
                     return "O(1)";
                 case BigOComplexityKind.Linear:
                     return "O(n)";
+                case BigOComplexityKind.Product:
+                    return "O(n*m)";
                 case BigOComplexityKind.Quadratic:
                     return "O(n^2)";
+                case BigOComplexityKind.Polynomial:
+                    return "O(n^c)";
                 default:
                     return "O(?)";
             }
+        }
+
+        private static bool IsLinearPair(BigOComplexity left, BigOComplexity right)
+        {
+            return left._kind == BigOComplexityKind.Linear
+                && right._kind == BigOComplexityKind.Linear;
+        }
+
+        private static BigOComplexity MultiplyLinear(BigOComplexity left, BigOComplexity right)
+        {
+            if (left.HasSameVariable(right)) return new BigOComplexity(BigOComplexityKind.Quadratic, left._variable);
+            if (string.IsNullOrEmpty(left._variable)) return Quadratic;
+            if (string.IsNullOrEmpty(right._variable)) return Quadratic;
+
+            return Product;
+        }
+
+        private static bool IsLinearAndQuadratic(BigOComplexity left, BigOComplexity right)
+        {
+            if (left._kind == BigOComplexityKind.Linear && right._kind == BigOComplexityKind.Quadratic)
+                return left.HasSameVariable(right);
+
+            if (right._kind == BigOComplexityKind.Linear && left._kind == BigOComplexityKind.Quadratic)
+                return right.HasSameVariable(left);
+
+            return false;
+        }
+
+        private bool HasSameVariable(BigOComplexity other)
+        {
+            if (string.IsNullOrEmpty(_variable)) return true;
+            if (string.IsNullOrEmpty(other._variable)) return true;
+
+            return string.Equals(_variable, other._variable, StringComparison.Ordinal);
         }
 
         private static int GetRank(BigOComplexityKind kind)
@@ -71,8 +126,12 @@ namespace StrictSharp.Analyzers
                     return 0;
                 case BigOComplexityKind.Linear:
                     return 2;
+                case BigOComplexityKind.Product:
+                    return 4;
                 case BigOComplexityKind.Quadratic:
                     return 5;
+                case BigOComplexityKind.Polynomial:
+                    return 6;
                 default:
                     return 8;
             }
@@ -83,7 +142,9 @@ namespace StrictSharp.Analyzers
     {
         Constant,
         Linear,
+        Product,
         Quadratic,
+        Polynomial,
         Unknown
     }
 }

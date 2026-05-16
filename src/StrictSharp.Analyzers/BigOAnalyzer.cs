@@ -117,7 +117,10 @@ namespace StrictSharp.Analyzers
             if (IsConstantExpression(binary.Right)) return BigOComplexity.Constant;
             if (IsConstantExpression(binary.Left)) return BigOComplexity.Constant;
 
-            return BigOComplexity.Linear;
+            var variable = GetLimitVariable(binary);
+            if (variable == null) return BigOComplexity.Unknown;
+
+            return BigOComplexity.LinearOf(variable);
         }
 
         private static BigOComplexity AnalyzeCollection(ExpressionSyntax expression)
@@ -127,6 +130,22 @@ namespace StrictSharp.Analyzers
             if (expression is MemberAccessExpressionSyntax) return BigOComplexity.Linear;
 
             return BigOComplexity.Unknown;
+        }
+
+        private static string GetLimitVariable(BinaryExpressionSyntax binary)
+        {
+            var right = GetVariableName(binary.Right);
+            if (right != null) return right;
+
+            return GetVariableName(binary.Left);
+        }
+
+        private static string GetVariableName(ExpressionSyntax expression)
+        {
+            if (expression is IdentifierNameSyntax identifier) return identifier.Identifier.ValueText;
+            if (expression is MemberAccessExpressionSyntax memberAccess) return memberAccess.Name.Identifier.ValueText;
+
+            return null;
         }
 
         private static bool IsConstantExpression(ExpressionSyntax expression)

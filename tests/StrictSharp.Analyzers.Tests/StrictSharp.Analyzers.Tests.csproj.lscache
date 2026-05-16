@@ -59,6 +59,7 @@ AllocationInsideLoopAnalyzerTests.cs
 AnonymousFunctionAnalyzerTests.cs
 BigOAnalyzerStage2Tests.cs
 BigOAnalyzerStage3Tests.cs
+BigOAnalyzerStage4Tests.cs
 BigOComplexityTests.cs
 HeavyObjectWithoutCachingAnalyzerTests.cs
 HiddenBoxingAnalyzerTests.cs
