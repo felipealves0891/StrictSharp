@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -43,7 +44,9 @@ namespace StrictSharp.Analyzers
             var method = (MethodDeclarationSyntax)context.Node;
             if (method.Body == null) return;
 
-            ReportIfNeeded(context, method.Body, AnalyzeBlock(method.Body));
+            var symbol = context.SemanticModel.GetDeclaredSymbol(method);
+            var state = new AnalysisState(context.SemanticModel, symbol);
+            ReportIfNeeded(context, method.Body, AnalyzeBlock(method.Body, state));
         }
 
         private static void AnalyzeConstructor(SyntaxNodeAnalysisContext context)
@@ -51,63 +54,65 @@ namespace StrictSharp.Analyzers
             var constructor = (ConstructorDeclarationSyntax)context.Node;
             if (constructor.Body == null) return;
 
-            ReportIfNeeded(context, constructor.Body, AnalyzeBlock(constructor.Body));
+            var symbol = context.SemanticModel.GetDeclaredSymbol(constructor);
+            var state = new AnalysisState(context.SemanticModel, symbol);
+            ReportIfNeeded(context, constructor.Body, AnalyzeBlock(constructor.Body, state));
         }
 
-        private static BigOComplexity AnalyzeBlock(BlockSyntax block)
+        private static BigOComplexity AnalyzeBlock(BlockSyntax block, AnalysisState state)
         {
             var result = BigOComplexity.Constant;
             foreach (var statement in block.Statements)
-                result = BigOComplexity.AddSequential(result, AnalyzeStatement(statement));
+                result = BigOComplexity.AddSequential(result, AnalyzeStatement(statement, state));
 
             return result;
         }
 
-        private static BigOComplexity AnalyzeStatement(StatementSyntax statement)
+        private static BigOComplexity AnalyzeStatement(StatementSyntax statement, AnalysisState state)
         {
-            if (statement is BlockSyntax block) return AnalyzeBlock(block);
-            if (statement is IfStatementSyntax ifStatement) return AnalyzeIf(ifStatement);
-            if (statement is ForStatementSyntax forStatement) return AnalyzeFor(forStatement);
-            if (statement is WhileStatementSyntax whileStatement) return AnalyzeWhile(whileStatement);
-            if (statement is DoStatementSyntax doStatement) return AnalyzeDo(doStatement);
-            if (statement is ForEachStatementSyntax forEachStatement) return AnalyzeForEach(forEachStatement);
+            if (statement is BlockSyntax block) return AnalyzeBlock(block, state);
+            if (statement is IfStatementSyntax ifStatement) return AnalyzeIf(ifStatement, state);
+            if (statement is ForStatementSyntax forStatement) return AnalyzeFor(forStatement, state);
+            if (statement is WhileStatementSyntax whileStatement) return AnalyzeWhile(whileStatement, state);
+            if (statement is DoStatementSyntax doStatement) return AnalyzeDo(doStatement, state);
+            if (statement is ForEachStatementSyntax forEachStatement) return AnalyzeForEach(forEachStatement, state);
 
-            return BigOComplexity.Constant;
+            return AnalyzeInvocations(statement, state);
         }
 
-        private static BigOComplexity AnalyzeIf(IfStatementSyntax ifStatement)
+        private static BigOComplexity AnalyzeIf(IfStatementSyntax ifStatement, AnalysisState state)
         {
-            var whenTrue = AnalyzeStatement(ifStatement.Statement);
+            var whenTrue = AnalyzeStatement(ifStatement.Statement, state);
             var whenFalse = BigOComplexity.Constant;
 
             if (ifStatement.Else != null)
-                whenFalse = AnalyzeStatement(ifStatement.Else.Statement);
+                whenFalse = AnalyzeStatement(ifStatement.Else.Statement, state);
 
             return BigOComplexity.AddSequential(whenTrue, whenFalse);
         }
 
-        private static BigOComplexity AnalyzeFor(ForStatementSyntax forStatement)
+        private static BigOComplexity AnalyzeFor(ForStatementSyntax forStatement, AnalysisState state)
         {
             var iteration = AnalyzeForIteration(forStatement);
-            return BigOComplexity.Multiply(iteration, AnalyzeStatement(forStatement.Statement));
+            return BigOComplexity.Multiply(iteration, AnalyzeStatement(forStatement.Statement, state));
         }
 
-        private static BigOComplexity AnalyzeWhile(WhileStatementSyntax whileStatement)
+        private static BigOComplexity AnalyzeWhile(WhileStatementSyntax whileStatement, AnalysisState state)
         {
             var iteration = AnalyzeWhileIteration(whileStatement.Condition, whileStatement.Statement);
-            return BigOComplexity.Multiply(iteration, AnalyzeStatement(whileStatement.Statement));
+            return BigOComplexity.Multiply(iteration, AnalyzeStatement(whileStatement.Statement, state));
         }
 
-        private static BigOComplexity AnalyzeDo(DoStatementSyntax doStatement)
+        private static BigOComplexity AnalyzeDo(DoStatementSyntax doStatement, AnalysisState state)
         {
             var iteration = AnalyzeWhileIteration(doStatement.Condition, doStatement.Statement);
-            return BigOComplexity.Multiply(iteration, AnalyzeStatement(doStatement.Statement));
+            return BigOComplexity.Multiply(iteration, AnalyzeStatement(doStatement.Statement, state));
         }
 
-        private static BigOComplexity AnalyzeForEach(ForEachStatementSyntax forEachStatement)
+        private static BigOComplexity AnalyzeForEach(ForEachStatementSyntax forEachStatement, AnalysisState state)
         {
             var iteration = AnalyzeCollection(forEachStatement.Expression);
-            return BigOComplexity.Multiply(iteration, AnalyzeStatement(forEachStatement.Statement));
+            return BigOComplexity.Multiply(iteration, AnalyzeStatement(forEachStatement.Statement, state));
         }
 
         private static BigOComplexity AnalyzeForIteration(ForStatementSyntax forStatement)
@@ -243,6 +248,65 @@ namespace StrictSharp.Analyzers
             return false;
         }
 
+        private static BigOComplexity AnalyzeInvocations(SyntaxNode node, AnalysisState state)
+        {
+            var result = BigOComplexity.Constant;
+            foreach (var invocation in node.DescendantNodesAndSelf())
+            {
+                if (!(invocation is InvocationExpressionSyntax invocationExpression)) continue;
+
+                var cost = AnalyzeInvocation(invocationExpression, state);
+                result = BigOComplexity.AddSequential(result, cost);
+            }
+
+            return result;
+        }
+
+        private static BigOComplexity AnalyzeInvocation(
+            InvocationExpressionSyntax invocation,
+            AnalysisState state)
+        {
+            var symbol = state.SemanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
+            if (symbol == null) return BigOComplexity.Unknown;
+            if (!IsLocalMethod(symbol, state.CurrentSymbol)) return BigOComplexity.Constant;
+            if (IsSameMethod(symbol, state.CurrentSymbol)) return BigOComplexity.Unknown;
+            if (!state.Enter(symbol)) return BigOComplexity.Unknown;
+
+            try
+            {
+                return AnalyzeLocalMethod(symbol, state);
+            }
+            finally
+            {
+                state.Exit(symbol);
+            }
+        }
+
+        private static BigOComplexity AnalyzeLocalMethod(IMethodSymbol symbol, AnalysisState state)
+        {
+            foreach (var reference in symbol.DeclaringSyntaxReferences)
+            {
+                var method = reference.GetSyntax() as MethodDeclarationSyntax;
+                if (method != null && method.Body != null)
+                    return AnalyzeBlock(method.Body, state);
+            }
+
+            return BigOComplexity.Unknown;
+        }
+
+        private static bool IsLocalMethod(IMethodSymbol symbol, ISymbol currentSymbol)
+        {
+            if (currentSymbol == null) return false;
+            if (symbol.ContainingType == null) return false;
+
+            return SymbolEqualityComparer.Default.Equals(symbol.ContainingType, currentSymbol.ContainingType);
+        }
+
+        private static bool IsSameMethod(IMethodSymbol symbol, ISymbol currentSymbol)
+        {
+            return SymbolEqualityComparer.Default.Equals(symbol, currentSymbol);
+        }
+
         private static void ReportIfNeeded(
             SyntaxNodeAnalysisContext context,
             SyntaxNode node,
@@ -252,6 +316,32 @@ namespace StrictSharp.Analyzers
             if (complexity.CompareTo(BigOComplexity.Logarithmic) < 0) return;
 
             context.ReportDiagnostic(Diagnostic.Create(Rule, node.GetLocation(), complexity.ToString()));
+        }
+
+        private sealed class AnalysisState
+        {
+            private readonly HashSet<IMethodSymbol> _visiting;
+
+            public AnalysisState(SemanticModel semanticModel, ISymbol currentSymbol)
+            {
+                SemanticModel = semanticModel;
+                CurrentSymbol = currentSymbol;
+                _visiting = new HashSet<IMethodSymbol>(SymbolEqualityComparer.Default);
+            }
+
+            public SemanticModel SemanticModel { get; }
+
+            public ISymbol CurrentSymbol { get; }
+
+            public bool Enter(IMethodSymbol symbol)
+            {
+                return _visiting.Add(symbol);
+            }
+
+            public void Exit(IMethodSymbol symbol)
+            {
+                _visiting.Remove(symbol);
+            }
         }
     }
 }
