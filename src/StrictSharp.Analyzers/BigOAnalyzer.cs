@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -46,6 +47,14 @@ namespace StrictSharp.Analyzers
 
             var symbol = context.SemanticModel.GetDeclaredSymbol(method);
             var state = new AnalysisState(context.SemanticModel, symbol);
+
+            var recursion = AnalyzeDirectRecursion(method, symbol, context.SemanticModel);
+            if (!recursion.IsUnknown)
+            {
+                ReportIfNeeded(context, method.Body, recursion);
+                return;
+            }
+
             ReportIfNeeded(context, method.Body, AnalyzeBlock(method.Body, state));
         }
 
@@ -246,6 +255,59 @@ namespace StrictSharp.Analyzers
             if (expression is ImplicitArrayCreationExpressionSyntax) return true;
 
             return false;
+        }
+
+        private static BigOComplexity AnalyzeDirectRecursion(
+            MethodDeclarationSyntax method,
+            IMethodSymbol methodSymbol,
+            SemanticModel semanticModel)
+        {
+            if (methodSymbol == null) return BigOComplexity.Unknown;
+
+            InvocationExpressionSyntax recursiveInvocation = null;
+            var recursiveCount = 0;
+            foreach (var invocation in method.Body.DescendantNodes().OfType<InvocationExpressionSyntax>())
+            {
+                var symbol = semanticModel.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
+                if (!SymbolEqualityComparer.Default.Equals(symbol, methodSymbol)) continue;
+
+                recursiveCount++;
+                recursiveInvocation = invocation;
+            }
+
+            if (recursiveCount == 0) return BigOComplexity.Unknown;
+            if (recursiveCount > 1) return BigOComplexity.Exponential;
+
+            return AnalyzeSingleRecursiveInvocation(methodSymbol, recursiveInvocation);
+        }
+
+        private static BigOComplexity AnalyzeSingleRecursiveInvocation(
+            IMethodSymbol methodSymbol,
+            InvocationExpressionSyntax invocation)
+        {
+            if (invocation.ArgumentList.Arguments.Count == 0) return BigOComplexity.Unknown;
+            if (methodSymbol.Parameters.Length == 0) return BigOComplexity.Unknown;
+
+            var parameterName = methodSymbol.Parameters[0].Name;
+            var expression = invocation.ArgumentList.Arguments[0].Expression as BinaryExpressionSyntax;
+            if (expression == null) return BigOComplexity.Unknown;
+            if (!IsVariable(expression.Left, parameterName)) return BigOComplexity.Unknown;
+            if (expression.IsKind(SyntaxKind.DivideExpression) && IsConstantGreaterThanOne(expression.Right))
+                return BigOComplexity.LogarithmicOf(parameterName);
+
+            if (expression.IsKind(SyntaxKind.SubtractExpression) && IsPositiveConstant(expression.Right))
+                return BigOComplexity.LinearOf(parameterName);
+
+            return BigOComplexity.Unknown;
+        }
+
+        private static bool IsPositiveConstant(ExpressionSyntax expression)
+        {
+            var literal = expression as LiteralExpressionSyntax;
+            if (literal == null) return false;
+            if (!(literal.Token.Value is int value)) return false;
+
+            return value > 0;
         }
 
         private static BigOComplexity AnalyzeInvocations(SyntaxNode node, AnalysisState state)

@@ -85,7 +85,7 @@ public sealed class BigOAnalyzerStage6Tests
     }
 
     [Fact]
-    public async Task DirectRecursion_ShouldNotBeAnalyzedInStage6()
+    public async Task DirectRecursion_ShouldReportDiagnosticAfterStage7()
     {
         const string code = """
             public sealed class Sample
@@ -103,8 +103,9 @@ public sealed class BigOAnalyzerStage6Tests
             """;
 
         var diagnostics = await GetAnalyzerDiagnosticsAsync(code);
+        var diagnostic = Assert.Single(diagnostics);
 
-        Assert.Empty(diagnostics);
+        Assert.Contains("O(n)", diagnostic.GetMessage());
     }
 
     private static async Task<ImmutableArray<Diagnostic>> GetAnalyzerDiagnosticsAsync(string code)

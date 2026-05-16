@@ -62,6 +62,7 @@ BigOAnalyzerStage3Tests.cs
 BigOAnalyzerStage4Tests.cs
 BigOAnalyzerStage5Tests.cs
 BigOAnalyzerStage6Tests.cs
+BigOAnalyzerStage7Tests.cs
 BigOComplexityTests.cs
 HeavyObjectWithoutCachingAnalyzerTests.cs
 HiddenBoxingAnalyzerTests.cs

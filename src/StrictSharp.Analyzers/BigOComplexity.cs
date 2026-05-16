@@ -32,6 +32,8 @@ namespace StrictSharp.Analyzers
 
         public static BigOComplexity Polynomial { get; } = new BigOComplexity(BigOComplexityKind.Polynomial);
 
+        public static BigOComplexity Exponential { get; } = new BigOComplexity(BigOComplexityKind.Exponential);
+
         public static BigOComplexity Unknown { get; } = new BigOComplexity(BigOComplexityKind.Unknown);
 
         public bool IsUnknown
@@ -93,6 +95,8 @@ namespace StrictSharp.Analyzers
                     return "O(n^2)";
                 case BigOComplexityKind.Polynomial:
                     return "O(n^c)";
+                case BigOComplexityKind.Exponential:
+                    return "O(c^n)";
                 default:
                     return "O(?)";
             }
@@ -156,6 +160,8 @@ namespace StrictSharp.Analyzers
                     return 5;
                 case BigOComplexityKind.Polynomial:
                     return 6;
+                case BigOComplexityKind.Exponential:
+                    return 7;
                 default:
                     return 8;
             }
@@ -171,6 +177,7 @@ namespace StrictSharp.Analyzers
         Product,
         Quadratic,
         Polynomial,
+        Exponential,
         Unknown
     }
 }
