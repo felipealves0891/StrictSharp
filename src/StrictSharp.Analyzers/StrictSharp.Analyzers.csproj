@@ -12,6 +12,7 @@
     <PackageTags>roslyn;analyzer;performance;strict;dotnet</PackageTags>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 
   <ItemGroup>
