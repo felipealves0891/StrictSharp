@@ -1,9 +1,0 @@
-<Solution>
-  <Folder Name="/src/">
-    <Project Path="src/StrictSharp.Analyzers/StrictSharp.Analyzers.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/StrictSharp.Analyzers.Benchmark/StrictSharp.Analyzers.Benchmark.csproj" />
-    <Project Path="tests/StrictSharp.Analyzers.Tests/StrictSharp.Analyzers.Tests.csproj" />
-  </Folder>
-</Solution>
