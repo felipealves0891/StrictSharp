@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using System.Collections.Immutable;
 
 namespace StrictSharp.Analyzers.Rules;
 
@@ -52,6 +53,7 @@ public readonly struct RuleDefinition
             phase == RulePhase.V1,
             impact,
             reference);
+        SupportedDiagnostics = ImmutableArray.Create(Descriptor);
     }
 
     public string Id { get; }
@@ -66,6 +68,7 @@ public readonly struct RuleDefinition
     public string Reference { get; }
     public RulePhase Phase { get; }
     public DiagnosticDescriptor Descriptor { get; }
+    public ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
     public bool EnabledInV1 => Phase == RulePhase.V1;
 
     private static DiagnosticSeverity ToDiagnosticSeverity(RiskSeverity severity)

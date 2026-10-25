@@ -1,12 +1,45 @@
 param(
     [string]$FeatureId = "workspace",
     [string]$ConfigPath = ".spectro/config.yaml",
-    [string]$ProjectRoot = (Get-Location).Path,
+    [string]$ProjectRoot = "",
     [switch]$ContinueOnFailure
 )
 
-$ErrorActionPreference = "Stop"
-$root = (Resolve-Path -LiteralPath $ProjectRoot).Path
+$ErrorActionPreference = 'SilentlyContinue'
+$initialPath = (Get-Location).Path
+
+function Find-ProjectRoot([string]$StartPath) {
+    $current = (Resolve-Path -LiteralPath $StartPath).Path
+
+    while ($current) {
+        $currentLeaf = Split-Path -Leaf $current.TrimEnd('\')
+        if ($currentLeaf -eq '.spectro' -and (Test-Path -LiteralPath $current -PathType Container)) {
+            $parent = Split-Path -Parent $current
+            if ($parent) { return (Resolve-Path -LiteralPath $parent).Path }
+        }
+
+        $spectroPath = Join-Path $current '.spectro'
+        if (Test-Path -LiteralPath $spectroPath -PathType Container) {
+            return (Resolve-Path -LiteralPath $current).Path
+        }
+
+        $parent = Split-Path -Parent $current
+        if (-not $parent -or $parent -eq $current) { break }
+        $current = $parent
+    }
+
+    throw "Could not find an ancestor .spectro directory from the initial path: $StartPath"
+}
+
+if ([string]::IsNullOrWhiteSpace($ProjectRoot)) {
+    $root = Find-ProjectRoot $initialPath
+} else {
+    $root = (Resolve-Path -LiteralPath $ProjectRoot).Path
+}
+
+if (-not (Test-Path -LiteralPath $root -PathType Container)) {
+    throw "ProjectRoot must resolve to an existing directory: $root"
+}
 $configFullPath = (Resolve-Path -LiteralPath (Join-Path $root $ConfigPath)).Path
 
 if ($FeatureId -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]*$') {
@@ -51,6 +84,28 @@ function Get-CodeRevision {
     return "uncommitted"
 }
 
+function Get-OutputInventory([string]$Directory) {
+    $files = @()
+    $diagnostics = @()
+    $resolvedDirectory = (Resolve-Path -LiteralPath $Directory).Path.TrimEnd('\') + '\'
+    foreach ($item in @(Get-ChildItem -LiteralPath $Directory -File -Recurse -Force -ErrorAction Stop)) {
+        if ($item.LinkType) {
+            $diagnostics += "Ignored linked output: $($item.FullName)"
+            continue
+        }
+        $resolvedFile = (Resolve-Path -LiteralPath $item.FullName).Path
+        if (-not $resolvedFile.StartsWith($resolvedDirectory, [System.StringComparison]::OrdinalIgnoreCase)) {
+            $diagnostics += "Ignored output outside gate directory: $($item.FullName)"
+            continue
+        }
+        $files += $resolvedFile.Substring($resolvedDirectory.Length).Replace('\', '/')
+    }
+    return [pscustomobject]@{
+        files = @($files | Sort-Object)
+        diagnostics = @($diagnostics)
+    }
+}
+
 $configText = Get-Content -Raw -Encoding utf8 -LiteralPath $configFullPath
 $required = @(Get-List $configText "required")
 $optional = @(Get-List $configText "optional")
@@ -62,8 +117,16 @@ $gateNames = @($required + $optional | Select-Object -Unique)
 if ($gateNames.Count -eq 0) { throw "No gates are configured." }
 
 $featureDir = Join-Path $root (Join-Path ".spectro/features" $FeatureId)
-$executionId = "gate-{0}" -f (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
-$evidenceDir = Join-Path $featureDir (Join-Path "evidence" $executionId)
+$outputsRoot = Join-Path $featureDir "outputs"
+$executionBase = "gate-{0}" -f (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
+$executionId = $executionBase
+$executionNumber = 1
+while (Test-Path -LiteralPath (Join-Path $outputsRoot $executionId)) {
+    $executionNumber++
+    $executionId = "{0}-{1:D2}" -f $executionBase, $executionNumber
+}
+$executionOutputDir = Join-Path $outputsRoot $executionId
+$evidenceDir = Join-Path $executionOutputDir "evidence"
 New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
 $runner = Join-Path $PSScriptRoot "run_gate.ps1"
 $started = Get-Date
@@ -73,9 +136,14 @@ $index = 0
 
 foreach ($gateName in $gateNames) {
     $index++
+    if ($gateName -notmatch '^[A-Za-z0-9][A-Za-z0-9._-]*$') {
+        throw "Gate name contains unsupported path characters: $gateName"
+    }
     $requiredGate = $required -contains $gateName
     $command = if ($commands.ContainsKey($gateName)) { [string]$commands[$gateName] } else { "" }
     $evidencePath = Join-Path $evidenceDir ("{0:D2}-{1}.log" -f $index, $gateName)
+    $gateOutputDir = Join-Path $executionOutputDir $gateName
+    New-Item -ItemType Directory -Force -Path $gateOutputDir | Out-Null
     $gate = [ordered]@{
         id = "GATE-{0:D3}" -f $index
         name = $gateName
@@ -86,11 +154,16 @@ foreach ($gateName in $gateNames) {
         duration_ms = 0
         diagnostics = @()
         evidence = @()
+        output_directory = $gateOutputDir.Substring($root.Length + 1).Replace('\', '/')
+        output_files = @()
+        output_file_count = 0
     }
 
     if ($blockedByFailFast) {
         $gate.status = "blocked"
         $gate.diagnostics = @("Skipped because a previous required gate failed and fail-fast is enabled.")
+        Set-Content -LiteralPath $evidencePath -Value ($gate.diagnostics -join "`n") -Encoding utf8
+        $gate.evidence = @($evidencePath.Substring($root.Length + 1).Replace('\', '/'))
         $results += [pscustomobject]$gate
         continue
     }
@@ -98,12 +171,14 @@ foreach ($gateName in $gateNames) {
     if ([string]::IsNullOrWhiteSpace($command)) {
         $gate.status = "blocked"
         $gate.diagnostics = @("No command configured for gate '$gateName'.")
+        Set-Content -LiteralPath $evidencePath -Value ($gate.diagnostics -join "`n") -Encoding utf8
+        $gate.evidence = @($evidencePath.Substring($root.Length + 1).Replace('\', '/'))
         $results += [pscustomobject]$gate
         if ($requiredGate -and $failFast) { $blockedByFailFast = $true }
         continue
     }
 
-    $json = & powershell -NoProfile -ExecutionPolicy Bypass -File $runner -Command $command -TimeoutSeconds $timeoutSeconds -EvidencePath $evidencePath 2>&1 | Out-String
+    $json = & powershell -NoProfile -ExecutionPolicy Bypass -File $runner -Command $command -WorkingDirectory $root -OutputDirectory $gateOutputDir -TimeoutSeconds $timeoutSeconds -EvidencePath $evidencePath 2>&1 | Out-String
     $runnerExit = $LASTEXITCODE
     try { $runResult = $json | ConvertFrom-Json } catch { $runResult = $null }
     if ($null -eq $runResult) {
@@ -119,7 +194,11 @@ foreach ($gateName in $gateNames) {
             if ($diagnosticText) { $gate.diagnostics = @($diagnosticText) }
         }
     }
-    if (Test-Path -LiteralPath $evidencePath) { $gate.evidence = @($evidencePath.Substring($root.Length + 1)) }
+    if (Test-Path -LiteralPath $evidencePath) { $gate.evidence = @($evidencePath.Substring($root.Length + 1).Replace('\', '/')) }
+    $inventory = Get-OutputInventory $gateOutputDir
+    $gate.output_files = @($inventory.files)
+    $gate.output_file_count = $gate.output_files.Count
+    if ($inventory.diagnostics.Count -gt 0) { $gate.diagnostics = @($gate.diagnostics + $inventory.diagnostics) }
     $results += [pscustomobject]$gate
     if ($requiredGate -and $failFast -and $gate.status -ne "passed") { $blockedByFailFast = $true }
 }
@@ -136,6 +215,7 @@ $report = [ordered]@{
     schema_version = "1.0"
     feature_id = $FeatureId
     execution_id = $executionId
+    project_root = $root
     code_revision = Get-CodeRevision
     config_hash = "sha256:" + (Get-Sha256 $configFullPath)
     artifact_hashes = $artifactHashes

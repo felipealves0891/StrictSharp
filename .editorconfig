@@ -1,0 +1,12 @@
+root = true
+
+[*.cs]
+
+# StrictSharp rules use the standard Roslyn per-diagnostic configuration.
+# Set one of error, warning, suggestion, silent or none as appropriate.
+# Examples:
+# dotnet_diagnostic.PERF001.severity = error
+# dotnet_diagnostic.PERF008.severity = warning
+# dotnet_diagnostic.PERF014.severity = suggestion
+# dotnet_diagnostic.PERF025.severity = none
+# dotnet_diagnostic.PERF027.severity = warning

@@ -47,6 +47,17 @@ public static class RuleCatalog
     public static IReadOnlyList<RuleDefinition> All => s_all;
     public static IReadOnlyList<RuleDefinition> V1 => s_v1;
 
+    public static RuleDefinition Get(string id)
+    {
+        for (var index = 0; index < s_all.Length; index++)
+        {
+            if (string.Equals(s_all[index].Id, id, StringComparison.Ordinal))
+                return s_all[index];
+        }
+
+        throw new ArgumentOutOfRangeException(nameof(id), id, "Unknown performance rule.");
+    }
+
     private static RuleDefinition Create(
         string id,
         string title,

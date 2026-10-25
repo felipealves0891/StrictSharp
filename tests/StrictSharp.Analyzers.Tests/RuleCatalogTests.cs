@@ -12,9 +12,28 @@ public sealed class RuleCatalogTests
 
         Assert.Equal(30, rules.Count);
         Assert.Equal(30, rules.Select(rule => rule.Id).Distinct(StringComparer.Ordinal).Count());
-        Assert.Equal(15, rules.Count(rule => rule.Phase == RulePhase.V1));
-        Assert.Equal(13, rules.Count(rule => rule.Phase == RulePhase.V2));
-        Assert.Equal(2, rules.Count(rule => rule.Phase == RulePhase.V3));
+        var v1 = 0;
+        var v2 = 0;
+        var v3 = 0;
+        foreach (var rule in rules)
+        {
+            switch (rule.Phase)
+            {
+                case RulePhase.V1:
+                    v1++;
+                    break;
+                case RulePhase.V2:
+                    v2++;
+                    break;
+                case RulePhase.V3:
+                    v3++;
+                    break;
+            }
+        }
+
+        Assert.Equal(15, v1);
+        Assert.Equal(13, v2);
+        Assert.Equal(2, v3);
     }
 
     [Fact]
