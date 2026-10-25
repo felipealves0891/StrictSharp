@@ -17,10 +17,10 @@ recovery:
   preserve_evidence: true
   invalidate_on_change: true
 gates:
-  required: [build, test, coverage, security]
+  required: [build, test, security, coverage]
   optional: []
   commands:
     build: 'dotnet build'
     test: 'dotnet test'
-    coverage: '.scpectro/tools/coverage.sh'
+    coverage: '.scpectro/tools/coverage-gate.ps1 -Project "./src/MinhaSolucao.sln" -BaseBranch "develop" -MinLineCoverage 80 -MinBranchCoverage 70 -MinNewLineCoverage 90 -MinNewBranchCoverage 85'
     security: 'dotnet list package --vulnerable'
