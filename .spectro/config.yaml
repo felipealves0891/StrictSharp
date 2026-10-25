@@ -17,10 +17,18 @@ recovery:
   preserve_evidence: true
   invalidate_on_change: true
 gates:
-  required: [build, test, security, coverage]
+  required: [restore, build, test, security, coverage]
   optional: []
   commands:
-    build: 'dotnet build'
-    test: 'dotnet test'
-    coverage: '.scpectro/tools/coverage-gate.ps1 -Project "./src/MinhaSolucao.sln" -BaseBranch "develop" -MinLineCoverage 80 -MinBranchCoverage 70 -MinNewLineCoverage 90 -MinNewBranchCoverage 85'
+    restore: 'dotnet restore StrictSharp.sln'
+    build: 'dotnet build --no-restore'
+    test: 'dotnet test --no-restore --no-build'
+    coverage: >_
+      pwsh -NoProfile -ExecutionPolicy Bypass -File ".spectro/tools/coverage-gate.ps1" `
+        -Project "." `
+        -BaseBranch "origin/main" `
+        -MinLineCoverage 80 `
+        -MinBranchCoverage 70 `
+        -MinNewLineCoverage 90 `
+        -MinNewBranchCoverage 85
     security: 'dotnet list package --vulnerable'
