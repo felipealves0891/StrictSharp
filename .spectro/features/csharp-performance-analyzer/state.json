@@ -1,21 +1,20 @@
 {
   "schema_version": "1.0",
   "feature_id": "csharp-performance-analyzer",
-  "current_phase": "gates",
-  "status": "waiting_input",
+  "current_phase": "review",
+  "status": "completed",
   "phases": {
     "implement": {
-      "status": "running",
+      "status": "completed",
       "completed_tasks": [
         "TASK-011",
         "TASK-012"
       ],
-      "next_task": "TASK-013",
-      "blocking_reason": "Escopo aprovado; GATE-004 exige uma árvore Git limpa para medir cobertura. As alterações atuais ainda não estão commitadas."
+      "next_task": null
     },
     "gates": {
-      "status": "failed",
-      "execution_id": "gate-20261028T230515Z",
+      "status": "completed",
+      "execution_id": "gate-20261028T230711Z",
       "report": ".spectro/features/csharp-performance-analyzer/gates.json"
     }
   },
@@ -45,7 +44,6 @@
     ],
     "detected_at": "2026-10-28T23:06:16.382Z"
   },
-  "last_execution_id": "gate-20261028T230515Z",
-  "updated_at": "2026-10-28T23:06:16.383Z",
-  "invalidation_reason": "Recovery invalidated evidence for gate-20261028T230515Z."
+  "last_execution_id": "gate-20261028T230711Z",
+  "updated_at": "2026-10-28T23:07:33.187Z"
 }

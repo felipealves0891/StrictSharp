@@ -15,7 +15,7 @@
 | `TASK-010` | Revisão de cobertura, roadmap e gates iniciais | `FR-006`, `FR-007`, `FR-011`, `NFR-004`, `NFR-008`, `CON-005` | `AC-001`–`AC-013` | `TASK-008`, `TASK-009` | superseded |
 | `TASK-011` | Corrigir contrato observável dos diagnósticos e cobrir mensagens | `FR-003`, `FR-004`, `FR-009`, `FR-010`, `FR-012`, `NFR-002`, `NFR-005`, `CON-004` | `AC-003`, `AC-008`, `AC-009`, `AC-011`: testes confirmam campos obrigatórios, orientação condicional e ausência de ganho percentual | `TASK-009` | completed |
 | `TASK-012` | Normalizar rastreabilidade e validação automatizada | `FR-002`, `FR-006`, `FR-007`, `FR-011`, `NFR-008`, `CON-005` | `AC-002`, `AC-005`, `AC-006`, `AC-010`, `AC-013`: `validate_traceability.ps1` retorna `complete` e cada requisito/critério tem vínculo verificável | `TASK-010`, `TASK-011` | completed |
-| `TASK-013` | Reconciliar escopo, estado, gates e revisão final | `FR-001`, `FR-006`, `FR-007`, `FR-011`, `NFR-003`, `NFR-004`, `NFR-008`, `CON-005` | `AC-001`–`AC-013`: escopo adicional tem aprovação ou separação, estado consistente, gates renovados e revisão repetida | `TASK-011`, `TASK-012` | pending |
+| `TASK-013` | Reconciliar escopo, estado, gates e revisão final | `FR-001`, `FR-006`, `FR-007`, `FR-011`, `NFR-003`, `NFR-004`, `NFR-008`, `CON-005` | `AC-001`–`AC-013`: escopo adicional tem aprovação ou separação, estado consistente, gates renovados e revisão repetida | `TASK-011`, `TASK-012` | completed |
 
 ## Detalhamento e rastreabilidade operacional
 
@@ -111,7 +111,7 @@
 - **Componentes:** `state.json`, `gates.json`, evidências, diff e pacote de review.
 - **Risco:** o tooling adicional pode exigir aprovação humana; não concluir a feature enquanto isso não estiver decidido.
 - **Validação:** build, testes, segurança, cobertura e revisão final comprovam `AC-001`–`AC-013`; verificar revisionamento e hashes antes de concluir.
-- **Status:** pending; retorno `gates`/`human_review`; originado de `FINDING-003` e `FINDING-004`.
+- **Status:** completed; retorno `gates`/`human_review`; originado de `FINDING-003` e `FINDING-004`.
 
 ## Regras de execução
 
@@ -126,5 +126,5 @@
 
 - Concluídas: `TASK-001`–`TASK-009`.
 - Superseded: `TASK-010`.
-- Pendentes: `TASK-013`.
+- Pendentes: nenhuma.
 - Bloqueadas: nenhuma; `TASK-013` pode exigir decisão humana sobre tooling adicional.
