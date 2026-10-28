@@ -1,0 +1,325 @@
+{
+  "schema_version": "1.0",
+  "feature_id": "csharp-performance-analyzer",
+  "review_id": "review-20261028T231200Z",
+  "requirements": [
+    {
+      "id": "CON-001",
+      "linked_tasks": [
+        "TASK-001"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "CON-002",
+      "linked_tasks": [
+        "TASK-002"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "CON-003",
+      "linked_tasks": [
+        "TASK-002",
+        "TASK-009"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "CON-004",
+      "linked_tasks": [
+        "TASK-002",
+        "TASK-009",
+        "TASK-011"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "CON-005",
+      "linked_tasks": [
+        "TASK-003",
+        "TASK-010",
+        "TASK-012",
+        "TASK-013"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-001",
+      "linked_tasks": [
+        "TASK-001",
+        "TASK-003",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-013"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-002",
+      "linked_tasks": [
+        "TASK-002",
+        "TASK-008",
+        "TASK-012"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-003",
+      "linked_tasks": [
+        "TASK-002",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-009",
+        "TASK-011"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-004",
+      "linked_tasks": [
+        "TASK-003",
+        "TASK-006",
+        "TASK-007",
+        "TASK-009",
+        "TASK-011"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-005",
+      "linked_tasks": [
+        "TASK-003",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-006",
+      "linked_tasks": [
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-008",
+        "TASK-010",
+        "TASK-012",
+        "TASK-013"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-007",
+      "linked_tasks": [
+        "TASK-010",
+        "TASK-012",
+        "TASK-013"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-008",
+      "linked_tasks": [
+        "TASK-004",
+        "TASK-008"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-009",
+      "linked_tasks": [
+        "TASK-005",
+        "TASK-006",
+        "TASK-007",
+        "TASK-009",
+        "TASK-011"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-010",
+      "linked_tasks": [
+        "TASK-002",
+        "TASK-009",
+        "TASK-011"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-011",
+      "linked_tasks": [
+        "TASK-008",
+        "TASK-010",
+        "TASK-012",
+        "TASK-013"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-012",
+      "linked_tasks": [
+        "TASK-009",
+        "TASK-011"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-001",
+      "linked_tasks": [
+        "TASK-003",
+        "TASK-008"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-002",
+      "linked_tasks": [
+        "TASK-009",
+        "TASK-011"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-003",
+      "linked_tasks": [
+        "TASK-001",
+        "TASK-008",
+        "TASK-013"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-004",
+      "linked_tasks": [
+        "TASK-003",
+        "TASK-010",
+        "TASK-013"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-005",
+      "linked_tasks": [
+        "TASK-009",
+        "TASK-011"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-006",
+      "linked_tasks": [
+        "TASK-003"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-007",
+      "linked_tasks": [
+        "TASK-003",
+        "TASK-005",
+        "TASK-006",
+        "TASK-007"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-008",
+      "linked_tasks": [
+        "TASK-008",
+        "TASK-010",
+        "TASK-012",
+        "TASK-013"
+      ],
+      "appears_in_plan": true
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-001",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-002",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-003",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-004",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-005",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-006",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-007",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-008",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-009",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-010",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-011",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-012",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-013",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    }
+  ],
+  "task_ids": [
+    "TASK-001",
+    "TASK-002",
+    "TASK-003",
+    "TASK-004",
+    "TASK-005",
+    "TASK-006",
+    "TASK-007",
+    "TASK-008",
+    "TASK-009",
+    "TASK-010",
+    "TASK-011",
+    "TASK-012",
+    "TASK-013"
+  ],
+  "uncovered_requirements": [],
+  "uncovered_acceptance_criteria": [],
+  "result": "complete"
+}
