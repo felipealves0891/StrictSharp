@@ -1,36 +1,36 @@
-﻿{
-    "schema_version":  "1.0",
-    "feature_id":  "csharp-performance-analyzer",
-    "current_phase":  "waiting_input",
-    "status":  "waiting_input",
-    "phases":  {
-                   "gates":  {
-                                 "status":  "failed",
-                                 "execution_id":  "gate-20261025T235212Z",
-                                 "report":  ".spectro\\features\\csharp-performance-analyzer\\gates.json"
-                             }
-               },
-    "attempts":  {
-                     "implementation-defect:GATE-001,GATE-002,GATE-003,GATE-004":  1,
-                     "implementation-defect:GATE-004":  1,
-                     "needs-human-review:GATE-004":  1
-                 },
-    "invalidated_executions":  [
-                                   "gate-20261025T235212Z"
-                               ],
-    "last_failure":  {
-                         "category":  "needs-human-review",
-                         "stage":  "waiting_input",
-                         "execution_id":  "gate-20261025T235212Z",
-                         "gate_ids":  [
-                                          "GATE-004"
-                                      ],
-                         "diagnostics":  [
-                                             "coverage: ERRO: Working tree possui alterações tracked não commitadas. Commit antes de medir ou use -AllowDirtyTree (não recomendado).\r\nRESULTADO: false"
-                                         ],
-                         "detected_at":  "2026-10-25T23:52:32.2687223Z"
-                     },
-    "last_execution_id":  "gate-20261025T235212Z",
-    "updated_at":  "2026-10-25T23:52:32.3005515Z",
-    "invalidation_reason":  "Recovery invalidated evidence for gate-20261025T235212Z."
+{
+  "schema_version": "1.0",
+  "feature_id": "csharp-performance-analyzer",
+  "current_phase": "waiting_input",
+  "status": "waiting_input",
+  "phases": {
+    "gates": {
+      "status": "failed",
+      "execution_id": "gate-20261028T220121Z",
+      "report": ".spectro/features/csharp-performance-analyzer/gates.json"
+    }
+  },
+  "attempts": {
+    "environment-failure:GATE-001,GATE-002,GATE-003,GATE-004": 1,
+    "needs-human-review:GATE-004": 1
+  },
+  "invalidated_executions": [
+    "gate-20261028T220029Z",
+    "gate-20261028T220121Z"
+  ],
+  "last_failure": {
+    "category": "needs-human-review",
+    "stage": "waiting_input",
+    "execution_id": "gate-20261028T220121Z",
+    "gate_ids": [
+      "GATE-004"
+    ],
+    "diagnostics": [
+      "coverage: ERRO: Working tree possui altera��es tracked n�o commitadas. Commit antes de medir ou use -AllowDirtyTree (n�o recomendado).\r\nRESULTADO: false"
+    ],
+    "detected_at": "2026-10-28T22:02:09.573Z"
+  },
+  "last_execution_id": "gate-20261028T220121Z",
+  "updated_at": "2026-10-28T22:02:09.573Z",
+  "invalidation_reason": "Recovery invalidated evidence for gate-20261028T220121Z."
 }
