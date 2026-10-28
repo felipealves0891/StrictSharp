@@ -11,7 +11,7 @@
 | `TASK-006` | Implementar as regras V1 de memória e strings: `PERF007`, `PERF008`, `PERF012`, `PERF018`, `PERF019` e `PERF020`. | `FR-001`, `FR-003`, `FR-004`, `FR-005`, `FR-006`, `FR-009` | Casos de alocação/cópia/concatenação/normalização são distinguidos de exceções semânticas e de baixa evidência. | `TASK-002`, `TASK-003` | completed |
 | `TASK-007` | Implementar as regras V1 de LINQ, coleções, HTTP e logging: `PERF013`, `PERF014`, `PERF015`, `PERF022`, `PERF025` e `PERF027`. | `FR-001`, `FR-003`, `FR-004`, `FR-005`, `FR-006`, `FR-009`, `NFR-007` | Cada regra cobre o padrão documentado, evita duplicação sem valor e apresenta correção condicional quando depender de contrato/carga. | `TASK-002`, `TASK-003` | completed |
 | `TASK-008` | Criar a matriz de testes V1 para 15 regras, plataformas, C# 14, configuração e contratos de diagnóstico. | `FR-011`, `NFR-001`, `NFR-003`, `NFR-008` | Todas as 15 regras têm casos positivos/negativos/exceções e a suíte roda em `net10.0`; nenhum benchmark de runtime é exigido. | `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007` | completed |
-| `TASK-009` | Consolidar mensagens, orientação de refatoração, limitações estáticas, referências oficiais e ausência de Code Fix. | `FR-003`, `FR-004`, `FR-009`, `FR-010`, `FR-012`, `NFR-002`, `NFR-005` | Mensagens não prometem ganho percentual nem frequência real e informam evidência, impacto, escalabilidade, exceções, confiança e referência. | `TASK-005`, `TASK-006`, `TASK-007` | pending |
+| `TASK-009` | Consolidar mensagens, orientação de refatoração, limitações estáticas, referências oficiais e ausência de Code Fix. | `FR-003`, `FR-004`, `FR-009`, `FR-010`, `FR-012`, `NFR-002`, `NFR-005` | Mensagens não prometem ganho percentual nem frequência real e informam evidência, impacto, escalabilidade, exceções, confiança e referência. | `TASK-005`, `TASK-006`, `TASK-007` | completed |
 | `TASK-010` | Executar revisão de cobertura de requisitos, build/testes/gates estáticos e atualizar o roadmap V1/V2/V3; corrigir previamente os caminhos inválidos do `config.yaml` mediante aprovação. | `FR-006`, `FR-007`, `FR-011`, `NFR-004`, `NFR-008`, `CON-005` | `AC-001`–`AC-013` têm evidência; 15 regras V1 estão implementadas/testadas; V2/V3 permanecem sem implementação acidental; gates reportam resultado reproduzível. | `TASK-008`, `TASK-009` | pending |
 
 ## Regras de execução
@@ -25,5 +25,5 @@
 
 ## Progresso
 
-- Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-008`.
+- Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-008`, `TASK-009`.
 - Bloqueadas: nenhuma; `TASK-010` possui pré-condição de configuração dos gates.

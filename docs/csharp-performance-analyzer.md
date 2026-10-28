@@ -721,6 +721,39 @@ Escalas:
 | PERF024 Crescimento de coleções	| 3/5	| 3/5	| V2 |
 | PERF015 Count/Any inadequados	| 2/5	| 1/5	| V1 |
 
+## 7.1 Contrato operacional da V1
+
+As regras V1 implementadas seguem o mesmo contrato operacional:
+
+- o diagnóstico identifica somente um padrão estrutural observável no código;
+- o impacto é potencial e depende de frequência, volume, concorrência ou ambiente;
+- a orientação é condicional quando mutabilidade, propriedade, thread safety, ciclo de vida ou contrato não puderem ser provados estaticamente;
+- não há Code Fix automático nesta versão;
+- a severidade representa risco operacional (`Critical`, `High`, `Medium` ou `Low`), nunca ganho percentual medido;
+- cada descritor aponta para esta documentação e, quando aplicável, para a regra oficial complementar.
+
+| Regra | Evidência estática | Orientação principal | Exceções/limitações | Referência |
+| --- | --- | --- | --- | --- |
+| PERF001 | `.Result`, `.Wait()` ou `GetAwaiter().GetResult()` em tarefa potencialmente incompleta | Propagar `await` pelo fluxo assíncrono | Tarefas comprovadamente concluídas e fronteiras síncronas intencionais | Esta documentação |
+| PERF003 | `Task.Run` envolvendo operação que retorna `Task`/`ValueTask` | Aguardar a operação diretamente | Isolamento de API síncrona bloqueante ou trabalho CPU-bound | Esta documentação |
+| PERF007 | Alocação de objetos, coleções ou arrays dentro de loop | Reutilizar ou aplicar pool quando seguro | Objetos pequenos, necessários e de vida curta | Esta documentação |
+| PERF008 | Array com dimensão constante grande dentro de loop | Usar streaming, segmentação ou `ArrayPool<T>` quando apropriado | Não mede tamanho real de entrada nem frequência de execução | LOH / esta documentação |
+| PERF012 | `Clone`, `ToArray` ou `ToList` em sequência/coleção | Reutilizar a representação original quando compatível | Snapshot, isolamento de mutabilidade ou transferência de propriedade | Esta documentação |
+| PERF013 | Enumeração repetida do mesmo `IEnumerable` no método | Materializar uma vez ou reutilizar resultado | Sequência barata, reutilizável e repetição intencional | CA1851 |
+| PERF014 | Busca linear de lista dentro de loop | Avaliar `HashSet<T>` ou `Dictionary<TKey,TValue>` | Coleção pequena, busca única ou índice sem benefício comprovado | Esta documentação |
+| PERF015 | `Count()`/`Any()` sem predicado sobre fonte com contagem eficiente | Preferir `Count`, `Length`, `IsEmpty` ou API direta | Predicado, fonte sem contagem eficiente ou contrato específico | CA1827, CA1829, CA1860 |
+| PERF018 | Concatenação de strings repetida dentro de loop | Usar `StringBuilder` ou `string.Join` conforme o caso | Concatenação pequena e delimitada | Esta documentação |
+| PERF019 | `Substring` ou `ToCharArray` em texto | Evitar materialização intermediária quando possível | Resultado necessário para armazenar ou transferir | Esta documentação |
+| PERF020 | Normalização (`ToLower`/`ToUpper`) usada em comparação | Usar `StringComparison` adequado | Normalização necessária para persistência ou uso posterior | CA1862 |
+| PERF022 | `ContainsKey` seguido de indexador ou `Remove` para a mesma chave | Preferir `TryGetValue` ou operação direta equivalente | Condições independentes ou contratos diferentes | CA1853, CA1854 |
+| PERF025 | Criação de `HttpClient` dentro de método | Reutilizar cliente/handler ou usar `IHttpClientFactory` | Factory ou reutilização comprovada do handler | Esta documentação |
+| PERF026 | I/O síncrono em método assíncrono ou que retorna tipo assíncrono | Usar API assíncrona quando houver benefício de escalabilidade | API sem alternativa, operação curta ou fronteira genuinamente síncrona | Esta documentação |
+| PERF027 | Logging com interpolação, concatenação ou serialização eager | Usar logging estruturado, `LoggerMessage` ou checagem condicional | Mensagem já construída, valor disponível ou baixa frequência | CA1848 |
+
+O analisador não mede bytes alocados, GC/LOH, CPU, throughput, latência, conexões, contenção, memória viva ou frequência real. Essas métricas exigem profiling ou benchmark representativo. Portanto, nenhum diagnóstico V1 promete percentual de ganho, frequência de ocorrência ou correção universal.
+
+As recomendações são orientação de refatoração, não transformação automática. Alterações que dependam de contrato, igualdade, mutabilidade, propriedade de dados, ciclo de vida ou thread safety devem ser avaliadas pelo desenvolvedor.
+
 
 ## 8. Estratégia de evolução
 
