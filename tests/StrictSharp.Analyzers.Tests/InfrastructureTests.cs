@@ -22,7 +22,16 @@ public sealed class InfrastructureTests
 
         Assert.Equal("PERF001", diagnostic.Id);
         Assert.True(RuleAnalysis.IsSourceLocation(diagnostic.Location));
-        Assert.Equal(rule.Descriptor.Title.ToString(), diagnostic.GetMessage());
+        var message = diagnostic.GetMessage();
+        Assert.Contains("[PERF001]", message, StringComparison.Ordinal);
+        Assert.Contains("Evidência:", message, StringComparison.Ordinal);
+        Assert.Contains("Impacto:", message, StringComparison.Ordinal);
+        Assert.Contains("Escalabilidade:", message, StringComparison.Ordinal);
+        Assert.Contains("Correção:", message, StringComparison.Ordinal);
+        Assert.Contains("Exceções:", message, StringComparison.Ordinal);
+        Assert.Contains("Confiança:", message, StringComparison.Ordinal);
+        Assert.Contains("Referência:", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("%", message, StringComparison.Ordinal);
         Assert.False(RuleAnalysis.IsSourceLocation(Location.None));
     }
 

@@ -44,10 +44,24 @@ public readonly struct RuleDefinition
         Exceptions = exceptions;
         Reference = reference;
         Phase = phase;
+        var messageFormat = string.Join(
+            " ",
+            $"[{id}] {title}.",
+            $"Severidade: {severity}.",
+            $"Categoria: {category}.",
+            "Evidência: padrão estrutural identificado nesta localização.",
+            $"Impacto: {impact}",
+            $"Escalabilidade: {scalability}",
+            $"Correção: {correction}",
+            $"Exceções: {exceptions}",
+            $"Confiança: {confidence}.",
+            "Exemplo: consulte o exemplo correspondente na documentação da regra.",
+            $"Referência: {reference}.",
+            "Limitação: custo efetivo, frequência e ganho percentual não são medidos pela análise estática.");
         Descriptor = new DiagnosticDescriptor(
             id,
             title,
-            title,
+            messageFormat,
             category,
             ToDiagnosticSeverity(severity),
             phase == RulePhase.V1,
