@@ -75,4 +75,30 @@ public sealed class RuleCatalogTests
 
         Assert.Equal(expectedSeverity, rule.Severity);
     }
+
+    [Fact]
+    public void UnknownRuleIdsAreRejected()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => RuleCatalog.Get("PERF999"));
+    }
+
+    [Fact]
+    public void LowSeverityRulesUseHiddenDiagnosticSeverity()
+    {
+        var rule = new RuleDefinition(
+            "PERF999",
+            "Test rule",
+            RiskSeverity.Low,
+            "Test",
+            "Baixa",
+            "Impacto",
+            "Escalabilidade",
+            "Correção",
+            "Exceções",
+            "Referência",
+            RulePhase.V2);
+
+        Assert.Equal(Microsoft.CodeAnalysis.DiagnosticSeverity.Hidden, rule.Descriptor.DefaultSeverity);
+        Assert.False(rule.EnabledInV1);
+    }
 }
