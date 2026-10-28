@@ -1,8 +1,12 @@
 param(
     [Parameter(Mandatory = $true)][string]$Command,
+    [Parameter(Mandatory = $true)][string]$WorkingDirectory,
+    [Parameter(Mandatory = $true)][string]$OutputDirectory,
     [int]$TimeoutSeconds = 900,
     [string]$EvidencePath = ""
 )
+
+$ErrorActionPreference = 'SilentlyContinue'
 
 $started = Get-Date
 $output = ""
@@ -10,14 +14,31 @@ $status = "passed"
 $exitCode = 0
 
 try {
+    if (-not (Test-Path -LiteralPath $WorkingDirectory -PathType Container)) {
+        throw "WorkingDirectory must be an existing directory: $WorkingDirectory"
+    }
+    if (-not (Test-Path -LiteralPath $OutputDirectory -PathType Container)) {
+        New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
+    }
+    $resolvedWorkingDirectory = (Resolve-Path -LiteralPath $WorkingDirectory).Path
+    $resolvedOutputDirectory = (Resolve-Path -LiteralPath $OutputDirectory).Path
     $job = Start-Job -ScriptBlock {
-        param($Text)
-        $captured = & ([scriptblock]::Create($Text)) 2>&1 | Out-String
-        [pscustomobject]@{
-            output = $captured
-            exit_code = if ($null -eq $LASTEXITCODE) { 0 } else { $LASTEXITCODE }
+        param($Text, $WorkingDirectory, $OutputDirectory)
+        try {
+            Set-Location -LiteralPath $WorkingDirectory
+            $env:SPECTRO_GATE_OUTPUT_DIR = $OutputDirectory
+            $captured = & ([scriptblock]::Create($Text)) 2>&1 | Out-String
+            [pscustomobject]@{
+                output = $captured
+                exit_code = if ($null -eq $LASTEXITCODE) { 0 } else { $LASTEXITCODE }
+            }
+        } catch {
+            [pscustomobject]@{
+                output = $_.Exception.Message
+                exit_code = 1
+            }
         }
-    } -ArgumentList $Command
+    } -ArgumentList $Command, $resolvedWorkingDirectory, $resolvedOutputDirectory
 
     if (-not (Wait-Job -Job $job -Timeout $TimeoutSeconds)) {
         Stop-Job -Job $job

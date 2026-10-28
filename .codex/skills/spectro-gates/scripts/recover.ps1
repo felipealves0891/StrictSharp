@@ -105,9 +105,12 @@ if (-not $CorrectionCommand) {
     exit 0
 }
 
-$recoveryEvidence = Join-Path $featureDir (Join-Path "evidence" ("recovery-{0:D2}.log" -f $attempt))
+$executionOutputDir = Join-Path $featureDir (Join-Path "outputs" $report.execution_id)
+$recoveryOutputDir = Join-Path $executionOutputDir (Join-Path "recovery" ("attempt-{0:D2}" -f $attempt))
+$recoveryEvidence = Join-Path $executionOutputDir (Join-Path "evidence" ("recovery-{0:D2}.log" -f $attempt))
+$null = New-Item -ItemType Directory -Force -Path $recoveryOutputDir
 $runner = Join-Path $root "skills/spectro-gates/scripts/run_gate.ps1"
-$json = & powershell -NoProfile -ExecutionPolicy Bypass -File $runner -Command $CorrectionCommand -TimeoutSeconds $timeoutSeconds -EvidencePath $recoveryEvidence 2>&1 | Out-String
+$json = & powershell -NoProfile -ExecutionPolicy Bypass -File $runner -Command $CorrectionCommand -WorkingDirectory $root -OutputDirectory $recoveryOutputDir -TimeoutSeconds $timeoutSeconds -EvidencePath $recoveryEvidence 2>&1 | Out-String
 try { $correction = $json | ConvertFrom-Json } catch { $correction = $null }
 if ($null -eq $correction -or $correction.status -ne "passed") {
     $state.status = "failed"
