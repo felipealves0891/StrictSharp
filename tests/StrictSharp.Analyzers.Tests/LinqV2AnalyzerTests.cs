@@ -44,6 +44,29 @@ public sealed class LinqV2AnalyzerTests
     }
 
     [Fact]
+    public async Task Perf016StaysSilentWhenSourceIsMutatedInLoop()
+    {
+        const string source = """
+            using System.Linq;
+            using System.Collections.Generic;
+            class Sample
+            {
+                int[] Run(List<int> values)
+                {
+                    foreach (var item in values)
+                    {
+                        values.Add(item);
+                        return values.OrderBy(value => value).ToArray();
+                    }
+                    return [];
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf016Analyzer()));
+    }
+
+    [Fact]
     public async Task Perf017ReportsInvariantQueryInsideLoop()
     {
         const string source = """
@@ -84,5 +107,25 @@ public sealed class LinqV2AnalyzerTests
         var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf017Analyzer());
 
         Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf017StaysSilentWhenQueryHasObservableEffect()
+    {
+        const string source = """
+            using System.Linq;
+            class Sample
+            {
+                int Run(int[] values, int[] batches)
+                {
+                    foreach (var batch in batches)
+                        return values.Select(value => Observe(value)).Count();
+                    return 0;
+                }
+                int Observe(int value) => value;
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf017Analyzer()));
     }
 }

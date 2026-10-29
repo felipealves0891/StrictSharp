@@ -23,14 +23,21 @@ public sealed class Perf017Analyzer : RuleAnalyzerBase
             if (invocation.Parent is MemberAccessExpressionSyntax { Parent: InvocationExpressionSyntax })
                 return;
 
-            var iterationNames = invocation.Ancestors()
+            if (member.Expression is not ExpressionSyntax source
+                || RuleAnalysis.IsSourceMutatedInContainingLoop(source, invocation, context.SemanticModel))
+                return;
+
+            var iterationSymbols = invocation.Ancestors()
                 .OfType<ForEachStatementSyntax>()
-                .Select(loop => loop.Identifier.ValueText)
-                .ToHashSet(StringComparer.Ordinal);
+                .Select(loop => context.SemanticModel.GetDeclaredSymbol(loop))
+                .Where(symbol => symbol is not null)
+                .ToArray();
             var dependsOnIteration = invocation.DescendantNodes()
                 .OfType<IdentifierNameSyntax>()
-                .Any(identifier => iterationNames.Contains(identifier.Identifier.ValueText));
-            if (!dependsOnIteration)
+                .Any(identifier => iterationSymbols.Any(symbol =>
+                    SymbolEqualityComparer.Default.Equals(context.SemanticModel.GetSymbolInfo(identifier).Symbol, symbol)));
+            var hasEffects = invocation.DescendantNodes().OfType<LambdaExpressionSyntax>().Any(RuleAnalysis.HasObservableInvocation);
+            if (!dependsOnIteration && !hasEffects)
                 RuleAnalysis.Report(RuleCatalog.Get("PERF017"), context, invocation.GetLocation());
         }, Microsoft.CodeAnalysis.CSharp.SyntaxKind.InvocationExpression);
     }

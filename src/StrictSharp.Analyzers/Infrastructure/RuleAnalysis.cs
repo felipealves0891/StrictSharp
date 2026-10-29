@@ -155,6 +155,47 @@ public static class RuleAnalysis
             or DoStatementSyntax);
     }
 
+    public static bool IsSourceMutatedInContainingLoop(ExpressionSyntax source, SyntaxNode node, SemanticModel model)
+    {
+        if (model.GetSymbolInfo(source).Symbol is not { } sourceSymbol)
+            return false;
+
+        var loop = node.Ancestors().FirstOrDefault(ancestor => ancestor is ForStatementSyntax
+            or ForEachStatementSyntax or ForEachVariableStatementSyntax or WhileStatementSyntax or DoStatementSyntax);
+        if (loop is null)
+            return false;
+
+        foreach (var identifier in loop.DescendantNodes().OfType<IdentifierNameSyntax>())
+        {
+            if (!SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(identifier).Symbol, sourceSymbol))
+                continue;
+            if (identifier.Parent is AssignmentExpressionSyntax assignment && assignment.Left.Span.Contains(identifier.Span))
+                return true;
+            if (identifier.Parent is PrefixUnaryExpressionSyntax or PostfixUnaryExpressionSyntax)
+                return true;
+            if (identifier.Parent is ArgumentSyntax argument
+                && argument.RefKindKeyword.Kind() is SyntaxKind.RefKeyword or SyntaxKind.OutKeyword)
+                return true;
+        }
+
+        foreach (var invocation in loop.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            if (invocation.Expression is not MemberAccessExpressionSyntax member
+                || member.Expression is not IdentifierNameSyntax receiver
+                || !SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(receiver).Symbol, sourceSymbol))
+                continue;
+            if (member.Name.Identifier.ValueText is "Add" or "AddRange" or "Clear" or "Insert" or "InsertRange"
+                or "Remove" or "RemoveAt" or "RemoveAll" or "Reverse" or "Sort")
+                return true;
+        }
+        return false;
+    }
+
+    public static bool HasObservableInvocation(LambdaExpressionSyntax lambda)
+    {
+        return lambda.DescendantNodes().OfType<InvocationExpressionSyntax>().Any();
+    }
+
     public static bool IsString(ITypeSymbol? type)
     {
         return type?.SpecialType == SpecialType.System_String;

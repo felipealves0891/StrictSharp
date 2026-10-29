@@ -22,8 +22,7 @@ public sealed class LifetimeV2AnalyzerTests
 
         var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf028Analyzer());
 
-        var diagnostic = Assert.Single(diagnostics);
-        Assert.Equal("PERF028", diagnostic.Id);
+        Assert.Empty(diagnostics);
     }
 
     [Fact]
@@ -47,6 +46,45 @@ public sealed class LifetimeV2AnalyzerTests
         var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf028Analyzer());
 
         Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf028StaysSilentForExplicitlyDisposedLocal()
+    {
+        const string source = """
+            using System;
+            class Resource : IDisposable { public void Dispose() { } }
+            class Sample
+            {
+                void Run()
+                {
+                    var resource = new Resource();
+                    resource.Dispose();
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf028Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf028StaysSilentWhenLocalIsTransferred()
+    {
+        const string source = """
+            using System;
+            class Resource : IDisposable { public void Dispose() { } }
+            class Sample
+            {
+                Resource _resource;
+                void Run()
+                {
+                    var resource = new Resource();
+                    _resource = resource;
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf028Analyzer()));
     }
 
     [Fact]
@@ -94,5 +132,21 @@ public sealed class LifetimeV2AnalyzerTests
         var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf029Analyzer());
 
         Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf028StaysSilentWhenCreatedDirectlyForProperty()
+    {
+        const string source = """
+            using System;
+            class Resource : IDisposable { public void Dispose() { } }
+            class Sample
+            {
+                Resource Resource { get; set; }
+                void Run() => Resource = new Resource();
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf028Analyzer()));
     }
 }

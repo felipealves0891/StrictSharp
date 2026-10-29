@@ -21,7 +21,8 @@ internal static class AnalyzerTestHarness
             MetadataReference.CreateFromFile(typeof(File).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(System.Net.Http.HttpClient).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location),
-            MetadataReference.CreateFromFile(typeof(System.Text.RegularExpressions.Regex).Assembly.Location)
+            MetadataReference.CreateFromFile(typeof(System.Text.RegularExpressions.Regex).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(System.Text.Json.JsonSerializer).Assembly.Location)
         };
         var compilation = CSharpCompilation.Create(
             "AnalyzerTestAssembly",

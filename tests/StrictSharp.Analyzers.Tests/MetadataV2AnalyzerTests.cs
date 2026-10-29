@@ -16,7 +16,7 @@ public sealed class MetadataV2AnalyzerTests
                 {
                     foreach (var value in values)
                     {
-                        var regex = new Regex(value);
+                        var regex = new Regex("^x$");
                     }
                 }
             }
@@ -43,5 +43,44 @@ public sealed class MetadataV2AnalyzerTests
         var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf021Analyzer());
 
         Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf021StaysSilentForDynamicRegexConfiguration()
+    {
+        const string source = """
+            using System.Text.RegularExpressions;
+            class Sample
+            {
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        _ = new Regex(value);
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf021Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf021ReportsSerializerOptionsCreatedInsideLoop()
+    {
+        const string source = """
+            using System.Text.Json;
+            class Sample
+            {
+                void Run(int[] values)
+                {
+                    foreach (var value in values)
+                        _ = new JsonSerializerOptions();
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf021Analyzer());
+
+        Assert.Single(diagnostics);
+        Assert.Equal("PERF021", diagnostics[0].Id);
     }
 }

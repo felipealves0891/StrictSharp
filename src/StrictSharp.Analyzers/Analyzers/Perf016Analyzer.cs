@@ -19,6 +19,8 @@ public sealed class Perf016Analyzer : RuleAnalyzerBase
                 || invocation.Expression is not MemberAccessExpressionSyntax member
                 || member.Name.Identifier.Text is not ("OrderBy" or "OrderByDescending" or "ThenBy" or "ThenByDescending"))
                 return;
+            if (RuleAnalysis.IsSourceMutatedInContainingLoop(member.Expression, invocation, context.SemanticModel))
+                return;
 
             RuleAnalysis.Report(RuleCatalog.Get("PERF016"), context, invocation.GetLocation());
         }, Microsoft.CodeAnalysis.CSharp.SyntaxKind.InvocationExpression);

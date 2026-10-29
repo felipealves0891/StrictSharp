@@ -25,6 +25,27 @@ public sealed class Perf028Analyzer : RuleAnalyzerBase
                 && variable.Parent?.Parent is LocalDeclarationStatementSyntax declaration
                 && declaration.UsingKeyword != default)
                 return;
+            if (creation.Parent is ReturnStatementSyntax or ArrowExpressionClauseSyntax
+                || creation.Parent is ArgumentSyntax
+                || creation.Parent is AssignmentExpressionSyntax assignment
+                    && context.SemanticModel.GetSymbolInfo(assignment.Left).Symbol is IPropertySymbol or IFieldSymbol)
+                return;
+            if (creation.Parent is EqualsValueClauseSyntax initializer
+                && initializer.Parent is VariableDeclaratorSyntax declarator
+                && context.SemanticModel.GetDeclaredSymbol(declarator) is ILocalSymbol localSymbol)
+            {
+                var method = creation.Ancestors().OfType<BaseMethodDeclarationSyntax>().FirstOrDefault();
+                if (method?.DescendantNodes().OfType<IdentifierNameSyntax>().Any(identifier =>
+                    SymbolEqualityComparer.Default.Equals(context.SemanticModel.GetSymbolInfo(identifier).Symbol, localSymbol)
+                    && identifier.Parent is MemberAccessExpressionSyntax member
+                    && member.Parent is InvocationExpressionSyntax invocation
+                    && member.Name.Identifier.ValueText is "Dispose" or "DisposeAsync") == true)
+                    return;
+                if (method?.DescendantNodes().OfType<IdentifierNameSyntax>().Any(identifier =>
+                    SymbolEqualityComparer.Default.Equals(context.SemanticModel.GetSymbolInfo(identifier).Symbol, localSymbol)
+                    && identifier.Parent is ArgumentSyntax or AssignmentExpressionSyntax) == true)
+                    return;
+            }
 
             RuleAnalysis.Report(RuleCatalog.Get("PERF028"), context, creation.Type.GetLocation());
         }, Microsoft.CodeAnalysis.CSharp.SyntaxKind.ObjectCreationExpression);

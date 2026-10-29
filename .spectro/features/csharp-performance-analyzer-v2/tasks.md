@@ -16,61 +16,81 @@
 
 ## Detalhamento das tarefas
 
-### `TASK-001` — fundação e catálogo
+## TASK-001 — fundação e catálogo
+
+Requisitos: `FR-001`, `FR-015`, `FR-016`, `NFR-003`, `NFR-004`, `CON-001`, `CON-003`. Validação de teste/gate: `AC-001`, `AC-015`, `AC-016`, `AC-018`.
 
 - Componentes afetados: `V2AnalyzerCatalog.cs`, `RuleCatalog.cs`, possivelmente `RuleAnalysis.cs`, testes de catálogo.
 - Conclusão: os 13 analyzers são instanciáveis, cada um expõe um único descriptor V2, a V1 permanece com 15 entradas e V3 não é habilitada.
 - Risco: alterar `RuleCatalog` pode quebrar a ordem/contagem existente; executar regressão do catálogo antes de prosseguir.
 
-### `TASK-002` — concorrência
+## TASK-002 — concorrência
+
+Requisitos: `FR-002`, `FR-003`, `FR-004`, `FR-005`, `NFR-001`, `NFR-002`, `NFR-004`. Validação de teste/gate: `AC-002`, `AC-003`, `AC-004`, `AC-005`, `AC-015`, `AC-018`.
 
 - Componentes afetados: quatro analyzers V2 e seus testes.
 - Conclusão: cada regra possui detecção positiva, silêncio em neutralidade e exceções documentadas; consultas caras só ocorrem após filtros sintáticos.
 - Risco: limites externos não são demonstráveis; omitir nesses casos é comportamento esperado pela clarificação.
 
-### `TASK-003` — boxing e closures
+## TASK-003 — boxing e closures
+
+Requisitos: `FR-006`, `FR-007`, `NFR-001`, `NFR-004`. Validação de teste/gate: `AC-006`, `AC-007`, `AC-015`, `AC-018`.
 
 - Componentes afetados: dois analyzers V2, utilitários de conversão/captura e testes.
 - Conclusão: não reportar APIs tipadas, contratos que exigem `object`/interface ou cenários em que a captura não seja materializada de forma observável.
 - Risco: detalhes de otimização do compilador/runtime podem não ser prováveis estaticamente; mensagens devem usar linguagem condicional.
 
-### `TASK-004` — LINQ e ordenação
+## TASK-004 — LINQ e ordenação
+
+Requisitos: `FR-008`, `FR-009`, `NFR-001`, `NFR-004`. Validação de teste/gate: `AC-008`, `AC-009`, `AC-015`, `AC-018`.
 
 - Componentes afetados: dois analyzers V2 e testes de repetição, invariância e mutação.
 - Conclusão: reportar somente repetição contextual clara; não reportar consulta dependente da iteração ou dados alterados.
 - Risco: análise de equivalência de expressão pode ser limitada; preferir omissão a inferência insegura.
 
-### `TASK-005` — regex e metadados
+## TASK-005 — regex e metadados
+
+Requisitos: `FR-010`, `NFR-001`, `NFR-004`, `CON-002`. Validação de teste/gate: `AC-010`, `AC-015`, `AC-018`.
 
 - Componentes afetados: `Perf021Analyzer.cs`, utilitários de identificação de APIs e testes.
 - Conclusão: cobrir APIs documentadas e preservar construções dinâmicas/cacheadas; não adicionar dependência de serializador.
 - Risco: caches internos de APIs podem variar; só omitir quando o cache for observável ou documentado no contrato reconhecido.
 
-### `TASK-006` — coleções
+## TASK-006 — coleções
+
+Requisitos: `FR-011`, `FR-012`, `NFR-001`, `NFR-004`. Validação de teste/gate: `AC-011`, `AC-012`, `AC-015`, `AC-018`.
 
 - Componentes afetados: dois analyzers V2, predicados de tipos/operações e testes.
 - Conclusão: recomendar alternativas apenas condicionalmente e detectar capacidade somente quando explicitamente conhecida.
 - Risco: localidade de memória e tamanho real não são prováveis em geral; não emitir sem evidência estrutural.
 
-### `TASK-007` — recursos e exceções
+## TASK-007 — recursos e exceções
+
+Requisitos: `FR-013`, `FR-014`, `NFR-001`, `NFR-004`, `CON-004`. Validação de teste/gate: `AC-013`, `AC-014`, `AC-015`, `AC-018`.
 
 - Componentes afetados: dois analyzers V2 e testes de descarte, transferência de propriedade e `TryParse`.
 - Conclusão: `PERF028` é suspeita fundamentada; `PERF029` cobre fluxo esperado observável sem classificar toda captura como problema.
 - Risco: fluxo interprocedural/dinâmico incompleto; mensagens e testes devem deixar essa limitação explícita.
 
-### `TASK-008` — matrizes e configuração
+## TASK-008 — matrizes e configuração
+
+Requisitos: `FR-001`, `FR-016`, `FR-017`, `NFR-005`, `CON-001`, `CON-003`. Validação de teste/gate: `AC-001`, `AC-016`, `AC-017`, `AC-018`.
 
 - Componentes afetados: `V2TestMatrixTests.cs`, `RuleCatalogTests.cs`, `RuleConfigurationTests.cs` e harness somente se necessário.
 - Conclusão: 13 IDs implementados, 15 V1 preservadas, 2 V3 não ativadas, severidade/supressão configuráveis e código neutro silencioso.
 - Risco: falsos positivos cruzados entre analyzers; usar analyzers isolados nos testes por regra e matriz conjunta para neutralidade.
 
-### `TASK-009` — documentação
+## TASK-009 — documentação
+
+Requisitos: `FR-015`, `FR-017`, `NFR-006`, `CON-002`, `CON-004`, `CON-005`. Validação de teste/gate: `AC-015`, `AC-017`, `AC-019`.
 
 - Componentes afetados: `docs/csharp-performance-analyzer.md`, `README.md` se o status V2 for exposto, e referências Spectro.
 - Conclusão: status, exemplos, limitações e rastreabilidade correspondem ao comportamento testado; não adicionar promessas de benchmark.
 - Risco: documentação divergente do catálogo; conferir IDs e severidades automaticamente nos testes ou na revisão.
 
-### `TASK-010` — gates e entrega
+## TASK-010 — gates e entrega
+
+Requisitos: `NFR-001`, `NFR-002`, `NFR-003`, `NFR-004`, `NFR-005`, `NFR-006`, `NFR-007`, `CON-005`, `CON-006`. Validação de teste/gate: `AC-018`, `AC-019`.
 
 - Componentes afetados: nenhum componente funcional novo; evidências em `.spectro/features/csharp-performance-analyzer-v2/`.
 - Conclusão: build, testes, segurança e cobertura executados conforme configuração; diff revisado e bloqueios registrados.
@@ -88,4 +108,4 @@
 
 - Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-008`, `TASK-009`.
 - Bloqueadas: nenhuma.
-- Próxima tarefa: `TASK-010` (pendente: foram adicionados casos de branch; 106 testes passam. A medição local de cobertura ainda precisa ser validada pelo gate oficial).
+- Próxima tarefa: `TASK-010` (pendente: foram adicionados casos de branch e exceções do reviewer; 114 testes passam. A medição de cobertura ainda precisa ser validada pelo gate oficial).

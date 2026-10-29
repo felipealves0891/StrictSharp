@@ -43,6 +43,20 @@ public sealed class AllocationV2AnalyzerTests
     }
 
     [Fact]
+    public async Task Perf009StaysSilentForObjectContractArgument()
+    {
+        const string source = """
+            class Sample
+            {
+                void Run(int value) => Consume(value);
+                void Consume(object value) { }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf009Analyzer()));
+    }
+
+    [Fact]
     public async Task Perf010ReportsCapturedLambdaCreatedInLoop()
     {
         const string source = """
