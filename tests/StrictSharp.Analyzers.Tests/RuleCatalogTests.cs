@@ -45,6 +45,20 @@ public sealed class RuleCatalogTests
     }
 
     [Fact]
+    public void V2ContainsExactlyTheApprovedRules()
+    {
+        var expectedIds = new[]
+        {
+            "PERF002", "PERF004", "PERF005", "PERF006", "PERF009", "PERF010", "PERF016",
+            "PERF017", "PERF021", "PERF023", "PERF024", "PERF028", "PERF029"
+        };
+
+        Assert.Equal(expectedIds, RuleCatalog.V2.Select(rule => rule.Id));
+        Assert.All(RuleCatalog.V2, rule => Assert.True(rule.EnabledInV2));
+        Assert.DoesNotContain(RuleCatalog.V2, rule => rule.Phase != RulePhase.V2);
+    }
+
+    [Fact]
     public void EveryRuleContainsTheRequiredDiagnosticMetadata()
     {
         Assert.All(RuleCatalog.All, rule =>

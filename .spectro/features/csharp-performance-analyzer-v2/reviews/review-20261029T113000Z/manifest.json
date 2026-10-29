@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "review_id": "review-20261029T113000Z",
+  "feature_id": "csharp-performance-analyzer-v2",
+  "code_revision": "5cf8aa907f684d110854e65b8fa61269c859a487",
+  "base_ref": "origin/develop",
+  "created_at": "2026-10-29T11:27:37.2656889Z",
+  "artifacts": {
+    "spec.md": {
+      "path": ".spectro\\features\\csharp-performance-analyzer-v2\\spec.md",
+      "sha256": "596f195c3794ecae21069a01e0067049d03a92905005a8272fb18648ca68839f"
+    },
+    "clarifications.md": {
+      "path": ".spectro\\features\\csharp-performance-analyzer-v2\\clarifications.md",
+      "sha256": "fb52088b23b35f716ac641339c490a8cd6db27227876e09d4749640aa91b01ac"
+    },
+    "plan.md": {
+      "path": ".spectro\\features\\csharp-performance-analyzer-v2\\plan.md",
+      "sha256": "162728cfabdb9ae295d25bfb7805d89806175a53731041ab4b81d9ffb1ffc13d"
+    },
+    "tasks.md": {
+      "path": ".spectro\\features\\csharp-performance-analyzer-v2\\tasks.md",
+      "sha256": "bf75fb1db9545274baea0872112de992a9986600994170c9431489738b7bdf08"
+    },
+    "gates.json": {
+      "path": ".spectro\\features\\csharp-performance-analyzer-v2\\gates.json",
+      "sha256": "596a4a38519508afe7c13f7f497e65a56e9ceb2f1966049c0dee94a9637d94dc"
+    },
+    "state.json": {
+      "path": ".spectro\\features\\csharp-performance-analyzer-v2\\state.json",
+      "sha256": "029179ecf4d5b636684bade70a5f1d985298db04b89a4fac36ebe7418024f478"
+    }
+  }
+}

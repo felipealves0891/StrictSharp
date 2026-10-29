@@ -45,4 +45,21 @@ public sealed class Perf012AnalyzerTests
 
         Assert.Empty(diagnostics);
     }
+
+    [Fact]
+    public async Task DoesNotReportToArrayOnNonEnumerableType()
+    {
+        const string source = """
+            class Custom
+            {
+                public int[] ToArray() => [];
+            }
+            class Sample
+            {
+                void Run(Custom value) => value.ToArray();
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf012Analyzer()));
+    }
 }
