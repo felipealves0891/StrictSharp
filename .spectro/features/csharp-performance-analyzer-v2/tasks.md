@@ -12,7 +12,7 @@
 | `TASK-007` | Implementar `PERF028` e `PERF029`, cobrindo descarte observável de `IDisposable`/`IAsyncDisposable` e exceções usadas para fluxo esperado, sem alegar prova completa de fluxo dinâmico. | `FR-013`, `FR-014`, `NFR-001`, `NFR-004`, `CON-004` | `AC-013`, `AC-014`, `AC-015`, `AC-018` | `TASK-001` | completed |
 | `TASK-008` | Adicionar matriz V2, testes de catálogo, severidade/supressão e regressão V1/V3, verificando exatamente os 13 analyzers e a compatibilidade C# 14. | `FR-001`, `FR-016`, `FR-017`, `NFR-005`, `CON-001`, `CON-003` | `AC-001`, `AC-016`, `AC-017`, `AC-018` | `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007` | completed |
 | `TASK-009` | Atualizar documentação e rastreabilidade do catálogo para marcar V2 implementada, manter V3 catalogada e documentar evidência, exceções, confiança e ausência de limiares arbitrários. | `FR-015`, `FR-017`, `NFR-006`, `CON-002`, `CON-004`, `CON-005` | `AC-015`, `AC-017`, `AC-019` | `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007` | completed |
-| `TASK-010` | Executar build, testes, cobertura e segurança configurados; revisar diff, rastreabilidade, ausência de dependências novas e regressão das regras V1 antes de solicitar aprovação de conclusão. | `NFR-001`–`NFR-007`, `CON-005`, `CON-006` | `AC-018`, `AC-019` | `TASK-008`, `TASK-009` | pending |
+| `TASK-010` | Executar build, testes, cobertura e segurança configurados; revisar diff, rastreabilidade, ausência de dependências novas e regressão das regras V1 antes de solicitar aprovação de conclusão. | `NFR-001`–`NFR-007`, `CON-005`, `CON-006` | `AC-018`, `AC-019` | `TASK-008`, `TASK-009` | completed |
 
 ## Detalhamento das tarefas
 
@@ -106,9 +106,9 @@ Requisitos: `NFR-001`, `NFR-002`, `NFR-003`, `NFR-004`, `NFR-005`, `NFR-006`, `N
 
 ## Progresso
 
-- Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-008`, `TASK-009`.
+- Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-008`, `TASK-009`, `TASK-010`.
 - Bloqueadas: nenhuma.
-- Próxima tarefa: `TASK-010` (pendente: ajustes funcionais do reviewer implementados; 152 testes passam. A cobertura/gate oficial ainda precisa ser renovada).
+- Próxima tarefa: nenhuma; implementação e gates concluídos. 152 testes passam e a cobertura oficial atende aos mínimos configurados.
 
 ## TASK-REV-002 - Remediate FINDING-002
 
@@ -134,7 +134,7 @@ Requisitos: `NFR-001`, `NFR-002`, `NFR-003`, `NFR-004`, `NFR-005`, `NFR-006`, `N
 
 ## TASK-REV-001 - Remediate FINDING-001
 
-- **Status:** pending
+- **Status:** completed
 - **Finding:** FINDING-001
 - **Severity:** High
 - **Return stage:** gates
