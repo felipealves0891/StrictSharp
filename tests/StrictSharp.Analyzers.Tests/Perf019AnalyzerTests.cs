@@ -41,4 +41,21 @@ public sealed class Perf019AnalyzerTests
 
         Assert.Empty(diagnostics);
     }
+
+    [Fact]
+    public async Task DoesNotReportUnknownStringCopyShape()
+    {
+        const string source = """
+            class Sample
+            {
+                void Run()
+                {
+                    Unknown value = null;
+                    value.Substring(1);
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf019Analyzer()));
+    }
 }

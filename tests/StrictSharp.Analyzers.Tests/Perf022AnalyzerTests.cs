@@ -48,4 +48,23 @@ public sealed class Perf022AnalyzerTests
 
         Assert.Empty(diagnostics);
     }
+
+    [Fact]
+    public async Task DoesNotReportContainsKeyWithoutDuplicateAccess()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                bool Read(Dictionary<string, int> values, string key)
+                {
+                    if (values.ContainsKey(key))
+                        return true;
+                    return false;
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf022Analyzer()));
+    }
 }

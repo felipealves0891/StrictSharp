@@ -44,8 +44,15 @@ public static class RuleCatalog
         s_all[17], s_all[18], s_all[19], s_all[21], s_all[24], s_all[25], s_all[26]
     ];
 
+    private static readonly RuleDefinition[] s_v2 =
+    [
+        s_all[1], s_all[3], s_all[4], s_all[5], s_all[8], s_all[9], s_all[15],
+        s_all[16], s_all[20], s_all[22], s_all[23], s_all[27], s_all[28]
+    ];
+
     public static IReadOnlyList<RuleDefinition> All => s_all;
     public static IReadOnlyList<RuleDefinition> V1 => s_v1;
+    public static IReadOnlyList<RuleDefinition> V2 => s_v2;
 
     public static RuleDefinition Get(string id)
     {

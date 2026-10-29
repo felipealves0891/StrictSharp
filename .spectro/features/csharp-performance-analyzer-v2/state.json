@@ -1,0 +1,36 @@
+{
+  "schema_version": "1.0",
+  "feature_id": "csharp-performance-analyzer-v2",
+  "current_phase": "review",
+  "status": "completed",
+  "phases": {
+    "gates": {
+      "status": "completed",
+      "execution_id": "gate-20261029T112637Z",
+      "report": ".spectro/features/csharp-performance-analyzer-v2/gates.json"
+    }
+  },
+  "attempts": {
+    "environment-failure:GATE-004": 1,
+    "test-defect:GATE-004": 2
+  },
+  "invalidated_executions": [
+    "gate-20261029T003041Z",
+    "gate-20261029T003215Z",
+    "gate-20261029T004729Z"
+  ],
+  "last_failure": {
+    "category": "test-defect",
+    "stage": "implement",
+    "execution_id": "gate-20261029T004729Z",
+    "gate_ids": [
+      "GATE-004"
+    ],
+    "diagnostics": [
+      "coverage: Executando: dotnet test . --collect:XPlat Code Coverage\r\n  Determinando os projetos a serem restaurados...\r\n  Todos os projetos estão atualizados para restauração.\r\n  StrictSharp.Analyzers -> D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\src\\StrictSharp.Analyzers\\bin\\Debug\\netstandard2.1\\StrictSharp.Analyzers.dll\r\n  StrictSharp.Analyzers.Tests -> D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\tests\\StrictSharp.Analyzers.Tests\\bin\\Debug\\net10.0\\StrictSharp.Analyzers.Tests.dll\r\nExecução de teste para D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\tests\\StrictSharp.Analyzers.Tests\\bin\\Debug\\net10.0\\StrictSharp.Analyzers.Tests.dll (.NETCoreApp,Version=v10.0)\r\n1 arquivos de teste no total corresponderam ao padrão especificado.\r\n\r\nAprovado!  – Com falha:     0, Aprovado:   114, Ignorado:     0, Total:   114, Duração: 3 s - StrictSharp.Analyzers.Tests.dll (net10.0)\r\n\r\nAnexos:\r\n  C:\\Users\\cfalv\\AppData\\Local\\Temp\\coverage-gate-e8b8ce0b8dc54a0795fa52f12e8e8dbe\\21602750-d382-4ec7-8aa9-bef38b751627\\coverage.cobertura.xml\r\nRelat�rios: 1 | Linhas C# modificadas no Git: 4244 | Linhas instrumentadas modificadas: 1002\r\n\n=========== QUALITY GATE ===========\r\nLine Coverage            97,11% (min 80,00%) [PASS]\r\nBranch Coverage          80,76% (min 70,00%) [PASS]\r\nNew Line Coverage        97,11% (min 90,00%) [PASS]\r\nNew Branch Coverage      80,76% (min 85,00%) [FAIL]\r\nRESULTADO: false"
+    ],
+    "detected_at": "2026-10-29T00:48:05.171Z"
+  },
+  "last_execution_id": "gate-20261029T112637Z",
+  "updated_at": "2026-10-29T11:27:09.715Z"
+}

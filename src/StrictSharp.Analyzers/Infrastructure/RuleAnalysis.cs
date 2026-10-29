@@ -28,6 +28,11 @@ public static class RuleAnalysis
         context.ReportDiagnostic(CreateDiagnostic(rule, location));
     }
 
+    public static void Report(RuleDefinition rule, OperationAnalysisContext context, Location location)
+    {
+        context.ReportDiagnostic(CreateDiagnostic(rule, location));
+    }
+
     public static bool IsTaskLike(ITypeSymbol? type)
     {
         return type is INamedTypeSymbol named
@@ -47,6 +52,20 @@ public static class RuleAnalysis
         return method.Name == "Run"
             && method.ContainingType is not null
             && method.ContainingType.ToDisplayString() == "System.Threading.Tasks.Task";
+    }
+
+    public static bool IsTaskWhenAll(IMethodSymbol method)
+    {
+        return method.Name == "WhenAll"
+            && method.ContainingType?.ToDisplayString() == "System.Threading.Tasks.Task";
+    }
+
+    public static bool IsBlockingOperation(IMethodSymbol method)
+    {
+        if (method.Name is "Sleep" or "Wait" or "WaitOne" or "Join")
+            return true;
+
+        return IsSynchronousIo(method);
     }
 
     public static bool IsAwaiter(ITypeSymbol? type)
@@ -134,6 +153,92 @@ public static class RuleAnalysis
             or ForEachVariableStatementSyntax
             or WhileStatementSyntax
             or DoStatementSyntax);
+    }
+
+    public static bool IsSourceMutatedInContainingLoop(ExpressionSyntax source, SyntaxNode node, SemanticModel model)
+    {
+        return IsSourceMutatedInContainingLoop(source, node, model, includeCurrentOperation: true);
+    }
+
+    public static bool IsStableSourceInContainingLoop(ExpressionSyntax source, SyntaxNode node, SemanticModel model)
+    {
+        var rootSource = GetSourceRoot(source);
+        if (rootSource is null
+            || model.GetSymbolInfo(rootSource).Symbol is not (IParameterSymbol or ILocalSymbol))
+            return false;
+
+        return !IsSourceMutatedInContainingLoop(rootSource, node, model, includeCurrentOperation: false);
+    }
+
+    private static bool IsSourceMutatedInContainingLoop(
+        ExpressionSyntax source,
+        SyntaxNode node,
+        SemanticModel model,
+        bool includeCurrentOperation)
+    {
+        if (model.GetSymbolInfo(source).Symbol is not { } sourceSymbol)
+            return false;
+
+        var loop = node.Ancestors().FirstOrDefault(ancestor => ancestor is ForStatementSyntax
+            or ForEachStatementSyntax or ForEachVariableStatementSyntax or WhileStatementSyntax or DoStatementSyntax);
+        if (loop is null)
+            return false;
+
+        foreach (var identifier in loop.DescendantNodes().OfType<IdentifierNameSyntax>())
+        {
+            if (!SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(identifier).Symbol, sourceSymbol))
+                continue;
+            if (identifier.Parent is AssignmentExpressionSyntax assignment && assignment.Left.Span.Contains(identifier.Span))
+                return true;
+            if (identifier.Parent is PrefixUnaryExpressionSyntax or PostfixUnaryExpressionSyntax)
+                return true;
+            if (identifier.Parent is ArgumentSyntax argument
+                && argument.RefKindKeyword.Kind() is SyntaxKind.RefKeyword or SyntaxKind.OutKeyword)
+                return true;
+        }
+
+        foreach (var invocation in loop.DescendantNodes().OfType<InvocationExpressionSyntax>())
+        {
+            if (!includeCurrentOperation && invocation == node)
+                continue;
+
+            if (invocation.Expression is not MemberAccessExpressionSyntax member
+                || member.Expression is not IdentifierNameSyntax receiver
+                || !SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(receiver).Symbol, sourceSymbol))
+                continue;
+            if (member.Name.Identifier.ValueText is "Add" or "AddRange" or "Clear" or "Insert" or "InsertRange"
+                or "Remove" or "RemoveAt" or "RemoveAll" or "Reverse" or "Sort")
+                return true;
+        }
+        return false;
+    }
+
+    public static bool HasObservableInvocation(LambdaExpressionSyntax lambda)
+    {
+        return lambda.DescendantNodes().OfType<InvocationExpressionSyntax>().Any();
+    }
+
+    private static IdentifierNameSyntax? GetSourceRoot(ExpressionSyntax source)
+    {
+        while (true)
+        {
+            switch (source)
+            {
+                case IdentifierNameSyntax identifier:
+                    return identifier;
+                case MemberAccessExpressionSyntax member:
+                    source = member.Expression;
+                    continue;
+                case InvocationExpressionSyntax invocation when invocation.Expression is MemberAccessExpressionSyntax member:
+                    source = member.Expression;
+                    continue;
+                case ParenthesizedExpressionSyntax parenthesized:
+                    source = parenthesized.Expression;
+                    continue;
+                default:
+                    return null;
+            }
+        }
     }
 
     public static bool IsString(ITypeSymbol? type)

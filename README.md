@@ -19,7 +19,7 @@ O catálogo contém 30 diagnósticos, organizados em três fases:
 | Fase | Quantidade | Situação |
 | --- | ---: | --- |
 | V1 | 15 | Implementados e registrados em `V1AnalyzerCatalog` |
-| V2 | 13 | Catalogados; implementação futura |
+| V2 | 13 | Implementados e registrados em `V2AnalyzerCatalog` |
 | V3 | 2 | Catalogados; análise mais profunda de ciclo de vida |
 
 Os diagnósticos V1 usam C# 14 e são compilados como um analisador Roslyn para `netstandard2.1`. Cada ocorrência possui severidade, categoria, impacto, escalabilidade, correção sugerida, exceções e referência documental.
@@ -76,7 +76,7 @@ dotnet_diagnostic.PERF027.severity = suggestion
 
 As regras V1 não aplicam Code Fix automático. Algumas correções dependem de mutabilidade, igualdade, propriedade dos dados, ciclo de vida ou thread safety.
 
-### V2 — catalogados, ainda não implementados
+### V2 — implementados
 
 | ID | Diagnóstico | O que pretende detectar |
 | --- | --- | --- |
