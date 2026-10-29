@@ -450,7 +450,87 @@ public sealed class V2BranchCoverageTests
             }
             """;
 
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf016Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf016ReportsListSortWhenSourceIsStable()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                void Run(List<int> values, int[] batches)
+                {
+                    foreach (var batch in batches)
+                        values.Sort();
+                }
+            }
+            """;
+
         Assert.Single(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf016Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf016StaysSilentWhenListSortSourceIsMutatedInLoop()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                void Run(List<int> values, int[] batches)
+                {
+                    foreach (var batch in batches)
+                    {
+                        values.Add(batch);
+                        values.Sort();
+                    }
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf016Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf017IgnoresUnknownSource()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            using System.Linq;
+            class Sample
+            {
+                IEnumerable<int> GetValues() => [];
+                int Run(int[] batches)
+                {
+                    foreach (var batch in batches)
+                        return GetValues().Where(value => value > 0).Count();
+                    return 0;
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf017Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf017IgnoresPotentiallyMutablePropertySource()
+    {
+        const string source = """
+            using System.Linq;
+            class Sample
+            {
+                int[] Values => [];
+                int Run(int[] batches)
+                {
+                    foreach (var batch in batches)
+                        return Values.Where(value => value > 0).Count();
+                    return 0;
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf017Analyzer()));
     }
 
     [Fact]

@@ -157,6 +157,25 @@ public static class RuleAnalysis
 
     public static bool IsSourceMutatedInContainingLoop(ExpressionSyntax source, SyntaxNode node, SemanticModel model)
     {
+        return IsSourceMutatedInContainingLoop(source, node, model, includeCurrentOperation: true);
+    }
+
+    public static bool IsStableSourceInContainingLoop(ExpressionSyntax source, SyntaxNode node, SemanticModel model)
+    {
+        var rootSource = GetSourceRoot(source);
+        if (rootSource is null
+            || model.GetSymbolInfo(rootSource).Symbol is not (IParameterSymbol or ILocalSymbol))
+            return false;
+
+        return !IsSourceMutatedInContainingLoop(rootSource, node, model, includeCurrentOperation: false);
+    }
+
+    private static bool IsSourceMutatedInContainingLoop(
+        ExpressionSyntax source,
+        SyntaxNode node,
+        SemanticModel model,
+        bool includeCurrentOperation)
+    {
         if (model.GetSymbolInfo(source).Symbol is not { } sourceSymbol)
             return false;
 
@@ -180,6 +199,9 @@ public static class RuleAnalysis
 
         foreach (var invocation in loop.DescendantNodes().OfType<InvocationExpressionSyntax>())
         {
+            if (!includeCurrentOperation && invocation == node)
+                continue;
+
             if (invocation.Expression is not MemberAccessExpressionSyntax member
                 || member.Expression is not IdentifierNameSyntax receiver
                 || !SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(receiver).Symbol, sourceSymbol))
@@ -194,6 +216,29 @@ public static class RuleAnalysis
     public static bool HasObservableInvocation(LambdaExpressionSyntax lambda)
     {
         return lambda.DescendantNodes().OfType<InvocationExpressionSyntax>().Any();
+    }
+
+    private static IdentifierNameSyntax? GetSourceRoot(ExpressionSyntax source)
+    {
+        while (true)
+        {
+            switch (source)
+            {
+                case IdentifierNameSyntax identifier:
+                    return identifier;
+                case MemberAccessExpressionSyntax member:
+                    source = member.Expression;
+                    continue;
+                case InvocationExpressionSyntax invocation when invocation.Expression is MemberAccessExpressionSyntax member:
+                    source = member.Expression;
+                    continue;
+                case ParenthesizedExpressionSyntax parenthesized:
+                    source = parenthesized.Expression;
+                    continue;
+                default:
+                    return null;
+            }
+        }
     }
 
     public static bool IsString(ITypeSymbol? type)

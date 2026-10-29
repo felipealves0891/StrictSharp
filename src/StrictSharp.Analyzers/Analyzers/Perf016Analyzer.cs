@@ -17,12 +17,26 @@ public sealed class Perf016Analyzer : RuleAnalyzerBase
             if (context.Node is not InvocationExpressionSyntax invocation
                 || !RuleAnalysis.IsInsideLoop(invocation)
                 || invocation.Expression is not MemberAccessExpressionSyntax member
-                || member.Name.Identifier.Text is not ("OrderBy" or "OrderByDescending" or "ThenBy" or "ThenByDescending"))
-                return;
-            if (RuleAnalysis.IsSourceMutatedInContainingLoop(member.Expression, invocation, context.SemanticModel))
+                || !IsSupportedOrdering(invocation, member, context.SemanticModel)
+                || !RuleAnalysis.IsStableSourceInContainingLoop(member.Expression, invocation, context.SemanticModel))
                 return;
 
             RuleAnalysis.Report(RuleCatalog.Get("PERF016"), context, invocation.GetLocation());
         }, Microsoft.CodeAnalysis.CSharp.SyntaxKind.InvocationExpression);
+    }
+
+    private static bool IsSupportedOrdering(
+        InvocationExpressionSyntax invocation,
+        MemberAccessExpressionSyntax member,
+        SemanticModel model)
+    {
+        if (member.Name.Identifier.Text is "OrderBy" or "OrderByDescending" or "ThenBy" or "ThenByDescending")
+            return true;
+
+        return member.Name.Identifier.Text == "Sort"
+            && model.GetSymbolInfo(invocation).Symbol is IMethodSymbol method
+            && method.ContainingType is INamedTypeSymbol containingType
+            && containingType.Name == "List"
+            && containingType.ContainingNamespace.ToDisplayString() == "System.Collections.Generic";
     }
 }

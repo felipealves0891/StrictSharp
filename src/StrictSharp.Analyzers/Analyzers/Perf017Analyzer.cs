@@ -24,7 +24,7 @@ public sealed class Perf017Analyzer : RuleAnalyzerBase
                 return;
 
             if (member.Expression is not ExpressionSyntax source
-                || RuleAnalysis.IsSourceMutatedInContainingLoop(source, invocation, context.SemanticModel))
+                || !RuleAnalysis.IsStableSourceInContainingLoop(source, invocation, context.SemanticModel))
                 return;
 
             var iterationSymbols = invocation.Ancestors()

@@ -108,4 +108,38 @@ Requisitos: `NFR-001`, `NFR-002`, `NFR-003`, `NFR-004`, `NFR-005`, `NFR-006`, `N
 
 - Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-008`, `TASK-009`.
 - Bloqueadas: nenhuma.
-- Próxima tarefa: `TASK-010` (pendente: foram adicionados casos de branch e exceções do reviewer; 148 testes passam. A cobertura local atende aos mínimos, aguardando nova evidência do gate oficial).
+- Próxima tarefa: `TASK-010` (pendente: ajustes funcionais do reviewer implementados; 152 testes passam. A cobertura/gate oficial ainda precisa ser renovada).
+
+## TASK-REV-002 - Remediate FINDING-002
+
+- **Status:** completed
+- **Finding:** FINDING-002
+- **Severity:** High
+- **Return stage:** implement
+- **Description:** Omitir PERF016/017 quando a fonte não tiver símbolo e invariância semanticamente demonstráveis; adicionar testes negativos.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
+## TASK-REV-003 - Remediate FINDING-003
+
+- **Status:** completed
+- **Finding:** FINDING-003
+- **Severity:** Medium
+- **Return stage:** implement
+- **Description:** Adicionar reconhecimento seguro de List.Sort em PERF016 e testes positivos/negativos.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
+## TASK-REV-001 - Remediate FINDING-001
+
+- **Status:** pending
+- **Finding:** FINDING-001
+- **Severity:** High
+- **Return stage:** gates
+- **Description:** Executar novamente os gates sobre a revisão atual e atualizar a evidência de cobertura e segurança.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
