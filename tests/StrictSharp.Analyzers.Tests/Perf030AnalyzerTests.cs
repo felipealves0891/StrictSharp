@@ -41,7 +41,12 @@ public sealed class Perf030AnalyzerTests
         const string source = """
             class Expensive
             {
-                public Expensive(string value) { }
+                private readonly string _normalized;
+
+                public Expensive(string value)
+                {
+                    _normalized = value.ToUpperInvariant();
+                }
             }
 
             class Sample
@@ -109,7 +114,12 @@ public sealed class Perf030AnalyzerTests
         const string source = """
             class Expensive
             {
-                public Expensive(string value) { }
+                private readonly string _normalized;
+
+                public Expensive(string value)
+                {
+                    _normalized = value.ToUpperInvariant();
+                }
             }
 
             class Sample
@@ -142,7 +152,7 @@ public sealed class Perf030AnalyzerTests
                 void Run(string[] values)
                 {
                     foreach (var value in values)
-                        _ = new Descriptor { Name = "fixed" };
+                        _ = new Descriptor { Name = "fixed".ToUpperInvariant() };
                 }
             }
             """;
@@ -151,6 +161,50 @@ public sealed class Perf030AnalyzerTests
 
         Assert.Single(diagnostics);
         Assert.Equal("PERF030", diagnostics[0].Id);
+    }
+
+    [Fact]
+    public async Task Perf030StaysSilentForSimpleParameterizedConstruction()
+    {
+        const string source = """
+            class Simple
+            {
+                public Simple(string value) { }
+            }
+
+            class Sample
+            {
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        _ = new Simple("fixed");
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf030StaysSilentForTrivialObjectInitializerInLoop()
+    {
+        const string source = """
+            class Descriptor
+            {
+                public string Name { get; init; }
+            }
+
+            class Sample
+            {
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        _ = new Descriptor { Name = "fixed" };
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer()));
     }
 
     [Fact]

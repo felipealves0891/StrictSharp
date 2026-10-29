@@ -22,12 +22,26 @@ public sealed class Perf011Analyzer : RuleAnalyzerBase
 
             if (member.Expression is not IdentifierNameSyntax receiver
                 || context.SemanticModel.GetSymbolInfo(receiver).Symbol is not IFieldSymbol field
+                || !IsRetainingOperation(member, field, context.SemanticModel)
                 || !RuleAnalysis.IsInsideLoop(invocation)
                 || HasReleaseOperation(invocation, field, context.SemanticModel))
                 return;
 
             RuleAnalysis.Report(RuleCatalog.Get("PERF011"), context, receiver.GetLocation());
         }, Microsoft.CodeAnalysis.CSharp.SyntaxKind.InvocationExpression);
+    }
+
+    private static bool IsRetainingOperation(
+        MemberAccessExpressionSyntax member,
+        IFieldSymbol field,
+        SemanticModel model)
+    {
+        var receiverType = field.Type;
+        if (member.Name.Identifier.ValueText is "Add" or "AddRange")
+            return RuleAnalysis.IsRetainingCollection(receiverType);
+
+        return member.Name.Identifier.ValueText == "Subscribe"
+            && RuleAnalysis.IsObservableSource(receiverType);
     }
 
     private static bool HasReleaseOperation(

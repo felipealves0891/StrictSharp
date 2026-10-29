@@ -88,6 +88,54 @@ public sealed class Perf011AnalyzerTests
     }
 
     [Fact]
+    public async Task Perf011StaysSilentForArbitraryFieldAddMethod()
+    {
+        const string source = """
+            class Sink
+            {
+                public void Add(string value) { }
+            }
+
+            class Sample
+            {
+                private readonly Sink _sink = new();
+
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        _sink.Add(value);
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf011StaysSilentForArbitraryFieldSubscribeMethod()
+    {
+        const string source = """
+            class SubscriptionManager
+            {
+                public void Subscribe(string value) { }
+            }
+
+            class Sample
+            {
+                private readonly SubscriptionManager _manager = new();
+
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        _manager.Subscribe(value);
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
     public async Task Perf011StaysSilentWhenFieldCollectionIsUpdatedOutsideLoop()
     {
         const string source = """

@@ -105,3 +105,31 @@ Não há dependências cíclicas. As tarefas 002 e 003 dependem da fundação e 
 
 - Estado do plano: `ready_for_implementation`.
 - Aprovação adicional necessária: aprovação humana para iniciar a implementação, conforme `require_human_approval_for_scope_changes` e os estágios configurados pelo projeto.
+
+## Plano de remediação da revisão
+
+### Escopo recebido
+
+- A revisão `review-20261029T121815Z` decidiu `changes_requested` e não alterou a especificação nem as clarificações aprovadas.
+- `FINDING-001` exige tornar a rastreabilidade consumível pelo validador, incluindo seções detalhadas para as tarefas principais e validações explícitas para todos os critérios de aceite.
+- `FINDING-002` exige restringir `PERF011` a tipos e padrões retentores reconhecidos semanticamente; nomes genéricos de métodos (`Add`, `AddRange`, `Subscribe`) não são evidência suficiente.
+- `FINDING-003` exige que `PERF030` tenha evidência observável de inicialização complexa ou invariância relevante; construtor parametrizado ou inicializador não vazio, isoladamente, não basta.
+- `FINDING-004` exige benchmarks comparativos representativos para as duas regras, preservados como evidência de cenário e sem criar limiar de runtime para o analyzer.
+
+### Ordem e dependências de remediação
+
+1. `TASK-REV-001` — documentar a rastreabilidade detalhada e as validações; bloqueia o retorno à implementação até que o plano seja verificável.
+2. `TASK-REV-002` e `TASK-REV-003` — corrigir `PERF011` e `PERF030`, respectivamente, após `TASK-REV-001`; podem ser executadas em paralelo.
+3. `TASK-REV-004` — executar benchmarks após as correções dos analyzers e seus testes; depende de `TASK-REV-002` e `TASK-REV-003`.
+4. Reexecutar os gates configurados e repetir a revisão independente após `TASK-REV-004`; essa etapa não altera a especificação e deve preservar as evidências anteriores.
+
+### Contratos de remediação
+
+- `PERF011` só pode reportar quando o receptor resolve para uma estrutura retentora reconhecida e houver evidência estrutural de retenção potencial; APIs desconhecidas, métodos homônimos e contratos não demonstráveis devem ser omitidos.
+- `PERF030` deve exigir combinação conservadora de repetição, invariância observável e sinal estrutural de inicialização não trivial. Construtores simples, inicializadores triviais, estado variável, isolamento por operação e tipos sem thread safety demonstrável devem permanecer silenciosos.
+- Benchmarks devem comparar cenário de repetição contra cenário limitado/reutilizado, medir memória viva para `PERF011` e alocações/CPU para `PERF030`, registrar ambiente/carga/comando e declarar que os resultados não configuram a heurística estática.
+- Nenhuma remediação inclui Code Fix, dependência nova, profiling no analyzer, telemetria, chamada externa ou mudança de IDs, severidades, fase e contrato V1/V2.
+
+### Critério de saída
+
+O plano estará pronto para implementação quando `TASK-REV-001` tiver todas as relações requisito-tarefa e critério-validação detectáveis, e as tarefas de implementação puderem demonstrar `AC-002`, `AC-004` e `AC-010` com testes/evidências correspondentes. A conclusão da remediação requer novo build, testes, segurança, cobertura, benchmarks preservados e revisão sem os achados High.

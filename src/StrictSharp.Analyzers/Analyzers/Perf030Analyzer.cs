@@ -79,7 +79,10 @@ public sealed class Perf030Analyzer : RuleAnalyzerBase
         SemanticModel model)
     {
         if (creation.Initializer is not null)
-            return creation.Initializer.Expressions.Count > 0;
+            return creation.Initializer.Expressions.Any(expression =>
+                expression.DescendantNodesAndSelf().Any(node => node is InvocationExpressionSyntax
+                    or ObjectCreationExpressionSyntax
+                    or ConditionalExpressionSyntax));
 
         if (model.GetSymbolInfo(creation).Symbol is not IMethodSymbol constructor)
             return false;
@@ -95,6 +98,6 @@ public sealed class Perf030Analyzer : RuleAnalyzerBase
                 return true;
         }
 
-        return constructor.Parameters.Length > 0;
+        return false;
     }
 }

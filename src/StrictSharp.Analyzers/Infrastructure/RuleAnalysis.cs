@@ -274,6 +274,31 @@ public static class RuleAnalysis
             && named.Name is "Dictionary" or "IDictionary" or "IReadOnlyDictionary";
     }
 
+    public static bool IsRetainingCollection(ITypeSymbol? type)
+    {
+        if (type is not INamedTypeSymbol named)
+            return false;
+
+        if (named.ContainingNamespace.ToDisplayString() == "System.Collections.Generic"
+            && named.Name is "List" or "HashSet" or "LinkedList" or "Queue" or "Stack"
+            or "Dictionary" or "SortedDictionary" or "SortedSet")
+            return true;
+
+        return named.AllInterfaces.Any(interfaceType =>
+            interfaceType.ContainingNamespace.ToDisplayString() == "System.Collections.Generic"
+            && interfaceType.Name is "ICollection" or "IDictionary" or "ISet");
+    }
+
+    public static bool IsObservableSource(ITypeSymbol? type)
+    {
+        return type is INamedTypeSymbol named
+            && ((named.Name == "IObservable"
+                    && named.ContainingNamespace.ToDisplayString() == "System")
+                || named.AllInterfaces.Any(interfaceType =>
+                    interfaceType.Name == "IObservable"
+                    && interfaceType.ContainingNamespace.ToDisplayString() == "System"));
+    }
+
     public static bool HasEfficientCount(ITypeSymbol? type)
     {
         if (type is IArrayTypeSymbol || IsString(type))
