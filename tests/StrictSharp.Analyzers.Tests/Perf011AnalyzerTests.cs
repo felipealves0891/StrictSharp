@@ -69,4 +69,40 @@ public sealed class Perf011AnalyzerTests
 
         Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
     }
+
+    [Fact]
+    public async Task Perf011StaysSilentForNonRetainingInvocation()
+    {
+        const string source = """
+            class Sample
+            {
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        value.ToString();
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf011StaysSilentWhenFieldCollectionIsUpdatedOutsideLoop()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                private readonly List<string> _values = new();
+
+                void Run(string value)
+                {
+                    _values.Add(value);
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
 }

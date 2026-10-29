@@ -102,4 +102,73 @@ public sealed class Perf030AnalyzerTests
 
         Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer()));
     }
+
+    [Fact]
+    public async Task Perf030ReportsInvariantConstructionInForLoop()
+    {
+        const string source = """
+            class Expensive
+            {
+                public Expensive(string value) { }
+            }
+
+            class Sample
+            {
+                void Run(int count)
+                {
+                    for (var index = 0; index < count; index++)
+                        _ = new Expensive("fixed");
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer());
+
+        Assert.Single(diagnostics);
+        Assert.Equal("PERF030", diagnostics[0].Id);
+    }
+
+    [Fact]
+    public async Task Perf030ReportsInvariantObjectInitializerInLoop()
+    {
+        const string source = """
+            class Descriptor
+            {
+                public string Name { get; init; }
+            }
+
+            class Sample
+            {
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        _ = new Descriptor { Name = "fixed" };
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer());
+
+        Assert.Single(diagnostics);
+        Assert.Equal("PERF030", diagnostics[0].Id);
+    }
+
+    [Fact]
+    public async Task Perf030StaysSilentForSimpleParameterlessConstruction()
+    {
+        const string source = """
+            class Simple { }
+
+            class Sample
+            {
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        _ = new Simple();
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer()));
+    }
 }
