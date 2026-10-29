@@ -1,33 +1,37 @@
 {
   "schema_version": "1.0",
   "feature_id": "csharp-performance-analyzer-v3",
-  "current_phase": "review",
-  "status": "completed",
+  "current_phase": "gates",
+  "status": "waiting_input",
   "phases": {
     "gates": {
-      "status": "completed",
-      "execution_id": "gate-20261029T121528Z",
+      "status": "failed",
+      "execution_id": "gate-20261029T123050Z",
       "report": ".spectro/features/csharp-performance-analyzer-v3/gates.json"
     }
   },
   "attempts": {
-    "environment-failure:GATE-004": 1
+    "environment-failure:GATE-004": 2,
+    "implementation-defect:GATE-004": 1
   },
   "invalidated_executions": [
-    "gate-20261029T121307Z"
+    "gate-20261029T121307Z",
+    "gate-20261029T122940Z",
+    "gate-20261029T123050Z"
   ],
   "last_failure": {
     "category": "environment-failure",
     "stage": "gates",
-    "execution_id": "gate-20261029T121307Z",
+    "execution_id": "gate-20261029T123050Z",
     "gate_ids": [
       "GATE-004"
     ],
     "diagnostics": [
       "coverage: ERRO: Working tree possui altera��es tracked n�o commitadas. Commit antes de medir ou use -AllowDirtyTree (n�o recomendado).\r\nRESULTADO: false"
     ],
-    "detected_at": "2026-10-29T12:13:51.338Z"
+    "detected_at": "2026-10-29T12:31:08.867Z"
   },
-  "last_execution_id": "gate-20261029T121528Z",
-  "updated_at": "2026-10-29T12:15:58.661Z"
+  "last_execution_id": "gate-20261029T123050Z",
+  "updated_at": "2026-10-29T12:31:08.868Z",
+  "invalidation_reason": "Recovery invalidated evidence for gate-20261029T123050Z."
 }

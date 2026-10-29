@@ -29,6 +29,75 @@ public sealed class Perf011AnalyzerTests
     }
 
     [Fact]
+    public async Task Perf011ReportsFieldCollectionRetainedByRepeatedAddRange()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                private readonly List<string> _values = new();
+
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        _values.AddRange(values);
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer());
+
+        Assert.Single(diagnostics);
+        Assert.Equal("PERF011", diagnostics[0].Id);
+    }
+
+    [Fact]
+    public async Task Perf011ReportsFieldObservableRetainedBySubscribe()
+    {
+        const string source = """
+            using System;
+            class Sample
+            {
+                private readonly IObservable<string> _source = null!;
+
+                void Run(string[] values, IObserver<string> observer)
+                {
+                    foreach (var value in values)
+                        _source.Subscribe(observer);
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer());
+
+        Assert.Single(diagnostics);
+        Assert.Equal("PERF011", diagnostics[0].Id);
+    }
+
+    [Fact]
+    public async Task Perf011ReportsInterfaceCollectionRetainedByAdd()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                private readonly ICollection<string> _values = new List<string>();
+
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        _values.Add(value);
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer());
+
+        Assert.Single(diagnostics);
+        Assert.Equal("PERF011", diagnostics[0].Id);
+    }
+
+    [Fact]
     public async Task Perf011StaysSilentForLocalCollection()
     {
         const string source = """

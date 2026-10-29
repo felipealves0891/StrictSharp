@@ -281,7 +281,8 @@ public static class RuleAnalysis
 
         if (named.ContainingNamespace.ToDisplayString() == "System.Collections.Generic"
             && named.Name is "List" or "HashSet" or "LinkedList" or "Queue" or "Stack"
-            or "Dictionary" or "SortedDictionary" or "SortedSet")
+            or "Dictionary" or "SortedDictionary" or "SortedSet"
+            or "ICollection" or "IDictionary" or "ISet")
             return true;
 
         return named.AllInterfaces.Any(interfaceType =>
