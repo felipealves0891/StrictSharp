@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
   "feature_id": "csharp-performance-analyzer-v2",
-  "current_phase": "gates",
-  "status": "failed",
+  "current_phase": "review",
+  "status": "completed",
   "phases": {
     "gates": {
-      "status": "failed",
-      "execution_id": "gate-20261029T011214Z",
+      "status": "completed",
+      "execution_id": "gate-20261029T111803Z",
       "report": ".spectro/features/csharp-performance-analyzer-v2/gates.json"
     }
   },
@@ -31,6 +31,6 @@
     ],
     "detected_at": "2026-10-29T00:48:05.171Z"
   },
-  "last_execution_id": "gate-20261029T011214Z",
-  "updated_at": "2026-10-29T01:12:27.821Z"
+  "last_execution_id": "gate-20261029T111803Z",
+  "updated_at": "2026-10-29T11:19:03.595Z"
 }
