@@ -24,7 +24,7 @@
 ## Progresso
 
 - Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-REV-001`, `TASK-REV-002`, `TASK-REV-003`.
-- Concluídas: `TASK-008`, `TASK-009`, `TASK-010`, `TASK-011`.
+- Concluídas: `TASK-008`, `TASK-009`, `TASK-010`, `TASK-011`, `TASK-REV-005`, `TASK-REV-006`.
 - Bloqueadas: nenhuma.
 - Próxima tarefa: `TASK-REV-004` (etapa `gates`).
 
@@ -225,4 +225,26 @@
 - **Conclusão:** JSON, log, comando, revisão, ambiente, carga, limitações e conclusão de cada regra são preservados; `TASK-REV-004` só passa a `completed` após ambos os cenários; nenhum dado sensível é exposto.
 - **Validação:** revisar rastreabilidade, executar gates, confirmar `AC-003`, `AC-006`, `AC-008`, `AC-010` e `AC-011`, e repetir `spectro-review`.
 - **Risco:** artefatos não corresponderem à revisão do código; incluir hash/revisão no resultado e invalidar evidência se código ou configuração mudar.
+
+## TASK-REV-005 - Remediate FINDING-005
+
+- **Status:** completed
+- **Finding:** `FINDING-005`
+- **Severity:** Medium
+- **Return stage:** implement
+- **Description:** Adicionar medição explícita de memória viva após coleta completa para o cenário `PERF011`, preservando o BenchmarkDotNet como mecanismo de timing/alocação e registrando a diferença entre retenção e controle limitado.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Executar o benchmark `PERF011` e preservar métricas de memória viva pós-GC para ambos os cenários.
+
+## TASK-REV-006 - Remediate FINDING-006
+
+- **Status:** completed
+- **Finding:** `FINDING-006`
+- **Severity:** Medium
+- **Return stage:** implement
+- **Description:** Preservar um log textual reproduzível da execução BenchmarkDotNet com comando, versão, ambiente, parâmetros, artefatos e limitações, alinhado ao contrato de `TASK-011`.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Executar o harness e verificar a presença e o conteúdo do log textual junto aos relatórios BDN.
 

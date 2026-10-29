@@ -2,12 +2,52 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Exporters.Json;
 using BenchmarkDotNet.Running;
+using System.Text;
+
+var artifactsPath = Environment.GetEnvironmentVariable("STRICTSHARP_BENCHMARK_ARTIFACTS") ?? "BenchmarkDotNet.Artifacts";
+Directory.CreateDirectory(artifactsPath);
+var originalOutput = Console.Out;
+using var log = new StreamWriter(Path.Combine(artifactsPath, "BenchmarkDotNet-run.log"), append: false, Encoding.UTF8);
+using var tee = new TeeTextWriter(originalOutput, log);
+Console.SetOut(tee);
+Console.WriteLine($"Command: {Environment.CommandLine}");
+Console.WriteLine($"BenchmarkDotNet: {typeof(BenchmarkSwitcher).Assembly.GetName().Version}");
+Console.WriteLine($"Runtime: {Environment.Version}");
+Console.WriteLine($"OperatingSystem: {Environment.OSVersion}");
+Console.WriteLine($"StartedAtUtc: {DateTimeOffset.UtcNow:O}");
+Console.WriteLine("Limitations: synthetic workload; results are not analyzer thresholds or proof of memory leak.");
 
 var config = ManualConfig.Create(DefaultConfig.Instance)
     .AddExporter(JsonExporter.Full)
-    .WithArtifactsPath(Environment.GetEnvironmentVariable("STRICTSHARP_BENCHMARK_ARTIFACTS") ?? "BenchmarkDotNet.Artifacts");
+    .WithArtifactsPath(artifactsPath);
 
 BenchmarkSwitcher.FromAssembly(typeof(Perf011Benchmarks).Assembly).Run(args, config);
+Console.WriteLine($"FinishedAtUtc: {DateTimeOffset.UtcNow:O}");
+Console.SetOut(originalOutput);
+
+internal sealed class TeeTextWriter(TextWriter first, TextWriter second) : TextWriter
+{
+    public override Encoding Encoding => first.Encoding;
+
+    public override void Write(char value)
+    {
+        first.Write(value);
+        second.Write(value);
+    }
+
+    public override void WriteLine(string? value)
+    {
+        first.WriteLine(value);
+        second.WriteLine(value);
+        second.Flush();
+    }
+
+    public override void Flush()
+    {
+        first.Flush();
+        second.Flush();
+    }
+}
 
 [MemoryDiagnoser]
 public class Perf011Benchmarks
@@ -20,6 +60,7 @@ public class Perf011Benchmarks
 
     private List<byte[]> _retained = null!;
     private Queue<byte[]> _bounded = null!;
+    private string _currentCase = "unknown";
 
     [GlobalSetup]
     public void Setup()
@@ -31,6 +72,7 @@ public class Perf011Benchmarks
     [Benchmark(Description = "PERF011: retaining collection")]
     public int Retaining()
     {
+        _currentCase = "retaining";
         for (var index = 0; index < Iterations; index++)
             _retained.Add(CreatePayload(PayloadSize, index));
         return _retained.Count;
@@ -39,6 +81,7 @@ public class Perf011Benchmarks
     [Benchmark(Baseline = true, Description = "PERF011: bounded collection")]
     public int Bounded()
     {
+        _currentCase = "bounded";
         for (var index = 0; index < Iterations; index++)
         {
             _bounded.Enqueue(CreatePayload(PayloadSize, index));
@@ -46,6 +89,17 @@ public class Perf011Benchmarks
                 _bounded.Dequeue();
         }
         return _bounded.Count;
+    }
+
+    [IterationCleanup]
+    public void CaptureLiveMemory()
+    {
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+        var liveBytes = GC.GetTotalMemory(forceFullCollection: true);
+        var path = Path.Combine(Environment.GetEnvironmentVariable("STRICTSHARP_BENCHMARK_ARTIFACTS") ?? "BenchmarkDotNet.Artifacts", "perf011-live-memory.log");
+        File.AppendAllText(path, $"{DateTimeOffset.UtcNow:O}|{_currentCase}|{liveBytes}|{Iterations}|{PayloadSize}|{Environment.ProcessId}{Environment.NewLine}");
     }
 
     private static byte[] CreatePayload(int size, int seed)
