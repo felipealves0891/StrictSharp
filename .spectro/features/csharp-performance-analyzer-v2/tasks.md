@@ -143,3 +143,25 @@ Requisitos: `NFR-001`, `NFR-002`, `NFR-003`, `NFR-004`, `NFR-005`, `NFR-006`, `N
 - **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
 - **Expected tests:** Add or update behavior-focused coverage as required.
 
+## TASK-REV-004 - Remediate FINDING-004
+
+- **Status:** pending
+- **Finding:** FINDING-004
+- **Severity:** High
+- **Return stage:** gates
+- **Description:** Renovar os gates após a revisão final e garantir que `gates.json` registre exatamente a revisão de código atual, sem divergência entre `code_revision` e `HEAD`.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
+## TASK-REV-005 - Remediate FINDING-005
+
+- **Status:** completed
+- **Finding:** FINDING-005
+- **Severity:** Medium
+- **Return stage:** implement
+- **Description:** Atualizar o quadro de estado do README para indicar que os 13 diagnósticos V2 estão implementados, mantendo V3 como catalogada e futura.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
