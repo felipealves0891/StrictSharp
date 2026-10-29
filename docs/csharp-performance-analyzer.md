@@ -229,7 +229,7 @@ Identificar padrões de retenção potencialmente ilimitada em coleções estát
 
 **Exceção**: retenção explicitamente delimitada ou necessária durante toda a vida da aplicação.
 
-Observação: muitos vazamentos dependem do fluxo de vida real e só podem ser reportados como suspeitas.
+Observação: muitos vazamentos dependem do fluxo de vida real e só podem ser reportados como suspeitas. A primeira entrega reconhece adições repetidas a coleções mantidas em campos, dentro de loops, quando não há remoção ou limpeza observável no método. Retenção delimitada, transferência de propriedade e ciclos de vida administrados externamente ficam fora do diagnóstico.
 
 
 #### PERF012 — Cópias desnecessárias de coleções e buffers
@@ -510,6 +510,8 @@ Identificar criação repetida de recursos cuja configuração não muda, como m
 **Correção**: criar uma vez no escopo apropriado, aplicar cache limitado ou compartilhar instâncias imutáveis.
 
 **Exceção**: instância não thread-safe, estado variável ou isolamento obrigatório por operação.
+
+Na primeira entrega, a evidência exige criação dentro de repetição estrutural, argumentos e valores de inicialização invariantes em relação à iteração e uma inicialização observável por construtor com parâmetros, corpo complexo ou inicializador de objeto. O diagnóstico não classifica todo tipo com muitas propriedades como pesado e não usa limiar numérico de propriedades ou custo.
 
 O diagnóstico `PERF025` segue as recomendações oficiais de gerenciamento de conexões HTTP. O `PERF027` é apoiado pela recomendação de source-generated logging, que reduz boxing, parsing de templates e alocações. 
 
