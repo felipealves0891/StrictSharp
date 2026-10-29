@@ -6,6 +6,106 @@ namespace StrictSharp.Analyzers.Tests;
 public sealed class CoverageBranchTests
 {
     [Fact]
+    public async Task Perf011CoversDerivedCollectionAndObservableSourceBranches()
+    {
+        const string source = """
+            using System;
+            using System.Collections.Generic;
+
+            class DerivedCollection : List<string> { }
+
+            class Source : IObservable<string>
+            {
+                public IDisposable Subscribe(IObserver<string> observer) => null!;
+            }
+
+            class Sample
+            {
+                private readonly DerivedCollection _values = new();
+                private readonly Source _source = new();
+
+                void Run(string[] values, IObserver<string> observer)
+                {
+                    foreach (var value in values)
+                    {
+                        _values.Add(value);
+                        _source.Subscribe(observer);
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer());
+
+        Assert.Equal(2, diagnostics.Length);
+        Assert.All(diagnostics, diagnostic => Assert.Equal("PERF011", diagnostic.Id));
+    }
+
+    [Fact]
+    public async Task Perf030CoversComplexInitializationFormsAndForWithoutDeclaration()
+    {
+        const string source = """
+            class Helper { }
+
+            class Complex
+            {
+                public Complex(string value)
+                {
+                    _ = new Helper();
+                    _ = value.Length > 0 ? new Helper() : null;
+                }
+            }
+
+            class Descriptor
+            {
+                public Helper Value { get; init; }
+            }
+
+            class Sample
+            {
+                void Run(int count, string[] values)
+                {
+                    for (; count > 0; count--)
+                        _ = new Complex("fixed");
+
+                    foreach (var value in values)
+                    {
+                        _ = new Descriptor { Value = new Helper() };
+                        _ = new Descriptor { Value = value.Length > 0 ? new Helper() : null };
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer());
+
+        Assert.Equal(2, diagnostics.Length);
+        Assert.All(diagnostics, diagnostic => Assert.Equal("PERF030", diagnostic.Id));
+    }
+
+    [Fact]
+    public async Task Perf030StaysSilentForLoopDependentInitializer()
+    {
+        const string source = """
+            class Descriptor
+            {
+                public string Name { get; init; }
+            }
+
+            class Sample
+            {
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        _ = new Descriptor { Name = value };
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer()));
+    }
+
+    [Fact]
     public async Task Perf013RecognizesSupportedEnumerationOperations()
     {
         const string source = """
