@@ -13,7 +13,7 @@
 
 ## Regras de execução
 
-- Não implementar Code Fix, profiling, telemetria, persistência, chamadas de rede ou dependências novas.
+- Não implementar Code Fix, profiling, telemetria, persistência, chamadas de rede ou dependências novas no analyzer; `BenchmarkDotNet 0.15.8` é permitido somente no harness isolado por `Q-V3-004`.
 - Não usar limiares numéricos fixos para “muitas propriedades”, frequência, memória retida ou custo do analyzer; usar sinais estruturais conservadores e documentados.
 - Não alterar IDs, severidades, fases ou contrato V1/V2 sem nova clarificação e aprovação humana.
 - `PERF011` deve permanecer uma suspeita fundamentada, nunca uma prova de memory leak.
@@ -24,6 +24,7 @@
 ## Progresso
 
 - Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-REV-001`, `TASK-REV-002`, `TASK-REV-003`.
+- Concluídas: `TASK-008`, `TASK-009`, `TASK-010`, `TASK-011`.
 - Bloqueadas: nenhuma.
 - Próxima tarefa: `TASK-REV-004` (etapa `gates`).
 
@@ -176,8 +177,52 @@
 
 - **Finding:** `FINDING-004`; **etapa de retorno:** `gates`; **dependências:** `TASK-REV-002`, `TASK-REV-003`.
 - **Requisitos:** `FR-009`, `FR-011`, `NFR-006`; **critérios:** `AC-006`, `AC-008`, `AC-010`.
-- **Ação:** executar cenários representativos comparando retenção repetida versus retenção limitada e reconstrução versus reutilização, sem alterar o analyzer.
+- **Ação:** executar `TASK-008` a `TASK-011` para criar o harness isolado, medir os dois pares de cenários, preservar evidência e atualizar a documentação, sem alterar o analyzer.
 - **Conclusão:** preservar comando, ambiente, carga, memória viva para `PERF011`, alocações/CPU para `PERF030`, resultados e limitações; declarar que números não são limiares estáticos.
 - **Validação:** anexar evidência comparativa, atualizar `evidence-v3-validation.md`, executar gates e confirmar `AC-006`, `AC-008` e `AC-010`.
 - **Risco:** benchmark não representar produção ou ser não reproduzível; fixar carga/comando e documentar a limitação, sem alegar ganho universal.
+
+## TASK-008 - Criar harness isolado de benchmark
+
+- **Status:** completed
+
+- **Requisitos:** `FR-009`, `FR-011`, `NFR-006`, `NFR-007`, `CON-007`; **critérios:** `AC-006`, `AC-008`, `AC-010`.
+- **Componentes afetados:** novo projeto `benchmarks/StrictSharp.Analyzers.V3.Benchmarks`, scripts de execução e contrato de saída; nenhum componente em `src/`.
+- **Dependências:** `TASK-REV-002`, `TASK-REV-003`.
+- **Conclusão:** executável `net10.0` em Release usa `BenchmarkDotNet 0.15.8`, aceita filtros/parâmetros do BDN, aquece, repete, registra ambiente e produz JSON/Markdown/CSV versionados sem rede durante a medição.
+- **Validação:** build isolado, execução com parâmetros mínimos e inspeção do JSON/log confirmam `AC-006`, `AC-008` e `AC-010`.
+- **Risco:** incluir benchmark na solução/gates pode ampliar escopo; manter execução explícita e fora dos gates do analyzer.
+
+## TASK-009 - Cenário comparativo de PERF011
+
+- **Status:** completed
+
+- **Requisitos:** `FR-009`, `FR-011`, `NFR-006`, `NFR-007`; **critérios:** `AC-006`, `AC-010`.
+- **Componentes afetados:** cenário `perf011` do harness e artefatos de evidência.
+- **Dependências:** `TASK-008`.
+- **Conclusão:** retenção repetida é comparada ao controle de retenção limitada com mesma carga; memória viva pós-GC, memória inicial/final, iterações, payload e duração são registrados.
+- **Validação:** executar repetições configuráveis, comparar os cenários e preservar comando, parâmetros, resultados brutos e limitações para `AC-006` e `AC-010`.
+- **Risco:** confundir crescimento do cenário com prova de leak; usar linguagem de suspeita e não criar limiar para `PERF011`.
+
+## TASK-010 - Cenário comparativo de PERF030
+
+- **Status:** completed
+
+- **Requisitos:** `FR-009`, `FR-011`, `NFR-006`, `NFR-007`; **critérios:** `AC-006`, `AC-010`.
+- **Componentes afetados:** cenário `perf030` do harness e artefatos de evidência.
+- **Dependências:** `TASK-008`.
+- **Conclusão:** reconstrução com inicialização não trivial é comparada à reutilização de instância imutável equivalente, com mesma carga e resultado observável; CPU/tempo e bytes alocados são registrados.
+- **Validação:** executar aquecimento e repetições, verificar métricas por cenário e preservar resultados sem transformar diferença em ganho universal para `AC-006` e `AC-010`.
+- **Risco:** otimização de JIT ou estado compartilhado distorcer comparação; manter operações equivalentes e documentar protocolo.
+
+## TASK-011 - Preservar evidência e fechar a remediação
+
+- **Status:** completed
+
+- **Requisitos:** `FR-008`, `FR-009`, `FR-011`, `NFR-006`, `NFR-007`, `CON-002`, `CON-004`; **critérios:** `AC-003`, `AC-006`, `AC-008`, `AC-010`, `AC-011`.
+- **Componentes afetados:** `.spectro/features/csharp-performance-analyzer-v3/evidence-v3-validation.md`, diretório de evidência, `tasks.md` e relatório de revisão.
+- **Dependências:** `TASK-009`, `TASK-010`.
+- **Conclusão:** JSON, log, comando, revisão, ambiente, carga, limitações e conclusão de cada regra são preservados; `TASK-REV-004` só passa a `completed` após ambos os cenários; nenhum dado sensível é exposto.
+- **Validação:** revisar rastreabilidade, executar gates, confirmar `AC-003`, `AC-006`, `AC-008`, `AC-010` e `AC-011`, e repetir `spectro-review`.
+- **Risco:** artefatos não corresponderem à revisão do código; incluir hash/revisão no resultado e invalidar evidência se código ou configuração mudar.
 

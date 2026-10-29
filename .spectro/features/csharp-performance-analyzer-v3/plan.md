@@ -59,7 +59,7 @@
 - **Sobreposição com regras existentes:** `PERF011` deve acrescentar contexto de ciclo de vida além de `PERF007`, `PERF008`, `PERF010` e `PERF028`; `PERF030` deve acrescentar invariância/custo de reconstrução além de `PERF007` e `PERF021`.
 - **Fluxo interprocedural incompleto:** omitir quando propriedade, mutabilidade, descarte ou configuração não forem demonstráveis, em vez de inferir contratos.
 - **Custo do analyzer:** mitigar com filtros sintáticos, consultas semânticas condicionais, ausência de análise global e revisão de alocações; aplicar os gates existentes, sem novo limiar quantitativo.
-- **Compatibilidade:** preservar `netstandard2.1`, C# 14, Roslyn 5.0 e o harness em `net10.0`; não adicionar dependências.
+- **Compatibilidade:** preservar `netstandard2.1`, C# 14, Roslyn 5.0 e o harness em `net10.0`; `BenchmarkDotNet 0.15.8` fica isolado exclusivamente no projeto de benchmark.
 
 ## Estratégia de testes
 
@@ -120,16 +120,75 @@ Não há dependências cíclicas. As tarefas 002 e 003 dependem da fundação e 
 
 1. `TASK-REV-001` — documentar a rastreabilidade detalhada e as validações; bloqueia o retorno à implementação até que o plano seja verificável.
 2. `TASK-REV-002` e `TASK-REV-003` — corrigir `PERF011` e `PERF030`, respectivamente, após `TASK-REV-001`; podem ser executadas em paralelo.
-3. `TASK-REV-004` — executar benchmarks após as correções dos analyzers e seus testes; depende de `TASK-REV-002` e `TASK-REV-003`.
-4. Reexecutar os gates configurados e repetir a revisão independente após `TASK-REV-004`; essa etapa não altera a especificação e deve preservar as evidências anteriores.
+3. `TASK-008` — criar o harness isolado após as correções dos analyzers e seus testes; depende de `TASK-REV-002` e `TASK-REV-003`.
+4. `TASK-009` e `TASK-010` — executar os cenários comparativos de `PERF011` e `PERF030` em paralelo; dependem de `TASK-008`.
+5. `TASK-011` / `TASK-REV-004` — preservar evidência, atualizar documentação e fechar a remediação; dependem de `TASK-009` e `TASK-010`.
+6. Reexecutar os gates configurados e repetir a revisão independente após `TASK-REV-004`; essa etapa não altera a especificação e deve preservar as evidências anteriores.
 
 ### Contratos de remediação
 
 - `PERF011` só pode reportar quando o receptor resolve para uma estrutura retentora reconhecida e houver evidência estrutural de retenção potencial; APIs desconhecidas, métodos homônimos e contratos não demonstráveis devem ser omitidos.
 - `PERF030` deve exigir combinação conservadora de repetição, invariância observável e sinal estrutural de inicialização não trivial. Construtores simples, inicializadores triviais, estado variável, isolamento por operação e tipos sem thread safety demonstrável devem permanecer silenciosos.
 - Benchmarks devem comparar cenário de repetição contra cenário limitado/reutilizado, medir memória viva para `PERF011` e alocações/CPU para `PERF030`, registrar ambiente/carga/comando e declarar que os resultados não configuram a heurística estática.
-- Nenhuma remediação inclui Code Fix, dependência nova, profiling no analyzer, telemetria, chamada externa ou mudança de IDs, severidades, fase e contrato V1/V2.
+- Nenhuma remediação inclui Code Fix, dependência nova no analyzer, profiling no analyzer, telemetria, chamada externa ou mudança de IDs, severidades, fase e contrato V1/V2. Por decisão explícita `Q-V3-004`, o harness pode usar `BenchmarkDotNet 0.15.8`.
 
 ### Critério de saída
 
 O plano estará pronto para implementação quando `TASK-REV-001` tiver todas as relações requisito-tarefa e critério-validação detectáveis, e as tarefas de implementação puderem demonstrar `AC-002`, `AC-004` e `AC-010` com testes/evidências correspondentes. A conclusão da remediação requer novo build, testes, segurança, cobertura, benchmarks preservados e revisão sem os achados High.
+
+## Plano de criação dos benchmarks V3
+
+### Objetivo e limites
+
+- Atender `FINDING-004`, `AC-010` e `NFR-006` com evidência comparativa reproduzível para as hipóteses de `PERF011` e `PERF030`.
+- Criar um executável isolado em `benchmarks/StrictSharp.Analyzers.V3.Benchmarks`, direcionado a `net10.0`, sem referência ao analyzer em runtime. O projeto usa somente `BenchmarkDotNet 0.15.8` para calibração, memória e exportação dos resultados.
+- Medir o cenário de uso da regra, não o custo da análise Roslyn. O benchmark não altera heurísticas, severidades, mensagens ou critérios de diagnóstico.
+- Produzir resultados brutos e metadados em `.spectro/features/csharp-performance-analyzer-v3/evidence/benchmark-<run-id>/`, sem enviar código, dados ou resultados para serviços externos.
+
+### Cenários comparativos
+
+#### `PERF011` — retenção potencial
+
+- **Repetição:** adicionar repetidamente payloads de tamanho configurável a uma coleção mantida em campo, sem limpeza durante a janela de medição.
+- **Controle limitado:** executar o mesmo número de operações mantendo a coleção limitada por remoção/limpeza observável e liberando referências temporárias ao fim da janela.
+- **Métricas:** memória viva após coleta completa (`GC.GetTotalMemory(forceFullCollection: true)`), memória antes/depois, iterações, payload, duração e operações.
+- **Interpretação:** comparar tendência e diferença entre cenários; não declarar que o analyzer prova memory leak nem converter bytes em limiar da regra.
+
+#### `PERF030` — reconstrução versus reutilização
+
+- **Reconstrução:** criar repetidamente uma instância com inicialização não trivial e argumentos invariantes, mantendo o resultado válido para impedir eliminação artificial do trabalho.
+- **Controle reutilizado:** criar uma instância imutável equivalente uma vez e reutilizá-la no mesmo número de operações, preservando o contrato do cenário.
+- **Métricas:** `Stopwatch` para tempo/CPU, `GC.GetAllocatedBytesForCurrentThread()` para alocações, iterações, dados e criações.
+- **Interpretação:** registrar resultados por cenário e repetição; não afirmar ganho universal nem usar medição como limiar estático do analyzer.
+
+### Contrato do harness
+
+- Entrada: cenário (`perf011`, `perf030` ou `all`), iterações, payload, repetições, seed opcional e caminho absoluto de saída.
+- Saída: JSON versionado com revisão do código, timestamp, runtime, sistema operacional, configuração `Release`, parâmetros, métricas por repetição, agregados e limitações; log textual deve reproduzir o comando.
+- Repetibilidade: aquecer antes da medição, executar repetições configuráveis, impedir eliminação por efeitos observáveis e manter a mesma carga entre hipótese e controle.
+- Isolamento: não executar como parte do analyzer, testes unitários ou cobertura; sem rede, telemetria, persistência de produção ou dados sensíveis.
+- Higiene: coletar GC apenas nas fronteiras documentadas, evitar alocações de medição no trecho cronometrado e informar variação de GC/CPU por máquina e carga.
+
+### Execução e evidência
+
+1. Construir o projeto de benchmark em `Release`, restaurando apenas `BenchmarkDotNet 0.15.8` além do SDK aprovado.
+2. Executar `perf011`, `perf030` e, quando necessário, `all`; registrar comando, revisão e parâmetros.
+3. Preservar JSON, log, versão do `dotnet` e resumo de ambiente no diretório de evidência.
+4. Atualizar `evidence-v3-validation.md` com caminhos, hipóteses, cenários, métricas, resultados brutos, limitações e conclusão restrita ao cenário medido.
+5. Marcar `TASK-REV-004` como concluída somente quando ambas as regras tiverem evidência comparativa; repetir gates/review se artefatos rastreados ou configuração mudarem.
+
+### Alternativas rejeitadas e riscos
+
+- A implementação manual anterior foi substituída por `BenchmarkDotNet 0.15.8` após a decisão `Q-V3-004`; a dependência permanece fora do analyzer, testes, solução e gates do produto.
+- Medir o analyzer dentro do benchmark é rejeitado por misturar custo Roslyn com custo do código analisado.
+- Uma única execução ou limiar fixo é rejeitado por não fornecer reprodutibilidade e confundir evidência com contrato da regra.
+- Ruído de GC/JIT/OS será mitigado com aquecimento, repetições, Release e ambiente registrado, sem eliminar a incerteza.
+- Cenários artificiais terão payload, duração, distribuição e limites documentados; não haverá extrapolação automática para produção.
+
+### Rastreabilidade dos benchmarks
+
+| Requisito | Critério | Tarefa | Evidência |
+|---|---|---|---|
+| `FR-009`, `NFR-006` | `AC-010` | `TASK-008`–`TASK-011` | JSON/log de `PERF011` e `PERF030` |
+| `FR-011` | `AC-008`, `AC-010` | `TASK-008`, `TASK-011` | versão, comando, ambiente, hipótese e limitação |
+| `FR-008` | `AC-006` | `TASK-011` | resumo alinhado aos metadados e limitações |
