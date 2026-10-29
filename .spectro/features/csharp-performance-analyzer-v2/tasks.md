@@ -145,7 +145,7 @@ Requisitos: `NFR-001`, `NFR-002`, `NFR-003`, `NFR-004`, `NFR-005`, `NFR-006`, `N
 
 ## TASK-REV-004 - Remediate FINDING-004
 
-- **Status:** pending
+- **Status:** completed
 - **Finding:** FINDING-004
 - **Severity:** High
 - **Return stage:** gates
