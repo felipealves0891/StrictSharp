@@ -28,6 +28,11 @@ public static class RuleAnalysis
         context.ReportDiagnostic(CreateDiagnostic(rule, location));
     }
 
+    public static void Report(RuleDefinition rule, OperationAnalysisContext context, Location location)
+    {
+        context.ReportDiagnostic(CreateDiagnostic(rule, location));
+    }
+
     public static bool IsTaskLike(ITypeSymbol? type)
     {
         return type is INamedTypeSymbol named
@@ -47,6 +52,20 @@ public static class RuleAnalysis
         return method.Name == "Run"
             && method.ContainingType is not null
             && method.ContainingType.ToDisplayString() == "System.Threading.Tasks.Task";
+    }
+
+    public static bool IsTaskWhenAll(IMethodSymbol method)
+    {
+        return method.Name == "WhenAll"
+            && method.ContainingType?.ToDisplayString() == "System.Threading.Tasks.Task";
+    }
+
+    public static bool IsBlockingOperation(IMethodSymbol method)
+    {
+        if (method.Name is "Sleep" or "Wait" or "WaitOne" or "Join")
+            return true;
+
+        return IsSynchronousIo(method);
     }
 
     public static bool IsAwaiter(ITypeSymbol? type)

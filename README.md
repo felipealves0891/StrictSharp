@@ -76,7 +76,7 @@ dotnet_diagnostic.PERF027.severity = suggestion
 
 As regras V1 não aplicam Code Fix automático. Algumas correções dependem de mutabilidade, igualdade, propriedade dos dados, ciclo de vida ou thread safety.
 
-### V2 — catalogados, ainda não implementados
+### V2 — implementados
 
 | ID | Diagnóstico | O que pretende detectar |
 | --- | --- | --- |

@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0",
+  "feature_id": "csharp-performance-analyzer-v2",
+  "execution_id": "gate-20261029T003041Z",
+  "project_root": "D:\\Felipe\\Repos\\Dotnet\\StrictSharp",
+  "code_revision": "d4ba58aa9472c3e32290363e632fe2f0d4879654",
+  "config_hash": "sha256:f3b10a005783a65dab49364b6cc77202752363f8fabdd887aca2adaad3c3537b",
+  "artifact_hashes": {
+    "spec.md": "596f195c3794ecae21069a01e0067049d03a92905005a8272fb18648ca68839f",
+    "clarifications.md": "fb52088b23b35f716ac641339c490a8cd6db27227876e09d4749640aa91b01ac",
+    "plan.md": "162728cfabdb9ae295d25bfb7805d89806175a53731041ab4b81d9ffb1ffc13d",
+    "tasks.md": "d834c137fb72cc9f77fed5764b371a2dcb55b909efa2b49c4ddcb7f01e79f9ab"
+  },
+  "started_at": "2026-10-29T00:30:41.674Z",
+  "duration_ms": 10272,
+  "gates": [
+    {
+      "id": "GATE-001",
+      "name": "build",
+      "required": true,
+      "status": "passed",
+      "command": "dotnet build --no-restore -v d",
+      "exit_code": 0,
+      "duration_ms": 1660,
+      "diagnostics": [],
+      "evidence": [
+        ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/evidence/01-build.log"
+      ],
+      "output_directory": ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/build",
+      "output_files": [],
+      "output_file_count": 0
+    },
+    {
+      "id": "GATE-002",
+      "name": "test",
+      "required": true,
+      "status": "passed",
+      "command": "dotnet test --no-restore --no-build",
+      "exit_code": 0,
+      "duration_ms": 5008,
+      "diagnostics": [],
+      "evidence": [
+        ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/evidence/02-test.log"
+      ],
+      "output_directory": ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/test",
+      "output_files": [],
+      "output_file_count": 0
+    },
+    {
+      "id": "GATE-003",
+      "name": "security",
+      "required": true,
+      "status": "passed",
+      "command": "dotnet list package --vulnerable",
+      "exit_code": 0,
+      "duration_ms": 2711,
+      "diagnostics": [],
+      "evidence": [
+        ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/evidence/03-security.log"
+      ],
+      "output_directory": ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/security",
+      "output_files": [],
+      "output_file_count": 0
+    },
+    {
+      "id": "GATE-004",
+      "name": "coverage",
+      "required": true,
+      "status": "failed",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \".spectro/tools/coverage-gate.ps1\" -Project \".\" -BaseBranch \"origin/main\" -MinLineCoverage 80 -MinBranchCoverage 70 -MinNewLineCoverage 90 -MinNewBranchCoverage 85",
+      "exit_code": 1,
+      "duration_ms": 772,
+      "diagnostics": [
+        "ERRO: Working tree possui altera��es tracked n�o commitadas. Commit antes de medir ou use -AllowDirtyTree (n�o recomendado).\r\nRESULTADO: false"
+      ],
+      "evidence": [
+        ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/evidence/04-coverage.log"
+      ],
+      "output_directory": ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/coverage",
+      "output_files": [],
+      "output_file_count": 0
+    }
+  ],
+  "result": "failed"
+}
