@@ -38,4 +38,18 @@ public sealed class Perf020AnalyzerTests
 
         Assert.Empty(diagnostics);
     }
+
+    [Fact]
+    public async Task ReportsNotEqualsAndCompareNormalization()
+    {
+        const string source = """
+            class Sample
+            {
+                bool Matches(string value, string expected)
+                    => value.ToUpper() != expected || value.ToLower().Equals(expected);
+            }
+            """;
+
+        Assert.Equal(2, (await AnalyzerTestHarness.AnalyzeAsync(source, new Perf020Analyzer())).Length);
+    }
 }

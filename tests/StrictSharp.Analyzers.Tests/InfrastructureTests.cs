@@ -260,6 +260,107 @@ public sealed class InfrastructureTests
         Assert.False(RuleAnalysis.IsEnumerable(legacy));
     }
 
+    [Fact]
+    public void LoopPredicatesCoverMutationAndObservableInvocationShapes()
+    {
+        var (_, model, root) = CreateModel("""
+            using System;
+            using System.Collections.Generic;
+            class Sample
+            {
+                void Run(List<int> values, int[] items)
+                {
+                    foreach (var item in items)
+                    {
+                        values.Add(item);
+                        values[0] = item;
+                        values[0]++;
+                        Use(ref values[0]);
+                    }
+                    foreach (var item in items)
+                    {
+                        values.OrderBy(item => item);
+                    }
+                }
+                void Use(ref int value) { }
+            }
+            """);
+
+        var loops = root.DescendantNodes().OfType<ForEachStatementSyntax>().ToArray();
+        var firstLoop = loops[0];
+        var secondLoop = loops[1];
+        var addReceiver = firstLoop.DescendantNodes().OfType<IdentifierNameSyntax>()
+            .First(identifier => identifier.Parent is MemberAccessExpressionSyntax member && member.Name.Identifier.Text == "Add");
+        var source = (ExpressionSyntax)addReceiver;
+        var addInvocation = firstLoop.DescendantNodes().OfType<InvocationExpressionSyntax>().First();
+        var orderBy = secondLoop.DescendantNodes().OfType<InvocationExpressionSyntax>().Single();
+
+        Assert.True(RuleAnalysis.IsSourceMutatedInContainingLoop(source, addInvocation, model));
+        Assert.False(RuleAnalysis.IsSourceMutatedInContainingLoop(
+            (ExpressionSyntax)orderBy.Expression, orderBy, model));
+        var effectLambda = SyntaxFactory.ParseExpression("() => Use(1)") as LambdaExpressionSyntax;
+        var pureLambda = SyntaxFactory.ParseExpression("value => value") as LambdaExpressionSyntax;
+        Assert.NotNull(effectLambda);
+        Assert.NotNull(pureLambda);
+        Assert.True(RuleAnalysis.HasObservableInvocation(effectLambda!));
+        Assert.False(RuleAnalysis.HasObservableInvocation(pureLambda!));
+    }
+
+    [Fact]
+    public void LoopMutationPredicateCoversAssignmentPrefixAndRefBranches()
+    {
+        var (_, model, root) = CreateModel("""
+            using System.Collections.Generic;
+            class Sample
+            {
+                void Run(List<int> values)
+                {
+                    var counter = 0;
+                    foreach (var item in values) { counter = item; }
+                    foreach (var item in values) { counter++; }
+                    foreach (var item in values) { Use(ref counter); }
+                }
+                void Use(ref int value) { }
+            }
+            """);
+
+        foreach (var loop in root.DescendantNodes().OfType<ForEachStatementSyntax>())
+        {
+            var use = loop.DescendantNodes().OfType<IdentifierNameSyntax>()
+                .First(identifier => identifier.Identifier.Text == "counter");
+            var operation = loop.DescendantNodes().OfType<StatementSyntax>().Last();
+            Assert.True(RuleAnalysis.IsSourceMutatedInContainingLoop(use, operation, model));
+        }
+    }
+
+    [Fact]
+    public void LoopMutationPredicateCoversUnknownSourceAndMutatorCall()
+    {
+        var (_, model, root) = CreateModel("""
+            using System.Collections.Generic;
+            class Sample
+            {
+                void Run(List<int> values)
+                {
+                    Unknown unknown = null;
+                    Use(unknown);
+                    while (values.Count > 0)
+                        values.Clear();
+                }
+                void Use(object value) { }
+            }
+            """);
+
+        var loop = root.DescendantNodes().OfType<WhileStatementSyntax>().Single();
+        var clear = loop.DescendantNodes().OfType<InvocationExpressionSyntax>().Single();
+        var receiver = (ExpressionSyntax)((MemberAccessExpressionSyntax)clear.Expression).Expression;
+        Assert.True(RuleAnalysis.IsSourceMutatedInContainingLoop(receiver, clear, model));
+        var unknown = root.DescendantNodes().OfType<IdentifierNameSyntax>()
+            .First(identifier => identifier.Identifier.Text == "unknown");
+        Assert.False(RuleAnalysis.IsSourceMutatedInContainingLoop(unknown, clear, model));
+        Assert.False(RuleAnalysis.IsSourceMutatedInContainingLoop(receiver, root, model));
+    }
+
     private static (CSharpCompilation Compilation, SemanticModel Model, SyntaxNode Root) CreateModel(string source)
     {
         var tree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.CSharp14));

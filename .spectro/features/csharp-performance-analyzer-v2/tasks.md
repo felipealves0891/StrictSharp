@@ -108,4 +108,4 @@ Requisitos: `NFR-001`, `NFR-002`, `NFR-003`, `NFR-004`, `NFR-005`, `NFR-006`, `N
 
 - Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-008`, `TASK-009`.
 - Bloqueadas: nenhuma.
-- Próxima tarefa: `TASK-010` (pendente: foram adicionados casos de branch e exceções do reviewer; 114 testes passam. A medição de cobertura ainda precisa ser validada pelo gate oficial).
+- Próxima tarefa: `TASK-010` (pendente: foram adicionados casos de branch e exceções do reviewer; 148 testes passam. A cobertura local atende aos mínimos, aguardando nova evidência do gate oficial).

@@ -255,4 +255,434 @@ public sealed class V2BranchCoverageTests
 
         Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf029Analyzer()));
     }
+    [Fact]
+    public async Task Perf002ReportsUnboundedSelectSource()
+    {
+        const string source = """
+            using System.Linq;
+            using System.Threading.Tasks;
+            class Sample
+            {
+                Task[] Run(int[] values) => Task.WhenAll(values.Select(value => Task.Delay(value)));
+            }
+            """;
+
+        Assert.Single(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf002Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf005ReportsPollingWithoutWait()
+    {
+        const string source = """
+            class Sample
+            {
+                bool Ready() => true;
+                void Run()
+                {
+                    while (!Ready()) { }
+                }
+            }
+            """;
+
+        Assert.Single(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf005Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf004CoversStreamReaderWriterAndTaskWaitBranches()
+    {
+        const string source = """
+            using System.IO;
+            using System.Threading;
+            using System.Threading.Tasks;
+            class Sample
+            {
+                void Run(object gate, MemoryStream stream, StringReader reader, StringWriter writer, Task task)
+                {
+                    lock (gate) { stream.ReadByte(); }
+                    lock (gate) { reader.ReadLine(); }
+                    lock (gate) { writer.WriteLine("value"); }
+                    lock (gate) { task.Wait(); }
+                    lock (gate) { Thread.Sleep(1); }
+                }
+            }
+            """;
+
+        Assert.Equal(5, (await AnalyzerTestHarness.AnalyzeAsync(source, new Perf004Analyzer())).Length);
+    }
+
+    [Fact]
+    public async Task Perf006ReportsTaskRunInsideLoop()
+    {
+        const string source = """
+            using System.Threading.Tasks;
+            class Sample
+            {
+                void Run(int[] values)
+                {
+                    foreach (var value in values)
+                        Task.Run(() => Process(value));
+                }
+                void Process(int value) { }
+            }
+            """;
+
+        Assert.Single(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf006Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf006IgnoresWrongCreationAndCallsOutsideLoop()
+    {
+        const string source = """
+            using System;
+            using System.Threading.Tasks;
+            class Sample
+            {
+                void Run(int[] values)
+                {
+                    new object();
+                    Task.Run(Process);
+                    foreach (var value in values)
+                        Process(value);
+                }
+                void Process() { }
+                void Process(int value) { }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf006Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf010CoversParenthesizedCapture()
+    {
+        const string source = """
+            using System;
+            class Sample
+            {
+                void Run(int[] values)
+                {
+                    foreach (var value in values)
+                    {
+                        Action work = (int ignored) => Process(value + ignored);
+                    }
+                }
+                void Process(int value) { }
+            }
+            """;
+
+        Assert.Single(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf010Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf009IgnoresNumericAndReferenceConversions()
+    {
+        const string source = """
+            interface IMarker { }
+            class Reference : IMarker { }
+            class Sample
+            {
+                void Run(int value, Reference reference)
+                {
+                    long numeric = value;
+                    IMarker converted = reference;
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf009Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf009IgnoresUserDefinedBoxingAndArgumentConversions()
+    {
+        const string source = """
+            struct Value
+            {
+                public static implicit operator object(Value value) => value.ToString();
+            }
+            class Sample
+            {
+                void Run(Value value) => Consume(value);
+                void Consume(object value) { }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf009Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf016CoversAscendingOrdering()
+    {
+        const string source = """
+            using System.Linq;
+            class Sample
+            {
+                int[] Run(int[][] values)
+                {
+                    foreach (var value in values)
+                        return value.OrderBy(item => item).ThenByDescending(item => item).ToArray();
+                    return [];
+                }
+            }
+            """;
+
+        Assert.Equal(2, (await AnalyzerTestHarness.AnalyzeAsync(source, new Perf016Analyzer())).Length);
+    }
+
+    [Fact]
+    public async Task Perf016IgnoresUnknownSourceAndNonMutatingCalls()
+    {
+        const string source = """
+            using System.Linq;
+            using System.Collections.Generic;
+            class Sample
+            {
+                IEnumerable<int> GetValues() => [];
+                int[] Run(List<int> values)
+                {
+                    foreach (var item in values)
+                    {
+                        values.Contains(item);
+                        return GetValues().OrderBy(value => value).ToArray();
+                    }
+                    return [];
+                }
+            }
+            """;
+
+        Assert.Single(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf016Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf021CoversObjectCreationWithoutArgumentList()
+    {
+        const string source = """
+            using System.Text.Json;
+            class Sample
+            {
+                void Run(int[] values)
+                {
+                    foreach (var value in values)
+                        _ = new JsonSerializerOptions;
+                }
+            }
+            """;
+
+        Assert.Single(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf021Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf021IgnoresOptionsWithDynamicLoopConfiguration()
+    {
+        const string source = """
+            using System.Text.Json;
+            class Sample
+            {
+                void Run(JsonSerializerOptions[] options)
+                {
+                    foreach (var option in options)
+                        _ = new JsonSerializerOptions(option);
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf021Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf028ReportsUnmanagedLocalLifetime()
+    {
+        const string source = """
+            using System;
+            class Resource : IDisposable { public void Dispose() { } }
+            class Sample
+            {
+                void Run()
+                {
+                    var resource = new Resource();
+                }
+            }
+            """;
+
+        Assert.Single(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf028Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf023CoversNonZeroRemoveAndInterfaceList()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                void Run(List<int> values, IList<int> items)
+                {
+                    while (values.Count > 0)
+                    {
+                        values.RemoveAt(1);
+                        items.Contains(1);
+                    }
+                }
+            }
+            """;
+
+        Assert.Single(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf023Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf023IgnoresUnsupportedCollectionAndNonZeroRemove()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                void Run(Queue<int> queue, List<int> values)
+                {
+                    foreach (var item in values)
+                    {
+                        values.RemoveAt(item);
+                        queue.Enqueue(item);
+                    }
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf023Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf005CoversForIncrementAndDoQueryForms()
+    {
+        const string source = """
+            class Sample
+            {
+                bool Ready() => true;
+                void Run()
+                {
+                    for (; Ready(); Ready()) { }
+                    do { } while (Ready());
+                    for (var index = 0; index < 1; index++) { }
+                }
+            }
+            """;
+
+        Assert.Equal(2, (await AnalyzerTestHarness.AnalyzeAsync(source, new Perf005Analyzer())).Length);
+    }
+
+    [Fact]
+    public async Task Perf012CoversUnresolvedMaterializationShape()
+    {
+        const string source = """
+            class Sample
+            {
+                void Run()
+                {
+                    Unknown values = null;
+                    values.ToArray();
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf012Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf015CoversCustomCountAndArrayCount()
+    {
+        const string source = """
+            using System.Linq;
+            class Custom
+            {
+                public int Count() => 0;
+            }
+            class Sample
+            {
+                bool Run(Custom custom, int[] values, string text)
+                    => custom.Count() > 0 && values.Count() > 0 && text.Any();
+            }
+            """;
+
+        Assert.Equal(2, (await AnalyzerTestHarness.AnalyzeAsync(source, new Perf015Analyzer())).Length);
+    }
+
+    [Fact]
+    public async Task Perf025IgnoresWrongTypeCreatedInsideMethod()
+    {
+        const string source = """
+            class Sample
+            {
+                object Create() => new object();
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf025Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf024IgnoresCapacityAndLoopLocalCollections()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                void Run(int[] values)
+                {
+                    foreach (var value in values)
+                    {
+                        var local = new List<int>();
+                        local.Add(value);
+                    }
+                    var withCapacity = new List<int>(values.Length);
+                    withCapacity.Add(1);
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf024Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf028CoversAsyncDisposableAndArgumentTransfer()
+    {
+        const string source = """
+            using System;
+            using System.Threading.Tasks;
+            class AsyncResource : IAsyncDisposable
+            {
+                public ValueTask DisposeAsync() => default;
+            }
+            class Sample
+            {
+                void Consume(IAsyncDisposable value) { }
+                async Task Run()
+                {
+                    await using var managed = new AsyncResource();
+                    Consume(new AsyncResource());
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf028Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf029ReportsParseExactInsideLoop()
+    {
+        const string source = """
+            using System;
+            class Sample
+            {
+                DateTime Run(string[] values)
+                {
+                    foreach (var value in values)
+                    {
+                        try { return DateTime.ParseExact(value, "O"); }
+                        catch (FormatException) { }
+                    }
+                    return default;
+                }
+            }
+            """;
+
+        Assert.Single(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf029Analyzer()));
+    }
 }

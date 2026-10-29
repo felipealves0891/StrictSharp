@@ -128,4 +128,23 @@ public sealed class LinqV2AnalyzerTests
 
         Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf017Analyzer()));
     }
+
+    [Fact]
+    public async Task Perf017ReportsInvariantQueryInForLoopWithoutIterationVariable()
+    {
+        const string source = """
+            using System.Linq;
+            class Sample
+            {
+                int Run(int[] values)
+                {
+                    for (var index = 0; index < 1; index++)
+                        return values.Where(value => value > 0).Count();
+                    return 0;
+                }
+            }
+            """;
+
+        Assert.Single(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf017Analyzer()));
+    }
 }

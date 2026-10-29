@@ -47,4 +47,24 @@ public sealed class Perf008AnalyzerTests
 
         Assert.Empty(diagnostics);
     }
+
+    [Fact]
+    public async Task DoesNotReportDynamicOrOutsideLargeBuffer()
+    {
+        const string source = """
+            class Sample
+            {
+                void Process(int length)
+                {
+                    var outside = new byte[100_000];
+                    for (var i = 0; i < 1; i++)
+                    {
+                        var dynamicBuffer = new byte[length];
+                    }
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf008Analyzer()));
+    }
 }

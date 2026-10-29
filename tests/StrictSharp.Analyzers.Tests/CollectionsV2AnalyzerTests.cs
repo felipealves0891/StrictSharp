@@ -86,4 +86,24 @@ public sealed class CollectionsV2AnalyzerTests
 
         Assert.Empty(diagnostics);
     }
+
+    [Fact]
+    public async Task Perf024StaysSilentWhenListDoesNotGrowInLoop()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                List<int> Run(int[] values)
+                {
+                    var result = new List<int>();
+                    foreach (var value in values)
+                        _ = value;
+                    return result;
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf024Analyzer()));
+    }
 }

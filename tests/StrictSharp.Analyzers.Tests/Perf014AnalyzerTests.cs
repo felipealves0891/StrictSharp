@@ -45,4 +45,31 @@ public sealed class Perf014AnalyzerTests
 
         Assert.Empty(diagnostics);
     }
+
+    [Fact]
+    public async Task ReportsAllSupportedListSearchMethodsInsideLoop()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            using System.Linq;
+            class Sample
+            {
+                void Match(List<int> values, int item)
+                {
+                    foreach (var current in values)
+                    {
+                        values.IndexOf(item);
+                        values.Find(value => value == item);
+                        values.First();
+                        values.FirstOrDefault();
+                        values.SingleOrDefault();
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf014Analyzer());
+
+        Assert.Equal(2, diagnostics.Length);
+    }
 }

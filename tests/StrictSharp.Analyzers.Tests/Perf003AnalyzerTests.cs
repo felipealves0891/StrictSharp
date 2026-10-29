@@ -38,4 +38,23 @@ public sealed class Perf003AnalyzerTests
 
         Assert.Empty(diagnostics);
     }
+
+    [Fact]
+    public async Task ReportsAsyncBlockTaskRunWrapper()
+    {
+        const string source = """
+            using System.Threading.Tasks;
+            class Sample
+            {
+                async Task<int> GetAsync() => 1;
+                Task<int> Compute() => Task.Run(async () =>
+                {
+                    await GetAsync();
+                    return 1;
+                });
+            }
+            """;
+
+        Assert.Single(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf003Analyzer()));
+    }
 }
