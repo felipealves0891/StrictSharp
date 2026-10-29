@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "feature_id": "csharp-performance-analyzer-v2",
-  "execution_id": "gate-20261029T003041Z",
+  "execution_id": "gate-20261029T003215Z",
   "project_root": "D:\\Felipe\\Repos\\Dotnet\\StrictSharp",
-  "code_revision": "d4ba58aa9472c3e32290363e632fe2f0d4879654",
+  "code_revision": "06f254f00c922012ee1004e8839a25e5d798a95c",
   "config_hash": "sha256:f3b10a005783a65dab49364b6cc77202752363f8fabdd887aca2adaad3c3537b",
   "artifact_hashes": {
     "spec.md": "596f195c3794ecae21069a01e0067049d03a92905005a8272fb18648ca68839f",
@@ -11,8 +11,8 @@
     "plan.md": "162728cfabdb9ae295d25bfb7805d89806175a53731041ab4b81d9ffb1ffc13d",
     "tasks.md": "d834c137fb72cc9f77fed5764b371a2dcb55b909efa2b49c4ddcb7f01e79f9ab"
   },
-  "started_at": "2026-10-29T00:30:41.674Z",
-  "duration_ms": 10272,
+  "started_at": "2026-10-29T00:32:15.471Z",
+  "duration_ms": 25056,
   "gates": [
     {
       "id": "GATE-001",
@@ -21,12 +21,12 @@
       "status": "passed",
       "command": "dotnet build --no-restore -v d",
       "exit_code": 0,
-      "duration_ms": 1660,
+      "duration_ms": 4434,
       "diagnostics": [],
       "evidence": [
-        ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/evidence/01-build.log"
+        ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003215Z/evidence/01-build.log"
       ],
-      "output_directory": ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/build",
+      "output_directory": ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003215Z/build",
       "output_files": [],
       "output_file_count": 0
     },
@@ -37,12 +37,12 @@
       "status": "passed",
       "command": "dotnet test --no-restore --no-build",
       "exit_code": 0,
-      "duration_ms": 5008,
+      "duration_ms": 5483,
       "diagnostics": [],
       "evidence": [
-        ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/evidence/02-test.log"
+        ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003215Z/evidence/02-test.log"
       ],
-      "output_directory": ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/test",
+      "output_directory": ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003215Z/test",
       "output_files": [],
       "output_file_count": 0
     },
@@ -53,12 +53,12 @@
       "status": "passed",
       "command": "dotnet list package --vulnerable",
       "exit_code": 0,
-      "duration_ms": 2711,
+      "duration_ms": 2583,
       "diagnostics": [],
       "evidence": [
-        ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/evidence/03-security.log"
+        ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003215Z/evidence/03-security.log"
       ],
-      "output_directory": ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/security",
+      "output_directory": ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003215Z/security",
       "output_files": [],
       "output_file_count": 0
     },
@@ -69,14 +69,14 @@
       "status": "failed",
       "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \".spectro/tools/coverage-gate.ps1\" -Project \".\" -BaseBranch \"origin/main\" -MinLineCoverage 80 -MinBranchCoverage 70 -MinNewLineCoverage 90 -MinNewBranchCoverage 85",
       "exit_code": 1,
-      "duration_ms": 772,
+      "duration_ms": 12495,
       "diagnostics": [
-        "ERRO: Working tree possui altera��es tracked n�o commitadas. Commit antes de medir ou use -AllowDirtyTree (n�o recomendado).\r\nRESULTADO: false"
+        "Executando: dotnet test . --collect:XPlat Code Coverage\r\n  Determinando os projetos a serem restaurados...\r\n  Todos os projetos estão atualizados para restauração.\r\n  StrictSharp.Analyzers -> D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\src\\StrictSharp.Analyzers\\bin\\Debug\\netstandard2.1\\StrictSharp.Analyzers.dll\r\n  StrictSharp.Analyzers.Tests -> D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\tests\\StrictSharp.Analyzers.Tests\\bin\\Debug\\net10.0\\StrictSharp.Analyzers.Tests.dll\r\nExecução de teste para D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\tests\\StrictSharp.Analyzers.Tests\\bin\\Debug\\net10.0\\StrictSharp.Analyzers.Tests.dll (.NETCoreApp,Version=v10.0)\r\n1 arquivos de teste no total corresponderam ao padrão especificado.\r\n\r\nAprovado!  – Com falha:     0, Aprovado:    93, Ignorado:     0, Total:    93, Duração: 3 s - StrictSharp.Analyzers.Tests.dll (net10.0)\r\n\r\nAnexos:\r\n  C:\\Users\\cfalv\\AppData\\Local\\Temp\\coverage-gate-458845e4ded24efbad9f6b1682d0aa67\\e2a80a12-8f53-47c2-9428-0bbc3b9a0dba\\coverage.cobertura.xml\r\nRelat�rios: 1 | Linhas C# modificadas no Git: 3760 | Linhas instrumentadas modificadas: 934\r\n\n=========== QUALITY GATE ===========\r\nLine Coverage            95,72% (min 80,00%) [PASS]\r\nBranch Coverage          78,23% (min 70,00%) [PASS]\r\nNew Line Coverage        95,72% (min 90,00%) [PASS]\r\nNew Branch Coverage      78,23% (min 85,00%) [FAIL]\r\nRESULTADO: false"
       ],
       "evidence": [
-        ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/evidence/04-coverage.log"
+        ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003215Z/evidence/04-coverage.log"
       ],
-      "output_directory": ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003041Z/coverage",
+      "output_directory": ".spectro/features/csharp-performance-analyzer-v2/outputs/gate-20261029T003215Z/coverage",
       "output_files": [],
       "output_file_count": 0
     }

@@ -88,4 +88,4 @@
 
 - Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-008`, `TASK-009`.
 - Bloqueadas: nenhuma.
-- Próxima tarefa: `TASK-010` (pendente: o gate de segurança retornou código 1 sem saída em duas tentativas; build e testes passaram).
+- Próxima tarefa: `TASK-010` (pendente: foram adicionados casos de branch; 106 testes passam. A medição local de cobertura ainda precisa ser validada pelo gate oficial).
