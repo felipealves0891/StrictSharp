@@ -4,9 +4,6 @@ on:
   push:
     branches:
       - feat/**
-      - feat-**
-      - feature/**
-      - feature-**
 
 permissions:
   contents: read
@@ -40,3 +37,26 @@ jobs:
             --no-restore \
             -p:Version=1.0.${{ github.run_number }} \
             -p:ContinuousIntegrationBuild=true
+
+      - name: Unit Tests
+        run: |
+          dotnet test "${{ env.SOLUTION }}" \
+            --configuration Release \
+            --no-build \
+            --collect:"XPlat Code Coverage" \
+            --results-directory ./TestResults
+      
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: TestResults/**/coverage.cobertura.xml
+          if-no-files-found: warn
+
+      - name: Validate Coverage
+        run: |
+          python .github/scripts/validate_coverage.py \
+            --directory ./TestResults \
+            --min-lines 90 \
+            --min-branches 75
+      
