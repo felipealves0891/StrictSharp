@@ -23,6 +23,8 @@
     <RepositoryUrl>https://github.com/felipealves0891/StrictSharp</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -38,6 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
     <None Include=".nuspec">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
