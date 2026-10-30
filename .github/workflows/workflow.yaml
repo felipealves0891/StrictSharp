@@ -1,0 +1,39 @@
+name: .NET CI/CD
+
+on:
+  push:
+    branches:
+      - feat*
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  SOLUTION: 'StrictSharp.sln'
+  PROJECT: 'src/StrictSharp.Analyzers/StrictSharp.Analyzers.csproj'
+
+jobs:
+  ci:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore "${{ env.SOLUTION }}"
+
+      - name: Build
+        run: |
+          dotnet build "${{ env.SOLUTION }}" \
+            --configuration Release \
+            --no-restore \
+            -p:Version=1.0.${{ github.run_number }} \
+            -p:ContinuousIntegrationBuild=true
