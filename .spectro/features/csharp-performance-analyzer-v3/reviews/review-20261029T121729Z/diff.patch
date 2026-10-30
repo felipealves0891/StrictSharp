@@ -1,0 +1,1084 @@
+diff --git a/.spectro/features/csharp-performance-analyzer-v3/clarifications.md b/.spectro/features/csharp-performance-analyzer-v3/clarifications.md
+warning: in the working copy of '.spectro/features/csharp-performance-analyzer-v3/gates.json', LF will be replaced by CRLF the next time Git touches it
+new file mode 100644
+index 0000000..08c79e5
+--- /dev/null
++++ b/.spectro/features/csharp-performance-analyzer-v3/clarifications.md
+@@ -0,0 +1,15 @@
++<!-- spectro-managed: true -->
++# Clarificações: Implementação V3 do C# Performance Analyzer
++
++| ID | Dúvida | Classificação | Impacto | Decisão | Responsável | Data |
++|---|---|---|---|---|---|---|
++| `Q-V3-001` | Que evidência deve ser suportada na primeira entrega de `PERF011`? | Blocking | Define a cobertura e o risco de falsos positivos da análise de retenção. | Resolvido: limitar a primeira entrega a padrões estruturais explicitamente reconhecidos, com evidência comprovável; não realizar análise geral de todos os caminhos de alcance. | Usuário/projeto | 2026-10-29 |
++| `Q-V3-002` | Como definir “objeto pesado” e invariância para `PERF030`? | Blocking | Define quando a recriação repetida pode ser reportada sem medição de produção. | Resolvido: usar como sinais construtores complexos, quantidade relevante de propriedades/dados inicializados e recriação com os mesmos valores. Não fixar limiar numérico; o planejamento deve definir heurísticas conservadoras e observáveis. | Usuário/projeto | 2026-10-29 |
++| `Q-V3-003` | Quais critérios de validação e limite de custo do analyzer aplicar à V3? | Major | Define a evidência necessária para aceitar as duas regras e evitar um gate de performance arbitrário. | Resolvido: exigir exemplos positivos, negativos e de exceção, benchmark comparativo representativo para cada regra e uso dos gates existentes para o custo do analyzer, sem novo limiar quantitativo. | Usuário/projeto | 2026-10-29 |
++
++## Resultado
++
++- Bloqueios restantes: 0
++- Questões major restantes: 0
++- Pronto para planejamento: sim
++- Estado: `completed`
+diff --git a/.spectro/features/csharp-performance-analyzer-v3/evidence-v3-validation.md b/.spectro/features/csharp-performance-analyzer-v3/evidence-v3-validation.md
+new file mode 100644
+index 0000000..558a393
+--- /dev/null
++++ b/.spectro/features/csharp-performance-analyzer-v3/evidence-v3-validation.md
+@@ -0,0 +1,21 @@
++<!-- spectro-managed: true -->
++# Evidência de validação V3
++
++## Hipóteses
++
++- `PERF011`: adicionar repetidamente elementos a uma coleção mantida em campo, sem remoção/limpeza observável, pode aumentar a memória viva ao longo da execução.
++- `PERF030`: reconstruir em loop uma instância com argumentos invariantes e inicialização não trivial repete custo de CPU e alocação; reutilização pode reduzir esse custo quando o contrato permitir.
++
++## Cenários comparativos reproduzíveis
++
++Os cenários devem comparar uma implementação que repete a retenção/reconstrução com uma implementação que limita a retenção ou reutiliza uma instância imutável. A validação deve coletar, em execução representativa, memória viva após períodos prolongados para `PERF011` e alocações/CPU para `PERF030`. Os números são evidência do cenário, não limiares do analyzer.
++
++## Evidência estática disponível
++
++- Testes `Perf011AnalyzerTests` cobrem diagnóstico positivo, coleção local e limpeza explícita.
++- Testes `Perf030AnalyzerTests` cobrem diagnóstico positivo, argumentos dependentes da iteração e criação fora do loop.
++- `V3TestMatrixTests` confirma IDs, ordem, neutralidade, compatibilidade C# 14 e separação dos catálogos V1/V2.
++
++## Limitação
++
++O repositório não adiciona dependência de benchmark nem telemetria ao analyzer. A medição comparativa deve ser executada com carga representativa antes de afirmar impacto quantitativo; o diagnóstico permanece baseado apenas em evidência estática.
+diff --git a/.spectro/features/csharp-performance-analyzer-v3/gates.json b/.spectro/features/csharp-performance-analyzer-v3/gates.json
+new file mode 100644
+index 0000000..d2567e5
+--- /dev/null
++++ b/.spectro/features/csharp-performance-analyzer-v3/gates.json
+@@ -0,0 +1,83 @@
++{
++  "schema_version": "1.0",
++  "feature_id": "csharp-performance-analyzer-v3",
++  "execution_id": "gate-20261029T121528Z",
++  "project_root": "D:\\Felipe\\Repos\\Dotnet\\StrictSharp",
++  "code_revision": "75fd8e7871474f6f118310ab41a32324f2c7f1c6",
++  "config_hash": "sha256:f3b10a005783a65dab49364b6cc77202752363f8fabdd887aca2adaad3c3537b",
++  "artifact_hashes": {
++    "spec.md": "ed0b4a7c4276137c6349c37c8b13db9a6af3d0e30a06e18d4a59c77887079f8e",
++    "clarifications.md": "379d9220206edb415907d70d5fc95b86268f161e098b6f0ca2143aeb58716ea8",
++    "plan.md": "b726fa29a737fc7dc28983d5705f056f44572e06aaf258277db8527e54f4a00d",
++    "tasks.md": "7eb29507e184510eb2e85228fd3cb2e9dbb2b4537e7eedbebb1b21e953eb5697"
++  },
++  "started_at": "2026-10-29T12:15:28.792Z",
++  "duration_ms": 29865,
++  "gates": [
++    {
++      "id": "GATE-001",
++      "name": "build",
++      "required": true,
++      "status": "passed",
++      "command": "dotnet build --no-restore -v d",
++      "exit_code": 0,
++      "duration_ms": 5745,
++      "diagnostics": [],
++      "evidence": [
++        ".spectro/features/csharp-performance-analyzer-v3/outputs/gate-20261029T121528Z/evidence/01-build.log"
++      ],
++      "output_directory": ".spectro/features/csharp-performance-analyzer-v3/outputs/gate-20261029T121528Z/build",
++      "output_files": [],
++      "output_file_count": 0
++    },
++    {
++      "id": "GATE-002",
++      "name": "test",
++      "required": true,
++      "status": "passed",
++      "command": "dotnet test --no-restore --no-build",
++      "exit_code": 0,
++      "duration_ms": 8449,
++      "diagnostics": [],
++      "evidence": [
++        ".spectro/features/csharp-performance-analyzer-v3/outputs/gate-20261029T121528Z/evidence/02-test.log"
++      ],
++      "output_directory": ".spectro/features/csharp-performance-analyzer-v3/outputs/gate-20261029T121528Z/test",
++      "output_files": [],
++      "output_file_count": 0
++    },
++    {
++      "id": "GATE-003",
++      "name": "security",
++      "required": true,
++      "status": "passed",
++      "command": "dotnet list package --vulnerable",
++      "exit_code": 0,
++      "duration_ms": 2877,
++      "diagnostics": [],
++      "evidence": [
++        ".spectro/features/csharp-performance-analyzer-v3/outputs/gate-20261029T121528Z/evidence/03-security.log"
++      ],
++      "output_directory": ".spectro/features/csharp-performance-analyzer-v3/outputs/gate-20261029T121528Z/security",
++      "output_files": [],
++      "output_file_count": 0
++    },
++    {
++      "id": "GATE-004",
++      "name": "coverage",
++      "required": true,
++      "status": "passed",
++      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \".spectro/tools/coverage-gate.ps1\" -Project \".\" -BaseBranch \"origin/main\" -MinLineCoverage 80 -MinBranchCoverage 70 -MinNewLineCoverage 90 -MinNewBranchCoverage 85",
++      "exit_code": 0,
++      "duration_ms": 12737,
++      "diagnostics": [],
++      "evidence": [
++        ".spectro/features/csharp-performance-analyzer-v3/outputs/gate-20261029T121528Z/evidence/04-coverage.log"
++      ],
++      "output_directory": ".spectro/features/csharp-performance-analyzer-v3/outputs/gate-20261029T121528Z/coverage",
++      "output_files": [],
++      "output_file_count": 0
++    }
++  ],
++  "result": "passed"
++}
+diff --git a/.spectro/features/csharp-performance-analyzer-v3/plan.md b/.spectro/features/csharp-performance-analyzer-v3/plan.md
+new file mode 100644
+index 0000000..e09eacc
+--- /dev/null
++++ b/.spectro/features/csharp-performance-analyzer-v3/plan.md
+@@ -0,0 +1,107 @@
++<!-- spectro-managed: true -->
++# Plano: Implementação V3 do C# Performance Analyzer
++
++## Contexto e objetivo técnico
++
++- A especificação V3 foi clarificada e não possui bloqueios. A decisão `Q-V3-001` limita `PERF011` a padrões estruturais reconhecidos; `Q-V3-002` define construtores complexos, quantidade relevante de propriedades/dados e recriação com os mesmos valores como sinais para `PERF030`, sem limiar numérico fixo; `Q-V3-003` exige exemplos completos, benchmarks representativos e os gates existentes.
++- O projeto já possui `RuleDefinition`, `RuleCatalog`, `RuleAnalyzerBase`, `RuleAnalysis`, catálogos explícitos V1/V2 e um harness Roslyn determinístico. Os IDs V3 já estão catalogados, mas ainda não há `V3AnalyzerCatalog`, analyzers V3 ou testes específicos.
++- Objetivo técnico: habilitar exatamente `PERF011` e `PERF030` como analyzers executáveis, mantendo V1/V2 inalteradas, a análise concorrente segura e a distinção entre risco estrutural e impacto medido.
++
++## Solução proposta
++
++- Criar `Perf011Analyzer` e `Perf030Analyzer`, um por diagnóstico, derivados de `RuleAnalyzerBase`.
++- Criar `V3AnalyzerCatalog` com os dois analyzers na mesma ordem de `RuleCatalog.V3`; adicionar `RuleCatalog.V3` sem incluir V3 nos catálogos V1/V2.
++- `PERF011`: analisar somente padrões estruturais explicitamente reconhecidos no código e no modelo semântico, como referências de longa duração em campos/coleções/cache/eventos/delegates quando o vínculo e a ausência de limite, expiração, remoção ou descarte forem observáveis. O analyzer deve omitir a suspeita quando a propriedade, transferência, escopo delimitado ou retenção necessária forem plausíveis e não demonstráveis.
++- `PERF030`: localizar criações repetidas em loops ou caminhos de repetição estrutural e avaliar sinais de custo/invariância: construtor com inicialização complexa observável, conjunto relevante de propriedades/dados inicializados e argumentos/valores repetidos. A regra não deve usar quantidade numérica fixa de propriedades nem afirmar que o tipo é universalmente pesado.
++- Reutilizar `RuleAnalysis` somente para predicados compartilhados por ambas as regras ou por regras futuras; manter estado por compilação fora de serviços estáticos e preservar `EnableConcurrentExecution`.
++- Manter metadados, severidade, confiança, limitações e referência no `RuleCatalog`; `PERF011` continua com severidade `Critical` e confiança baixa, e `PERF030` com severidade `High` e confiança baixa conforme o catálogo atual.
++- Não criar Code Fix automático. As mensagens permanecem condicionais e o analyzer não executa profiling, telemetria, persistência ou chamadas externas.
++
++## Arquitetura e contratos
++
++### Componentes de produção
++
++- `src/StrictSharp.Analyzers/Analyzers/Perf011Analyzer.cs`: detecção estrutural de retenção potencial e reporte no local que melhor representa a referência ou vínculo retentor.
++- `src/StrictSharp.Analyzers/Analyzers/Perf030Analyzer.cs`: detecção de criação repetida com sinais observáveis de inicialização custosa/invariância.
++- `src/StrictSharp.Analyzers/Analyzers/V3AnalyzerCatalog.cs`: catálogo explícito dos dois analyzers V3.
++- `src/StrictSharp.Analyzers/Rules/RuleCatalog.cs`: exposição ordenada de `V3`, preservando os 30 IDs e as listas V1/V2 existentes.
++- `src/StrictSharp.Analyzers/Infrastructure/RuleAnalysis.cs`: extensões estáticas somente quando a lógica for comum, pequena e semanticamente comprovável; não transformar o serviço em um grafo de análise global.
++
++### Contrato de análise
++
++- Entrada: árvore C#, `SemanticModel`, símbolos e operações Roslyn disponíveis nos callbacks registrados pelo analyzer.
++- Saída: zero ou mais diagnósticos com exatamente um ID suportado pelo analyzer correspondente; cada analyzer expõe um único descriptor.
++- Código gerado: permanece excluído por `RuleAnalyzerBase`.
++- Configuração: severidade e supressão continuam delegadas ao Roslyn/`.editorconfig`; não haverá configuração proprietária de limiares.
++- Concorrência: callbacks devem ser reentrantes e sem estado mutável compartilhado, pois `EnableConcurrentExecution` permanece habilitado.
++- Segurança: nenhum código, literal, segredo ou dado de produção deixa o processo de análise.
++
++### Fluxo de decisão
++
++1. Aplicar filtro sintático barato para selecionar criações, atribuições, inscrições, adições a coleções, campos e caminhos de repetição candidatos.
++2. Consultar o modelo semântico apenas após o filtro, resolver símbolos/tipos e confirmar que o padrão pertence a um caso documentado.
++3. Procurar evidências de exceção: propriedade transferida, remoção/expiração, descarte, estado variável, configuração dependente da iteração, falta de thread safety ou isolamento por operação.
++4. Reportar somente quando a evidência positiva superar a incerteza; caso contrário, omitir o diagnóstico e preservar baixo ruído.
++
++## Alternativas consideradas
++
++- **Análise geral de reachability ou memory leak:** rejeitada; excede o contrato estático aprovado, exigiria análise interprocedural/dinâmica e contradiz `CON-004`.
++- **Lista de tipos “pesados” com limiar fixo de propriedades ou custo:** rejeitada; não há medição de runtime nem limiar numérico aprovado. Os sinais devem ser estruturais e conservadores.
++- **Marcar toda criação em loop como `PERF030`:** rejeitada; duplicaria `PERF007`/`PERF021` e produziria ruído sem demonstrar invariância ou inicialização relevante.
++- **Adicionar um analyzer único para as duas regras:** rejeitada; viola a convenção de um analyzer por diagnóstico e reduz a rastreabilidade do contrato.
++- **Code Fix para mover instâncias, limpar referências ou alterar escopo:** rejeitada; propriedade, ciclo de vida, thread safety e semântica não podem ser demonstrados genericamente.
++- **Dependência externa para profiling ou benchmark:** rejeitada na implementação; validações comparativas devem ser reproduzíveis sem alterar o runtime do analyzer.
++
++## Riscos e compatibilidade
++
++- **Falso positivo em retenção intencional:** mitigar com padrões reconhecidos, evidência de ausência de limite/expiração/remoção e testes para cache delimitado, singleton, transferência e descarte externo.
++- **Falso positivo em objeto “pesado”:** mitigar exigindo repetição, sinais de inicialização e invariância observáveis; não usar contagem numérica fixa nem classificar toda classe com muitas propriedades.
++- **Sobreposição com regras existentes:** `PERF011` deve acrescentar contexto de ciclo de vida além de `PERF007`, `PERF008`, `PERF010` e `PERF028`; `PERF030` deve acrescentar invariância/custo de reconstrução além de `PERF007` e `PERF021`.
++- **Fluxo interprocedural incompleto:** omitir quando propriedade, mutabilidade, descarte ou configuração não forem demonstráveis, em vez de inferir contratos.
++- **Custo do analyzer:** mitigar com filtros sintáticos, consultas semânticas condicionais, ausência de análise global e revisão de alocações; aplicar os gates existentes, sem novo limiar quantitativo.
++- **Compatibilidade:** preservar `netstandard2.1`, C# 14, Roslyn 5.0 e o harness em `net10.0`; não adicionar dependências.
++
++## Estratégia de testes
++
++- Criar testes comportamentais isolados para cada analyzer, com caso positivo, negativo e exceções relevantes.
++- `PERF011`: cobrir retenção estrutural reconhecida, retenção delimitada/expirada, transferência de propriedade, remoção explícita, descarte externo e código sem vínculo retentor.
++- `PERF030`: cobrir criação repetida com construtor complexo, inicialização de múltiplas propriedades, mesmos argumentos/valores, configuração dependente da iteração, estado variável, tipo não thread-safe e instância criada fora da repetição.
++- Criar `V3TestMatrixTests` para verificar exatamente os dois IDs, um descriptor por analyzer, ordem igual a `RuleCatalog.V3`, código neutro sem diagnósticos e compatibilidade com C# 14.
++- Expandir `RuleCatalogTests` para confirmar listas 15/13/2, fases, metadados e severidades V3; reutilizar `RuleConfigurationTests` para supressão e severidade configurável.
++- Manter regressão dos testes V1/V2 e executar a suíte sem habilitar V3 nos catálogos anteriores.
++- Registrar benchmark comparativo representativo para cada regra, limitado a demonstrar o cenário de regressão da hipótese; o benchmark não deve ser usado para alterar a heurística por limiar de runtime.
++- Executar `dotnet build StrictSharp.sln`, `dotnet test StrictSharp.sln` e os comandos de build, test, coverage e security definidos em `.spectro/config.yaml`.
++
++## Rastreabilidade
++
++| Requisito | Critério de aceite | Tarefa |
++|---|---|---|
++| `FR-001`, `CON-001`, `CON-003` | `AC-001` | `TASK-001`, `TASK-007` |
++| `FR-002`, `FR-003` | `AC-002` | `TASK-002` |
++| `FR-004`, `CON-004` | `AC-003` | `TASK-002`, `TASK-006` |
++| `FR-005`, `FR-006` | `AC-004` | `TASK-003` |
++| `FR-007` | `AC-005` | `TASK-003`, `TASK-006` |
++| `FR-008`, `FR-009` | `AC-006` | `TASK-001`, `TASK-002`, `TASK-003`, `TASK-006` |
++| `FR-010` | `AC-007` | `TASK-001`, `TASK-007` |
++| `FR-011` | `AC-008` | `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007` |
++| `NFR-001`, `NFR-002`, `NFR-003`, `NFR-004`, `NFR-005` | `AC-009` | `TASK-001`–`TASK-007` |
++| `NFR-006` | `AC-010` | `TASK-005`, `TASK-007` |
++| `NFR-007` | `AC-011` | `TASK-006`, `TASK-007` |
++| `CON-002`, `CON-005`, `CON-006`, `CON-007` | `AC-001`, `AC-005`, `AC-006`, `AC-009` | `TASK-001`, `TASK-003`, `TASK-006`, `TASK-007` |
++
++## Ordem de execução
++
++1. `TASK-001` — fundação, catálogo V3 e contratos compartilhados.
++2. `TASK-002` — analyzer e testes de `PERF011`.
++3. `TASK-003` — analyzer e testes de `PERF030`.
++4. `TASK-004` — matriz V3, catálogo e configuração.
++5. `TASK-005` — benchmarks e documentação funcional.
++6. `TASK-006` — revisão de segurança, custo e não sobreposição.
++7. `TASK-007` — build, testes e gates finais.
++
++Não há dependências cíclicas. As tarefas 002 e 003 dependem da fundação e podem ser executadas em paralelo; as tarefas 004–007 dependem dos analyzers e seus testes.
++
++## Estado
++
++- Estado do plano: `ready_for_implementation`.
++- Aprovação adicional necessária: aprovação humana para iniciar a implementação, conforme `require_human_approval_for_scope_changes` e os estágios configurados pelo projeto.
+diff --git a/.spectro/features/csharp-performance-analyzer-v3/spec.md b/.spectro/features/csharp-performance-analyzer-v3/spec.md
+new file mode 100644
+index 0000000..4ada9b1
+--- /dev/null
++++ b/.spectro/features/csharp-performance-analyzer-v3/spec.md
+@@ -0,0 +1,108 @@
++<!-- spectro-managed: true -->
++# Especificação: Implementação V3 do C# Performance Analyzer
++
++## Problema e objetivo
++
++- Problema: as versões V1 e V2 cobrem padrões objetivos e antipatrones dependentes de contexto, mas ainda não identificam dois riscos relevantes de aplicações de longa duração: objetos que permanecem retidos além do necessário e recursos pesados invariantes reconstruídos repetidamente. Esses riscos dependem de relações de propriedade, ciclo de vida, alcance e repetição que não podem ser reduzidas a uma única chamada de API.
++- Objetivo: implementar a etapa V3 do analisador estático, disponibilizando `PERF011` e `PERF030` com suspeitas fundamentadas, evidências observáveis, nível de confiança explícito e recomendações condicionais, sem prometer detecção completa de memory leaks nem ganho de performance medido.
++
++## Usuários e contexto
++
++- Desenvolvedores e revisores de código C# que trabalham com serviços de longa duração, Workers, APIs, filas e caminhos de inicialização ou processamento repetitivo.
++- A análise deve indicar risco estrutural no código; a confirmação do impacto em memória viva, CPU, GC ou throughput depende de profiling ou benchmark representativo.
++
++## Escopo
++
++### Incluído
++
++- Implementação dos dois diagnósticos V3 catalogados: `PERF011` e `PERF030`.
++- Identificação de evidências de retenção indevida e de reconstrução repetida de objetos ou recursos pesados invariantes.
++- Mensagens com impacto potencial, escalabilidade, correção condicional, exceções, confiança e limitações da análise estática.
++- Integração com o catálogo estável `PERF001`–`PERF030`, documentação e configuração de severidade.
++- Testes positivos, negativos e de exceção, incluindo propriedade, transferência de ciclo de vida, mutabilidade, thread safety e isolamento por operação quando relevantes.
++- Justificativa reproduzível e, para diagnósticos de maior impacto, benchmark comparativo com cenário representativo de regressão.
++
++### Excluído
++
++- Implementação ou alteração funcional das regras V1 e V2, salvo ajustes de integração indispensáveis para manter o catálogo consistente.
++- Prova completa de memory leak, análise de todos os caminhos dinâmicos, determinação de memória viva em produção ou garantia de ausência de retenção.
++- Medição automática de bytes alocados, GC/LOH, CPU, throughput, latência, frequência de execução ou custo real em produção.
++- Code Fix automático quando a correção depender de contrato, propriedade, mutabilidade, thread safety, ciclo de vida, estado variável ou isolamento.
++- Definição antecipada de arquitetura interna, nomes de classes, divisão de serviços ou mecanismo específico de implementação.
++- Profiling, telemetria, coleta de código-fonte ou correlação com dados externos de runtime.
++
++## Requisitos
++
++### Requisitos funcionais
++
++- `FR-001`: O produto deve disponibilizar `PERF011` e `PERF030` como diagnósticos V3, com IDs estáveis, títulos, categorias e severidades do catálogo, sem apresentá-los como regras oficiais do .NET.
++- `FR-002`: `PERF011` deve identificar situações em que um objeto ou recurso pode permanecer alcançável além do ciclo de vida necessário por uma referência, coleção, cache, delegate, evento ou outro vínculo estrutural observável.
++- `FR-003`: `PERF011` deve emitir a suspeita somente quando houver evidência suficiente de retenção potencial e deve reduzir a confiança ou omitir o diagnóstico quando propriedade, transferência de ciclo de vida, escopo de cache ou descarte externo forem plausíveis e não demonstráveis.
++- `FR-004`: `PERF011` deve orientar a revisão do ciclo de vida, remoção de referências, escopo limitado ou descarte apropriado conforme o caso, sem afirmar que encontrou um memory leak comprovado.
++- `FR-005`: `PERF030` deve identificar criação repetida de objetos, recursos ou estruturas de inicialização custosa cuja configuração seja observavelmente invariável no contexto analisado, usando como evidência construtores complexos, quantidade relevante de propriedades/dados inicializados ou recriação com os mesmos valores.
++- `FR-006`: `PERF030` deve considerar como exceções relevantes instâncias não thread-safe, estado variável, isolamento obrigatório por operação, propriedade transferida e casos em que a reutilização não seja demonstrável ou possa alterar a semântica.
++- `FR-007`: `PERF030` deve recomendar criação única no escopo apropriado, cache limitado ou compartilhamento de instâncias imutáveis somente como orientação condicional, preservando o contrato do código analisado.
++- `FR-008`: Cada diagnóstico V3 deve apresentar identificador, título, severidade, categoria, evidência, impacto, escalabilidade, correção, exemplo, exceções, confiança e referência técnica.
++- `FR-009`: Cada diagnóstico V3 deve distinguir custo ou risco estrutural observável de impacto dependente de frequência, duração, volume, carga ou ambiente, sem informar percentual de ganho sem medição.
++- `FR-010`: Cada diagnóstico V3 deve ser configurável individualmente para habilitação, desabilitação e severidade, mantendo o ID estável e evitando duplicação de regras oficiais sem valor adicional.
++- `FR-011`: Cada diagnóstico V3 deve possuir documentação rastreável, exemplos positivos e negativos, casos de exceção, versões suportadas e uma hipótese mensurável de validação.
++
++### Requisitos não funcionais
++
++- `NFR-001`: A análise deve priorizar precisão e baixo ruído; não deve reportar retenção ou invariância apenas porque uma construção é possível.
++- `NFR-002`: O custo do analyzer deve permanecer aceitável em IDE e build, evitando alocações desnecessárias, trabalho semântico repetido e análise de símbolos não relacionados ao diagnóstico.
++- `NFR-003`: A implementação deve manter separadas a integração Roslyn e a lógica específica de análise, com um analisador por diagnóstico e serviços estáticos por padrão, conforme as convenções do projeto.
++- `NFR-004`: As recomendações devem preservar semântica, propriedade, mutabilidade, thread safety, descarte, igualdade, estado e contrato das APIs; quando isso não puder ser provado, devem ser apresentadas como revisão manual.
++- `NFR-005`: A V3 deve permanecer compatível com as versões de C#, .NET, Target Framework e Roslyn aprovadas pelo projeto.
++- `NFR-006`: A validação deve usar evidência adequada à categoria: memória viva após períodos prolongados para retenção e alocações, GC/LOH e CPU quando aplicáveis à reconstrução; benchmarks comparativos devem ser representativos e reproduzíveis, sem criar limiar numérico adicional para o custo do analyzer além dos gates existentes.
++- `NFR-007`: A análise não deve enviar código-fonte, segredos, dados de produção ou informações sensíveis para serviços externos.
++
++### Restrições
++
++- `CON-001`: Os IDs V3 são exatamente `PERF011` e `PERF030`.
++- `CON-002`: A V3 deve complementar os analisadores oficiais e não duplicar diagnósticos `CA18xx` sem contexto ou valor explicativo adicional.
++- `CON-003`: Severidade representa risco operacional plausível, não estimativa de ganho percentual; os valores permitidos são `Critical`, `High`, `Medium` e `Low`.
++- `CON-004`: `PERF011` deve ser descrito como suspeita fundamentada e nunca como detecção completa ou prova de memory leak.
++- `CON-005`: Code Fix automático não é obrigatório e não deve ser oferecido quando a equivalência semântica, propriedade ou ciclo de vida não puder ser demonstrada.
++- `CON-006`: Alterações de severidade, plataformas, etapa do roadmap, escopo, dependências ou contrato público exigem aprovação humana conforme a constituição do projeto.
++- `CON-007`: Dependências externas novas só podem ser adicionadas com justificativa funcional, de compatibilidade, performance e manutenção.
++
++## Critérios de aceite
++
++- `AC-001` (FR-001): Dado o catálogo carregado, quando os diagnósticos V3 forem consultados, então `PERF011` e `PERF030` aparecem uma única vez, com metadados consistentes e etapa V3, sem IDs oficiais do .NET.
++- `AC-002` (FR-002, FR-003): Dado um objeto alcançável por vínculo estrutural que excede o escopo de vida esperado, quando a análise tiver evidência suficiente e nenhuma transferência ou administração externa demonstrável, então `PERF011` é emitido como suspeita; quando a propriedade externa ou o ciclo de vida válido forem demonstráveis, então não é emitido.
++- `AC-003` (FR-004, CON-004): Dado `PERF011` emitido, quando seus detalhes forem consultados, então a mensagem identifica a referência e o risco de retenção, orienta revisão do ciclo de vida e declara que não prova um memory leak nem mede memória viva em produção.
++- `AC-004` (FR-005, FR-006): Dado objeto ou recurso criado repetidamente, com construtor complexo, quantidade relevante de propriedades/dados inicializados ou os mesmos valores em cada criação, quando não houver estado variável, isolamento ou falta de thread safety que justifique a recriação, então `PERF030` é emitido; diante de qualquer exceção demonstrável, então não é emitido ou tem confiança reduzida.
++- `AC-005` (FR-007): Dado `PERF030` emitido, quando a recomendação for apresentada, então ela sugere reutilização, cache limitado ou compartilhamento apenas de forma condicional e explicita os contratos que precisam ser verificados.
++- `AC-006` (FR-008, FR-009): Dado qualquer diagnóstico V3 emitido, quando o desenvolvedor visualizar seus detalhes, então todos os campos obrigatórios estão presentes e a mensagem separa evidência estática, impacto potencial, escalabilidade, confiança, exceções e limitações de medição.
++- `AC-007` (FR-010): Dada configuração que desabilite ou altere a severidade de apenas `PERF011` ou `PERF030`, quando a análise for executada, então somente a regra configurada é afetada e seus IDs permanecem estáveis.
+warning: in the working copy of '.spectro/features/csharp-performance-analyzer-v3/state.json', LF will be replaced by CRLF the next time Git touches it
++- `AC-008` (FR-011): Dada a suíte V3, quando os testes e a documentação forem revisados, então cada regra possui exemplos positivos, negativos e de exceção, referência rastreável, versões suportadas e hipótese mensurável.
++- `AC-009` (NFR-001, NFR-002, NFR-003, NFR-004, NFR-005): Dado código compatível com as plataformas aprovadas, quando a análise completa for executada nos gates do projeto, então ela compila, mantém o custo aceitável, respeita a separação de responsabilidades e não recomenda alteração semanticamente não comprovada.
++- `AC-010` (NFR-006): Dado cenário representativo para cada regra, quando a validação for executada, então a evidência escolhida corresponde à categoria do risco e, para diagnósticos de maior impacto, existe benchmark comparativo com pelo menos uma regressão reproduzível.
++- `AC-011` (NFR-007): Dado código analisado contendo literais, identificadores ou exemplos potencialmente sensíveis, quando testes e gates forem executados, então nenhum conteúdo é enviado a serviço externo e as mensagens expõem apenas o contexto necessário.
++
++## Riscos, dependências e perguntas abertas
++
++- Risco: a análise estática pode não provar o tempo de vida esperado, a propriedade de uma referência, a frequência real, o peso de uma inicialização ou a segurança de compartilhar uma instância.
++- Risco: `PERF011` pode gerar falso positivo em caches intencionais, eventos, delegates, singletons, pools e componentes cuja propriedade foi transferida.
++- Risco: `PERF030` pode recomendar compartilhamento incorreto quando houver estado oculto, falta de thread safety, mutabilidade, isolamento, configuração dependente da operação ou custo de sincronização; “construtor complexo” e “quantidade relevante de propriedades” devem ser usados como sinais conservadores, sem limiar numérico arbitrário.
++- Risco: sobreposição com regras oficiais ou com `PERF007`, `PERF008`, `PERF021` e `PERF028` pode gerar diagnósticos duplicados; a regra deve acrescentar contexto de ciclo de vida ou invariância para permanecer válida.
++- Dependência: catálogo, documentação e contratos existentes da feature `csharp-performance-analyzer`.
++- Dependência: constituição e gates configurados em `.spectro/config.yaml`, incluindo cobertura, segurança, compatibilidade e custo do analyzer.
++- Dependência: Roslyn e versões de C#/.NET aprovadas pelo projeto.
++- Decisão aplicada: `PERF011` fica limitado a padrões estruturais explicitamente reconhecidos, com evidência comprovável, sem análise geral de todos os caminhos de alcance.
++- Decisão aplicada: `PERF030` usa construtores complexos, quantidade relevante de propriedades/dados e recriação com os mesmos valores como sinais de custo/invariância, sem limiar numérico fixo; a seleção conservadora dos sinais será detalhada no planejamento.
++- Decisão aplicada: a V3 exige exemplos positivos, negativos e de exceção, além de benchmark comparativo representativo para cada regra; o custo do analyzer segue os gates existentes.
++
++## Rastreabilidade
++
++- Especificação-mãe: `.spectro/features/csharp-performance-analyzer/spec.md`.
++- Fonte funcional: `docs/csharp-performance-analyzer.md`, seções 3, 4, 6, 7, 8 e 10.
++- Constituição: `.spectro/constitution.md`.
++- Configuração de gates: `.spectro/config.yaml`.
++
++## Estado
++
++- Estado da fase: `clarified`.
++- Pronto para esclarecimento: não.
++- Pronto para planejamento: sim.
+diff --git a/.spectro/features/csharp-performance-analyzer-v3/state.json b/.spectro/features/csharp-performance-analyzer-v3/state.json
+new file mode 100644
+index 0000000..8d69bbc
+--- /dev/null
++++ b/.spectro/features/csharp-performance-analyzer-v3/state.json
+@@ -0,0 +1,33 @@
++{
++  "schema_version": "1.0",
++  "feature_id": "csharp-performance-analyzer-v3",
++  "current_phase": "review",
++  "status": "completed",
++  "phases": {
++    "gates": {
++      "status": "completed",
++      "execution_id": "gate-20261029T121528Z",
++      "report": ".spectro/features/csharp-performance-analyzer-v3/gates.json"
++    }
++  },
++  "attempts": {
++    "environment-failure:GATE-004": 1
++  },
++  "invalidated_executions": [
++    "gate-20261029T121307Z"
++  ],
++  "last_failure": {
++    "category": "environment-failure",
++    "stage": "gates",
++    "execution_id": "gate-20261029T121307Z",
++    "gate_ids": [
++      "GATE-004"
++    ],
++    "diagnostics": [
++      "coverage: ERRO: Working tree possui altera��es tracked n�o commitadas. Commit antes de medir ou use -AllowDirtyTree (n�o recomendado).\r\nRESULTADO: false"
++    ],
++    "detected_at": "2026-10-29T12:13:51.338Z"
++  },
++  "last_execution_id": "gate-20261029T121528Z",
++  "updated_at": "2026-10-29T12:15:58.661Z"
++}
+diff --git a/.spectro/features/csharp-performance-analyzer-v3/tasks.md b/.spectro/features/csharp-performance-analyzer-v3/tasks.md
+new file mode 100644
+index 0000000..31e6991
+--- /dev/null
++++ b/.spectro/features/csharp-performance-analyzer-v3/tasks.md
+@@ -0,0 +1,28 @@
++<!-- spectro-managed: true -->
++# Tarefas: Implementação V3 do C# Performance Analyzer
++
++| ID | Tarefa | Requisito | Critério de aceite | Dependências | Status |
++|---|---|---|---|---|---|
++| `TASK-001` | Adicionar `RuleCatalog.V3`, criar `V3AnalyzerCatalog` e preparar extensões compartilhadas mínimas, preservando as listas e o comportamento V1/V2. | `FR-001`, `FR-008`, `FR-010`, `NFR-003`, `NFR-004`, `CON-001`, `CON-003` | `AC-001`, `AC-006`, `AC-007`, `AC-009` | — | completed |
++| `TASK-002` | Implementar `Perf011Analyzer` para padrões estruturais reconhecidos de retenção potencial, com omissão em retenção delimitada, transferência, remoção, descarte ou propriedade não demonstrável; adicionar testes comportamentais. | `FR-002`, `FR-003`, `FR-004`, `NFR-001`, `NFR-002`, `NFR-004`, `CON-004` | `AC-002`, `AC-003`, `AC-006`, `AC-009` | `TASK-001` | completed |
++| `TASK-003` | Implementar `Perf030Analyzer` para criação repetida com sinais de construtor complexo, inicialização relevante ou valores invariantes, preservando estado variável, isolamento e falta de thread safety; adicionar testes comportamentais. | `FR-005`, `FR-006`, `FR-007`, `NFR-001`, `NFR-002`, `NFR-004` | `AC-004`, `AC-005`, `AC-006`, `AC-009` | `TASK-001` | completed |
++| `TASK-004` | Criar matriz V3 e expandir testes de catálogo/configuração para verificar exatamente os dois IDs, metadados, fases, ordem, neutralidade, supressão e severidade configurável. | `FR-001`, `FR-008`, `FR-010`, `FR-011`, `NFR-005` | `AC-001`, `AC-007`, `AC-008`, `AC-009` | `TASK-002`, `TASK-003` | completed |
++| `TASK-005` | Produzir validação comparativa representativa para retenção e reconstrução, atualizar documentação e manter hipóteses, limitações, exemplos e rastreabilidade alinhados ao comportamento implementado. | `FR-008`, `FR-009`, `FR-011`, `NFR-006`, `CON-002`, `CON-004` | `AC-003`, `AC-005`, `AC-006`, `AC-008`, `AC-010` | `TASK-002`, `TASK-003`, `TASK-004` | completed |
++| `TASK-006` | Revisar segurança, ausência de chamadas externas, custo do analyzer, deduplicação com V1/V2/CA18xx e preservação semântica das recomendações. | `FR-004`, `FR-007`, `FR-009`, `NFR-001`, `NFR-002`, `NFR-004`, `NFR-007`, `CON-002`, `CON-005`, `CON-007` | `AC-003`, `AC-005`, `AC-006`, `AC-009`, `AC-011` | `TASK-002`, `TASK-003`, `TASK-005` | completed |
++| `TASK-007` | Executar build, testes, cobertura e segurança, revisar diff e confirmar a rastreabilidade integral antes da aprovação da implementação. | `FR-001`–`FR-011`, `NFR-001`–`NFR-007`, `CON-001`–`CON-007` | `AC-001`–`AC-011` | `TASK-004`, `TASK-005`, `TASK-006` | completed |
++
++## Regras de execução
++
++- Não implementar Code Fix, profiling, telemetria, persistência, chamadas de rede ou dependências novas.
++- Não usar limiares numéricos fixos para “muitas propriedades”, frequência, memória retida ou custo do analyzer; usar sinais estruturais conservadores e documentados.
++- Não alterar IDs, severidades, fases ou contrato V1/V2 sem nova clarificação e aprovação humana.
++- `PERF011` deve permanecer uma suspeita fundamentada, nunca uma prova de memory leak.
++- `PERF030` não deve reportar toda criação em loop nem afirmar que um tipo é universalmente pesado.
++- Preservar o padrão de analyzer por diagnóstico, serviços estáticos por padrão, execução concorrente e mensagens condicionais.
++- Cada tarefa deve adicionar ou atualizar testes reproduzíveis; alterações em `docs`, `README` e `.spectro` devem refletir o comportamento efetivamente planejado.
++
++## Progresso
++
++- Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`.
++- Bloqueadas: nenhuma.
++- Próxima tarefa: nenhuma.
+diff --git a/README.md b/README.md
+index f30365e..6cbfa7c 100644
+--- a/README.md
++++ b/README.md
+@@ -20,7 +20,7 @@ O catálogo contém 30 diagnósticos, organizados em três fases:
+ | --- | ---: | --- |
+ | V1 | 15 | Implementados e registrados em `V1AnalyzerCatalog` |
+ | V2 | 13 | Implementados e registrados em `V2AnalyzerCatalog` |
+-| V3 | 2 | Catalogados; análise mais profunda de ciclo de vida |
++| V3 | 2 | Implementados e registrados em `V3AnalyzerCatalog` |
+ 
+ Os diagnósticos V1 usam C# 14 e são compilados como um analisador Roslyn para `netstandard2.1`. Cada ocorrência possui severidade, categoria, impacto, escalabilidade, correção sugerida, exceções e referência documental.
+ 
+@@ -94,12 +94,14 @@ As regras V1 não aplicam Code Fix automático. Algumas correções dependem de
+ | PERF028 | Recursos `IDisposable` não liberados | Recursos, handles, conexões ou buffers sem ciclo de vida controlado |
+ | PERF029 | Exceções como fluxo normal | Uso recorrente de exceções para representar falhas esperadas |
+ 
+-### V3 — catalogados, ainda não implementados
++### V3 — implementados
+ 
+ | ID | Diagnóstico | O que pretende detectar |
+ | --- | --- | --- |
+-| PERF011 | Retenção indevida de objetos | Estruturas que mantêm memória viva sem limite de tamanho ou expiração |
+-| PERF030 | Reconstrução de objetos pesados invariantes | Criação repetida de objetos caros cuja configuração não muda |
++| PERF011 | Retenção indevida de objetos | Adições repetidas a coleções mantidas em campos, sem remoção ou limpeza observável no método |
++| PERF030 | Reconstrução de objetos pesados invariantes | Criação repetida em loops com argumentos invariantes e inicialização observavelmente custosa |
++
++Essas regras reportam suspeitas estruturais. Não provam memory leaks, não medem memória viva ou custo de execução e não classificam automaticamente todo objeto com muitas propriedades como pesado.
+ 
+ ## Severidade e confiança
+ 
+diff --git a/docs/csharp-performance-analyzer.md b/docs/csharp-performance-analyzer.md
+index 44023db..9179c8d 100644
+--- a/docs/csharp-performance-analyzer.md
++++ b/docs/csharp-performance-analyzer.md
+@@ -229,7 +229,7 @@ Identificar padrões de retenção potencialmente ilimitada em coleções estát
+ 
+ **Exceção**: retenção explicitamente delimitada ou necessária durante toda a vida da aplicação.
+ 
+-Observação: muitos vazamentos dependem do fluxo de vida real e só podem ser reportados como suspeitas.
++Observação: muitos vazamentos dependem do fluxo de vida real e só podem ser reportados como suspeitas. A primeira entrega reconhece adições repetidas a coleções mantidas em campos, dentro de loops, quando não há remoção ou limpeza observável no método. Retenção delimitada, transferência de propriedade e ciclos de vida administrados externamente ficam fora do diagnóstico.
+ 
+ 
+ #### PERF012 — Cópias desnecessárias de coleções e buffers
+@@ -511,6 +511,8 @@ Identificar criação repetida de recursos cuja configuração não muda, como m
+ 
+ **Exceção**: instância não thread-safe, estado variável ou isolamento obrigatório por operação.
+ 
++Na primeira entrega, a evidência exige criação dentro de repetição estrutural, argumentos e valores de inicialização invariantes em relação à iteração e uma inicialização observável por construtor com parâmetros, corpo complexo ou inicializador de objeto. O diagnóstico não classifica todo tipo com muitas propriedades como pesado e não usa limiar numérico de propriedades ou custo.
++
+ O diagnóstico `PERF025` segue as recomendações oficiais de gerenciamento de conexões HTTP. O `PERF027` é apoiado pela recomendação de source-generated logging, que reduz boxing, parsing de templates e alocações. 
+ 
+ ##  5. Exemplos de comportamento esperado
+diff --git a/src/StrictSharp.Analyzers/Analyzers/Perf011Analyzer.cs b/src/StrictSharp.Analyzers/Analyzers/Perf011Analyzer.cs
+new file mode 100644
+index 0000000..87d8227
+--- /dev/null
++++ b/src/StrictSharp.Analyzers/Analyzers/Perf011Analyzer.cs
+@@ -0,0 +1,55 @@
++using Microsoft.CodeAnalysis;
++using Microsoft.CodeAnalysis.CSharp.Syntax;
++using Microsoft.CodeAnalysis.Diagnostics;
++using StrictSharp.Analyzers.Infrastructure;
++using StrictSharp.Analyzers.Rules;
++
++namespace StrictSharp.Analyzers.Analyzers;
++
++[DiagnosticAnalyzer(LanguageNames.CSharp)]
++public sealed class Perf011Analyzer : RuleAnalyzerBase
++{
++    public Perf011Analyzer() : base("PERF011") { }
++
++    protected override void RegisterAnalysis(AnalysisContext context)
++    {
++        context.RegisterSyntaxNodeAction(static context =>
++        {
++            if (context.Node is not InvocationExpressionSyntax invocation
++                || invocation.Expression is not MemberAccessExpressionSyntax member
++                || member.Name.Identifier.ValueText is not ("Add" or "AddRange" or "Subscribe"))
++                return;
++
++            if (member.Expression is not IdentifierNameSyntax receiver
++                || context.SemanticModel.GetSymbolInfo(receiver).Symbol is not IFieldSymbol field
++                || !RuleAnalysis.IsInsideLoop(invocation)
++                || HasReleaseOperation(invocation, field, context.SemanticModel))
++                return;
++
++            RuleAnalysis.Report(RuleCatalog.Get("PERF011"), context, receiver.GetLocation());
++        }, Microsoft.CodeAnalysis.CSharp.SyntaxKind.InvocationExpression);
++    }
++
++    private static bool HasReleaseOperation(
++        InvocationExpressionSyntax invocation,
++        IFieldSymbol field,
++        SemanticModel model)
++    {
++        var containingMethod = invocation.Ancestors().OfType<BaseMethodDeclarationSyntax>().FirstOrDefault();
++        if (containingMethod is null)
++            return false;
++
++        foreach (var release in containingMethod.DescendantNodes().OfType<InvocationExpressionSyntax>())
++        {
++            if (release.Expression is not MemberAccessExpressionSyntax member
++                || member.Expression is not IdentifierNameSyntax receiver
++                || !SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(receiver).Symbol, field))
++                continue;
++
++            if (member.Name.Identifier.ValueText is "Clear" or "Remove" or "RemoveAll" or "Dequeue" or "Pop")
++                return true;
++        }
++
++        return false;
++    }
++}
+diff --git a/src/StrictSharp.Analyzers/Analyzers/Perf030Analyzer.cs b/src/StrictSharp.Analyzers/Analyzers/Perf030Analyzer.cs
+new file mode 100644
+index 0000000..b8d9e28
+--- /dev/null
++++ b/src/StrictSharp.Analyzers/Analyzers/Perf030Analyzer.cs
+@@ -0,0 +1,100 @@
++using Microsoft.CodeAnalysis;
++using Microsoft.CodeAnalysis.CSharp.Syntax;
++using Microsoft.CodeAnalysis.Diagnostics;
++using StrictSharp.Analyzers.Infrastructure;
++using StrictSharp.Analyzers.Rules;
++
++namespace StrictSharp.Analyzers.Analyzers;
++
++[DiagnosticAnalyzer(LanguageNames.CSharp)]
++public sealed class Perf030Analyzer : RuleAnalyzerBase
++{
++    public Perf030Analyzer() : base("PERF030") { }
++
++    protected override void RegisterAnalysis(AnalysisContext context)
++    {
++        context.RegisterSyntaxNodeAction(static context =>
++        {
++            if (context.Node is not ObjectCreationExpressionSyntax creation
++                || !RuleAnalysis.IsInsideLoop(creation)
++                || !HasInvariantArguments(creation, context.SemanticModel)
++                || !HasComplexInitialization(creation, context.SemanticModel))
++                return;
++
++            RuleAnalysis.Report(RuleCatalog.Get("PERF030"), context, creation.Type.GetLocation());
++        }, Microsoft.CodeAnalysis.CSharp.SyntaxKind.ObjectCreationExpression);
++    }
++
++    private static bool HasInvariantArguments(ObjectCreationExpressionSyntax creation, SemanticModel model)
++    {
++        var loop = creation.Ancestors().FirstOrDefault(node => node is ForStatementSyntax
++            or ForEachStatementSyntax
++            or ForEachVariableStatementSyntax
++            or WhileStatementSyntax
++            or DoStatementSyntax);
++        if (loop is WhileStatementSyntax or DoStatementSyntax)
++            return false;
++
++        var loopSymbols = Array.Empty<ISymbol>();
++        if (loop is ForEachStatementSyntax forEach)
++        {
++            loopSymbols = model.GetDeclaredSymbol(forEach) is { } symbol
++                ? new[] { symbol }
++                : Array.Empty<ISymbol>();
++        }
++
++        if (loop is ForStatementSyntax forStatement)
++        {
++            loopSymbols = forStatement.Declaration?.Variables
++                .Select(variable => model.GetDeclaredSymbol(variable))
++                .Where(symbol => symbol is not null)
++                .Cast<ISymbol>()
++                .ToArray() ?? Array.Empty<ISymbol>();
++        }
++
++        if (loop is not (ForEachStatementSyntax or ForStatementSyntax))
++            return false;
++
++        if (creation.ArgumentList?.Arguments.Any(argument =>
++            UsesLoopSymbol(argument.Expression, loopSymbols, model)) == true)
++            return false;
++
++        return creation.Initializer?.Expressions.Any(expression =>
++            UsesLoopSymbol(expression, loopSymbols, model)) != true;
++    }
++
++    private static bool UsesLoopSymbol(
++        SyntaxNode expression,
++        IReadOnlyCollection<ISymbol> loopSymbols,
++        SemanticModel model)
++    {
++        return expression.DescendantNodesAndSelf()
++            .OfType<IdentifierNameSyntax>()
++            .Any(identifier => loopSymbols.Any(symbol =>
++                SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(identifier).Symbol, symbol)));
++    }
++
++    private static bool HasComplexInitialization(
++        ObjectCreationExpressionSyntax creation,
++        SemanticModel model)
++    {
++        if (creation.Initializer is not null)
++            return creation.Initializer.Expressions.Count > 0;
++
++        if (model.GetSymbolInfo(creation).Symbol is not IMethodSymbol constructor)
++            return false;
++
++        foreach (var declaration in constructor.DeclaringSyntaxReferences)
++        {
++            if (declaration.GetSyntax() is not ConstructorDeclarationSyntax syntax)
++                continue;
++
++            if (syntax.DescendantNodes().Any(node => node is InvocationExpressionSyntax
++                or ObjectCreationExpressionSyntax
++                or ConditionalExpressionSyntax))
++                return true;
++        }
++
++        return constructor.Parameters.Length > 0;
++    }
++}
+diff --git a/src/StrictSharp.Analyzers/Analyzers/V3AnalyzerCatalog.cs b/src/StrictSharp.Analyzers/Analyzers/V3AnalyzerCatalog.cs
+new file mode 100644
+index 0000000..74d7783
+--- /dev/null
++++ b/src/StrictSharp.Analyzers/Analyzers/V3AnalyzerCatalog.cs
+@@ -0,0 +1,13 @@
++using Microsoft.CodeAnalysis.Diagnostics;
++using System.Collections.Immutable;
++
++namespace StrictSharp.Analyzers.Analyzers;
++
++public static class V3AnalyzerCatalog
++{
++    public static ImmutableArray<DiagnosticAnalyzer> All { get; } =
++    [
++        new Perf011Analyzer(),
++        new Perf030Analyzer()
++    ];
++}
+diff --git a/src/StrictSharp.Analyzers/Rules/RuleCatalog.cs b/src/StrictSharp.Analyzers/Rules/RuleCatalog.cs
+index 562a7b5..2af70f3 100644
+--- a/src/StrictSharp.Analyzers/Rules/RuleCatalog.cs
++++ b/src/StrictSharp.Analyzers/Rules/RuleCatalog.cs
+@@ -50,9 +50,15 @@ public static class RuleCatalog
+         s_all[16], s_all[20], s_all[22], s_all[23], s_all[27], s_all[28]
+     ];
+ 
++    private static readonly RuleDefinition[] s_v3 =
++    [
++        s_all[10], s_all[29]
++    ];
++
+     public static IReadOnlyList<RuleDefinition> All => s_all;
+     public static IReadOnlyList<RuleDefinition> V1 => s_v1;
+     public static IReadOnlyList<RuleDefinition> V2 => s_v2;
++    public static IReadOnlyList<RuleDefinition> V3 => s_v3;
+ 
+     public static RuleDefinition Get(string id)
+     {
+diff --git a/src/StrictSharp.Analyzers/Rules/RuleDefinition.cs b/src/StrictSharp.Analyzers/Rules/RuleDefinition.cs
+index ea03bbf..61b4eac 100644
+--- a/src/StrictSharp.Analyzers/Rules/RuleDefinition.cs
++++ b/src/StrictSharp.Analyzers/Rules/RuleDefinition.cs
+@@ -64,7 +64,7 @@ public readonly struct RuleDefinition
+             messageFormat,
+             category,
+             ToDiagnosticSeverity(severity),
+-            phase != RulePhase.V3,
++            true,
+             impact,
+             reference);
+         SupportedDiagnostics = ImmutableArray.Create(Descriptor);
+diff --git a/tests/StrictSharp.Analyzers.Tests/Perf011AnalyzerTests.cs b/tests/StrictSharp.Analyzers.Tests/Perf011AnalyzerTests.cs
+new file mode 100644
+index 0000000..64a4b80
+--- /dev/null
++++ b/tests/StrictSharp.Analyzers.Tests/Perf011AnalyzerTests.cs
+@@ -0,0 +1,108 @@
++using StrictSharp.Analyzers.Analyzers;
++using Xunit;
++
++namespace StrictSharp.Analyzers.Tests;
++
++public sealed class Perf011AnalyzerTests
++{
++    [Fact]
++    public async Task Perf011ReportsFieldCollectionRetainedByRepeatedAdd()
++    {
++        const string source = """
++            using System.Collections.Generic;
++            class Sample
++            {
++                private readonly List<string> _values = new();
++
++                void Run(string[] values)
++                {
++                    foreach (var value in values)
++                        _values.Add(value);
++                }
++            }
++            """;
++
++        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer());
++
++        var diagnostic = Assert.Single(diagnostics);
++        Assert.Equal("PERF011", diagnostic.Id);
++    }
++
++    [Fact]
++    public async Task Perf011StaysSilentForLocalCollection()
++    {
++        const string source = """
++            using System.Collections.Generic;
++            class Sample
++            {
++                void Run(string[] values)
++                {
++                    var local = new List<string>();
++                    foreach (var value in values)
++                        local.Add(value);
++                }
++            }
++            """;
++
++        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
++    }
++
++    [Fact]
++    public async Task Perf011StaysSilentWhenFieldCollectionIsCleared()
++    {
++        const string source = """
++            using System.Collections.Generic;
++            class Sample
++            {
++                private readonly List<string> _values = new();
++
++                void Run(string[] values)
++                {
++                    foreach (var value in values)
++                    {
++                        _values.Add(value);
++                        _values.Clear();
++                    }
++                }
++            }
++            """;
++
++        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
++    }
++
++    [Fact]
++    public async Task Perf011StaysSilentForNonRetainingInvocation()
++    {
++        const string source = """
++            class Sample
++            {
++                void Run(string[] values)
++                {
++                    foreach (var value in values)
++                        value.ToString();
++                }
++            }
++            """;
++
++        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
++    }
++
++    [Fact]
++    public async Task Perf011StaysSilentWhenFieldCollectionIsUpdatedOutsideLoop()
++    {
++        const string source = """
++            using System.Collections.Generic;
++            class Sample
++            {
++                private readonly List<string> _values = new();
++
++                void Run(string value)
++                {
++                    _values.Add(value);
++                }
++            }
++            """;
++
++        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
++    }
++}
+diff --git a/tests/StrictSharp.Analyzers.Tests/Perf030AnalyzerTests.cs b/tests/StrictSharp.Analyzers.Tests/Perf030AnalyzerTests.cs
+new file mode 100644
+index 0000000..588975f
+--- /dev/null
++++ b/tests/StrictSharp.Analyzers.Tests/Perf030AnalyzerTests.cs
+@@ -0,0 +1,174 @@
++using StrictSharp.Analyzers.Analyzers;
++using Xunit;
++
++namespace StrictSharp.Analyzers.Tests;
++
++public sealed class Perf030AnalyzerTests
++{
++    [Fact]
++    public async Task Perf030ReportsRepeatedComplexConstructionWithInvariantValue()
++    {
++        const string source = """
++            class Expensive
++            {
++                private readonly string _value;
++
++                public Expensive(string value)
++                {
++                    _value = value.ToUpperInvariant();
++                }
++            }
++
++            class Sample
++            {
++                void Run(string[] values)
++                {
++                    foreach (var value in values)
++                        _ = new Expensive("fixed");
++                }
++            }
++            """;
++
++        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer());
++
++        var diagnostic = Assert.Single(diagnostics);
++        Assert.Equal("PERF030", diagnostic.Id);
++    }
++
++    [Fact]
++    public async Task Perf030StaysSilentWhenConstructionDependsOnLoopValue()
++    {
++        const string source = """
++            class Expensive
++            {
++                public Expensive(string value) { }
++            }
++
++            class Sample
++            {
++                void Run(string[] values)
++                {
++                    foreach (var value in values)
++                        _ = new Expensive(value);
++                }
++            }
++            """;
++
++        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer()));
++    }
++
++    [Fact]
++    public async Task Perf030StaysSilentWhenConstructionIsOutsideLoop()
++    {
++        const string source = """
++            class Expensive
++            {
++                public Expensive(string value) { }
++            }
++
++            class Sample
++            {
++                private readonly Expensive _value = new("fixed");
++
++                void Run(string[] values)
++                {
++                    foreach (var value in values)
++                        _ = value;
++                }
++            }
++            """;
++
++        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer()));
++    }
++
++    [Fact]
++    public async Task Perf030StaysSilentWhenLoopInvarianceCannotBeProved()
++    {
++        const string source = """
++            class Expensive
++            {
++                public Expensive(string value) { }
++            }
++
++            class Sample
++            {
++                void Run(string value)
++                {
++                    while (value.Length > 0)
++                        _ = new Expensive(value);
++                }
++            }
++            """;
++
++        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer()));
++    }
++
++    [Fact]
++    public async Task Perf030ReportsInvariantConstructionInForLoop()
++    {
++        const string source = """
++            class Expensive
++            {
++                public Expensive(string value) { }
++            }
++
++            class Sample
++            {
++                void Run(int count)
++                {
++                    for (var index = 0; index < count; index++)
++                        _ = new Expensive("fixed");
++                }
++            }
++            """;
++
++        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer());
++
++        Assert.Single(diagnostics);
++        Assert.Equal("PERF030", diagnostics[0].Id);
++    }
++
++    [Fact]
++    public async Task Perf030ReportsInvariantObjectInitializerInLoop()
++    {
++        const string source = """
++            class Descriptor
++            {
++                public string Name { get; init; }
++            }
++
++            class Sample
++            {
++                void Run(string[] values)
++                {
++                    foreach (var value in values)
++                        _ = new Descriptor { Name = "fixed" };
++                }
++            }
++            """;
++
++        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer());
++
++        Assert.Single(diagnostics);
++        Assert.Equal("PERF030", diagnostics[0].Id);
++    }
++
++    [Fact]
++    public async Task Perf030StaysSilentForSimpleParameterlessConstruction()
++    {
++        const string source = """
++            class Simple { }
++
++            class Sample
++            {
++                void Run(string[] values)
++                {
++                    foreach (var value in values)
++                        _ = new Simple();
++                }
++            }
++            """;
++
++        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf030Analyzer()));
++    }
++}
+diff --git a/tests/StrictSharp.Analyzers.Tests/RuleCatalogTests.cs b/tests/StrictSharp.Analyzers.Tests/RuleCatalogTests.cs
+index 9532e69..b77f6ec 100644
+--- a/tests/StrictSharp.Analyzers.Tests/RuleCatalogTests.cs
++++ b/tests/StrictSharp.Analyzers.Tests/RuleCatalogTests.cs
+@@ -58,6 +58,19 @@ public sealed class RuleCatalogTests
+         Assert.DoesNotContain(RuleCatalog.V2, rule => rule.Phase != RulePhase.V2);
+     }
+ 
++    [Fact]
++    public void V3ContainsExactlyTheApprovedRulesAndIsEnabledByDefault()
++    {
++        var expectedIds = new[] { "PERF011", "PERF030" };
++
++        Assert.Equal(expectedIds, RuleCatalog.V3.Select(rule => rule.Id));
++        Assert.All(RuleCatalog.V3, rule =>
++        {
++            Assert.Equal(RulePhase.V3, rule.Phase);
++            Assert.True(rule.Descriptor.IsEnabledByDefault);
++        });
++    }
++
+     [Fact]
+     public void EveryRuleContainsTheRequiredDiagnosticMetadata()
+     {
+diff --git a/tests/StrictSharp.Analyzers.Tests/V3TestMatrixTests.cs b/tests/StrictSharp.Analyzers.Tests/V3TestMatrixTests.cs
+new file mode 100644
+index 0000000..12dc6a1
+--- /dev/null
++++ b/tests/StrictSharp.Analyzers.Tests/V3TestMatrixTests.cs
+@@ -0,0 +1,48 @@
++using Microsoft.CodeAnalysis;
++using Microsoft.CodeAnalysis.CSharp;
++using Microsoft.CodeAnalysis.Diagnostics;
++using StrictSharp.Analyzers.Analyzers;
++using StrictSharp.Analyzers.Rules;
++using Xunit;
++
++namespace StrictSharp.Analyzers.Tests;
++
++public sealed class V3TestMatrixTests
++{
++    [Fact]
++    public void V3CatalogHasExactlyTheTwoStableIds()
++    {
++        var actualIds = V3AnalyzerCatalog.All
++            .SelectMany(analyzer => analyzer.SupportedDiagnostics)
++            .Select(descriptor => descriptor.Id);
++
++        Assert.Equal(RuleCatalog.V3.Select(rule => rule.Id), actualIds);
++        Assert.Equal(new[] { "PERF011", "PERF030" }, actualIds);
++        Assert.All(V3AnalyzerCatalog.All, analyzer => Assert.Single(analyzer.SupportedDiagnostics));
++    }
++
++    [Fact]
++    public async Task V3CatalogAcceptsCSharp14AndStaysSilentOnNeutralCode()
++    {
++        const string source = "class Neutral { int Value => 42; }";
++        var tree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.CSharp14));
++        var compilation = CSharpCompilation.Create(
++            "V3MatrixAssembly",
++            [tree],
++            [MetadataReference.CreateFromFile(typeof(object).Assembly.Location)],
++            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
++
++        var diagnostics = await compilation.WithAnalyzers(V3AnalyzerCatalog.All).GetAnalyzerDiagnosticsAsync();
++
++        Assert.Empty(diagnostics);
++    }
++
++    [Fact]
++    public void V1AndV2CatalogsRemainSeparatedFromV3()
++    {
++        Assert.DoesNotContain(V1AnalyzerCatalog.All, analyzer =>
++            RuleCatalog.Get(analyzer.SupportedDiagnostics[0].Id).Phase == RulePhase.V3);
++        Assert.DoesNotContain(V2AnalyzerCatalog.All, analyzer =>
++            RuleCatalog.Get(analyzer.SupportedDiagnostics[0].Id).Phase == RulePhase.V3);
++    }
++}
+

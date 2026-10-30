@@ -11,6 +11,17 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <!-- The approved V1 target is netstandard2.1; RS1041 assumes netstandard2.0 analyzers. -->
     <NoWarn>$(NoWarn);RS1041</NoWarn>
+
+    <IsPackage>True</IsPackage>
+    <PackageId>StrictSharp</PackageId>
+    <Version>1.0.0</Version>
+
+    <Authors>Felipe Alves</Authors>
+    <Description>Library for code analisys to performance</Description>
+    <PackageTags>dotnet;library;performance</PackageTags>
+
+    <RepositoryUrl>https://github.com/felipealves0891/StrictSharp</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>

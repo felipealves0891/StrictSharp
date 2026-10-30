@@ -59,6 +59,19 @@ public sealed class RuleCatalogTests
     }
 
     [Fact]
+    public void V3ContainsExactlyTheApprovedRulesAndIsEnabledByDefault()
+    {
+        var expectedIds = new[] { "PERF011", "PERF030" };
+
+        Assert.Equal(expectedIds, RuleCatalog.V3.Select(rule => rule.Id));
+        Assert.All(RuleCatalog.V3, rule =>
+        {
+            Assert.Equal(RulePhase.V3, rule.Phase);
+            Assert.True(rule.Descriptor.IsEnabledByDefault);
+        });
+    }
+
+    [Fact]
     public void EveryRuleContainsTheRequiredDiagnosticMetadata()
     {
         Assert.All(RuleCatalog.All, rule =>
