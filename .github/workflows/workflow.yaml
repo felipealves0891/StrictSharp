@@ -58,5 +58,5 @@ jobs:
           python .github/scripts/validate_coverage.py \
             --directory ./TestResults \
             --min-lines 90 \
-            --min-branches 75
+            --min-branches 85
       
