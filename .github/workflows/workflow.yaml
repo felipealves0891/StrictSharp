@@ -15,7 +15,7 @@ env:
 
 jobs:
   ci:
-    name: Build
+    name: Build and Tests 
     runs-on: ubuntu-latest
 
     steps:
@@ -64,7 +64,7 @@ jobs:
           echo "Scripts:"
           ls -la .github/scripts/
           
-          python .github/scripts/validate_coverage.py \
+          python .github/scripts/validate-coverage.py \
             --directory ./TestResults \
             --min-lines 90 \
             --min-branches 85
