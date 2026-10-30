@@ -55,6 +55,15 @@ jobs:
 
       - name: Validate Coverage
         run: |
+          echo "Current directory:"
+          pwd
+
+          echo "Files in .github:"
+          ls -la .github/
+
+          echo "Scripts:"
+          ls -la .github/scripts/
+          
           python .github/scripts/validate_coverage.py \
             --directory ./TestResults \
             --min-lines 90 \
