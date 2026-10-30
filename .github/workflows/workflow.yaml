@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 env:
   DOTNET_VERSION: '10.0.x'
@@ -39,6 +40,7 @@ jobs:
             -p:ContinuousIntegrationBuild=true
 
       - name: Unit Tests
+        if: always()
         run: |
           dotnet test "${{ env.SOLUTION }}" \
             --configuration Release \
@@ -48,12 +50,14 @@ jobs:
       
       - name: Upload Coverage
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: coverage-report
           path: TestResults/**/coverage.cobertura.xml
           if-no-files-found: warn
 
       - name: Validate Coverage
+        if: always()
         run: |
           echo "Current directory:"
           pwd
@@ -68,4 +72,66 @@ jobs:
             --directory ./TestResults \
             --min-lines 90 \
             --min-branches 75
-      
+
+  create-pr:
+    name: Create PR dev to main
+    runs-on: ubuntu-latest
+
+    if: always() &&
+        github.event_name == 'push' &&
+        github.ref != 'refs/heads/main'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          SOURCE="${GITHUB_REF_NAME}"
+
+          case "$SOURCE" in
+            feat/*)
+              TARGET="dev"
+              ;;
+            develop)
+              TARGET="main"
+              ;;
+            *)
+              echo "Branch não configurada: $SOURCE"
+              exit 0
+              ;;
+          esac
+
+          echo "Origem: $SOURCE"
+          echo "Destino: $TARGET"
+
+          # Verificar se já existe PR aberto
+          PR=$(gh pr list \
+            --base "$TARGET" \
+            --head "$SOURCE" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [ -n "$PR" ]; then
+            echo "PR #$PR já existe."
+            exit 0
+          fi
+
+          # Verificar se há diferenças entre branches
+          git fetch origin "$TARGET"
+
+          if git diff --quiet "origin/$TARGET...HEAD"; then
+            echo "Nenhuma alteração para integrar."
+            exit 0
+          fi
+
+          # Criar PR
+          gh pr create \
+            --base "$TARGET" \
+            --head "$SOURCE" \
+            --title "merge: $SOURCE into $TARGET" \
+            --body "Pull Request criado automaticamente após aprovação do CI."
