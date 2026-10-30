@@ -6,6 +6,10 @@
     <description>Library for code analisys to performance</description>
     <authors>Felipe Alves</authors>
     <tags>dotnet;library;performance;roslyn</tags>
+    <readme>docs\README.md</readme>
   </metadata>
+  <files>
+    <file src="..\..\README.md" target="docs\" />
+  </files>
   <!-- Elementos opcionais -->
 </package>
