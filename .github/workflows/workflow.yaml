@@ -72,28 +72,19 @@ jobs:
             --directory ./TestResults \
             --min-lines 90 \
             --min-branches 75
-
-  create-pr:
-    name: Create PR dev to main
-    runs-on: ubuntu-latest
-
-    if: always() &&
-        github.event_name == 'push'
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
+      
       - name: Create Pull Request
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
+        if: always() &&
+            github.event_name == 'push'
         run: |
           SOURCE="${GITHUB_REF_NAME}"
 
           case "$SOURCE" in
             feat/*)
-              TARGET="dev"
+              TARGET="develop"
               ;;
             develop)
               TARGET="main"
@@ -134,3 +125,4 @@ jobs:
             --head "$SOURCE" \
             --title "merge: $SOURCE into $TARGET" \
             --body "Pull Request criado automaticamente após aprovação do CI."
+      
