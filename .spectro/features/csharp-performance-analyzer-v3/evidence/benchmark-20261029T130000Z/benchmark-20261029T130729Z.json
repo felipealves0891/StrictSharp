@@ -1,0 +1,178 @@
+{
+  "SchemaVersion": "1.0",
+  "CodeRevision": "unknown",
+  "StartedAt": "2026-10-29T13:07:29.0350497+00:00",
+  "FinishedAt": "2026-10-29T13:07:29.0673534+00:00",
+  "Runtime": "10.0.12",
+  "OperatingSystem": "Microsoft Windows NT 10.0.26300.0",
+  "Configuration": "Release",
+  "Parameters": {
+    "Scenario": "all",
+    "Iterations": 2000,
+    "Payload": 256,
+    "Repetitions": 3,
+    "Seed": 17,
+    "OutputDirectory": ".spectro/features/csharp-performance-analyzer-v3/evidence/benchmark-20261029T130000Z"
+  },
+  "Results": [
+    {
+      "Rule": "PERF011",
+      "Measurements": [
+        {
+          "Case": "retaining",
+          "Repetition": 1,
+          "Iterations": 2000,
+          "Payload": 256,
+          "InitialBytes": 277928,
+          "FinalBytes": 852296,
+          "AllocatedBytes": 0,
+          "ElapsedMilliseconds": 0,
+          "Operations": 2000,
+          "ObservableResult": 2000
+        },
+        {
+          "Case": "bounded",
+          "Repetition": 1,
+          "Iterations": 2000,
+          "Payload": 256,
+          "InitialBytes": 278016,
+          "FinalBytes": 279424,
+          "AllocatedBytes": 0,
+          "ElapsedMilliseconds": 0,
+          "Operations": 2000,
+          "ObservableResult": 2000
+        },
+        {
+          "Case": "retaining",
+          "Repetition": 2,
+          "Iterations": 2000,
+          "Payload": 256,
+          "InitialBytes": 278104,
+          "FinalBytes": 852496,
+          "AllocatedBytes": 0,
+          "ElapsedMilliseconds": 0,
+          "Operations": 2000,
+          "ObservableResult": 2000
+        },
+        {
+          "Case": "bounded",
+          "Repetition": 2,
+          "Iterations": 2000,
+          "Payload": 256,
+          "InitialBytes": 278192,
+          "FinalBytes": 279600,
+          "AllocatedBytes": 0,
+          "ElapsedMilliseconds": 0,
+          "Operations": 2000,
+          "ObservableResult": 2000
+        },
+        {
+          "Case": "retaining",
+          "Repetition": 3,
+          "Iterations": 2000,
+          "Payload": 256,
+          "InitialBytes": 278280,
+          "FinalBytes": 852672,
+          "AllocatedBytes": 0,
+          "ElapsedMilliseconds": 0,
+          "Operations": 2000,
+          "ObservableResult": 2000
+        },
+        {
+          "Case": "bounded",
+          "Repetition": 3,
+          "Iterations": 2000,
+          "Payload": 256,
+          "InitialBytes": 278368,
+          "FinalBytes": 279776,
+          "AllocatedBytes": 0,
+          "ElapsedMilliseconds": 0,
+          "Operations": 2000,
+          "ObservableResult": 2000
+        }
+      ]
+    },
+    {
+      "Rule": "PERF030",
+      "Measurements": [
+        {
+          "Case": "rebuilding",
+          "Repetition": 1,
+          "Iterations": 2000,
+          "Payload": 256,
+          "InitialBytes": 0,
+          "FinalBytes": 0,
+          "AllocatedBytes": 608040,
+          "ElapsedMilliseconds": 5,
+          "Operations": 2000,
+          "ObservableResult": 0
+        },
+        {
+          "Case": "reusing",
+          "Repetition": 1,
+          "Iterations": 2000,
+          "Payload": 256,
+          "InitialBytes": 0,
+          "FinalBytes": 0,
+          "AllocatedBytes": 40,
+          "ElapsedMilliseconds": 2,
+          "Operations": 2000,
+          "ObservableResult": 0
+        },
+        {
+          "Case": "rebuilding",
+          "Repetition": 2,
+          "Iterations": 2000,
+          "Payload": 256,
+          "InitialBytes": 0,
+          "FinalBytes": 0,
+          "AllocatedBytes": 608040,
+          "ElapsedMilliseconds": 5,
+          "Operations": 2000,
+          "ObservableResult": 0
+        },
+        {
+          "Case": "reusing",
+          "Repetition": 2,
+          "Iterations": 2000,
+          "Payload": 256,
+          "InitialBytes": 0,
+          "FinalBytes": 0,
+          "AllocatedBytes": 40,
+          "ElapsedMilliseconds": 2,
+          "Operations": 2000,
+          "ObservableResult": 0
+        },
+        {
+          "Case": "rebuilding",
+          "Repetition": 3,
+          "Iterations": 2000,
+          "Payload": 256,
+          "InitialBytes": 0,
+          "FinalBytes": 0,
+          "AllocatedBytes": 608040,
+          "ElapsedMilliseconds": 4,
+          "Operations": 2000,
+          "ObservableResult": 0
+        },
+        {
+          "Case": "reusing",
+          "Repetition": 3,
+          "Iterations": 2000,
+          "Payload": 256,
+          "InitialBytes": 0,
+          "FinalBytes": 0,
+          "AllocatedBytes": 40,
+          "ElapsedMilliseconds": 2,
+          "Operations": 2000,
+          "ObservableResult": 0
+        }
+      ]
+    }
+  ],
+  "Limitations": [
+    "Os resultados descrevem somente estes cen\u00E1rios e n\u00E3o provam memory leak nem ganho universal.",
+    "Os n\u00FAmeros n\u00E3o s\u00E3o limiares est\u00E1ticos do analyzer.",
+    "GC, JIT, CPU, sistema operacional e carga podem alterar a medi\u00E7\u00E3o."
+  ]
+}

@@ -20,7 +20,7 @@ O catálogo contém 30 diagnósticos, organizados em três fases:
 | --- | ---: | --- |
 | V1 | 15 | Implementados e registrados em `V1AnalyzerCatalog` |
 | V2 | 13 | Implementados e registrados em `V2AnalyzerCatalog` |
-| V3 | 2 | Catalogados; análise mais profunda de ciclo de vida |
+| V3 | 2 | Implementados e registrados em `V3AnalyzerCatalog` |
 
 Os diagnósticos V1 usam C# 14 e são compilados como um analisador Roslyn para `netstandard2.1`. Cada ocorrência possui severidade, categoria, impacto, escalabilidade, correção sugerida, exceções e referência documental.
 
@@ -94,12 +94,14 @@ As regras V1 não aplicam Code Fix automático. Algumas correções dependem de 
 | PERF028 | Recursos `IDisposable` não liberados | Recursos, handles, conexões ou buffers sem ciclo de vida controlado |
 | PERF029 | Exceções como fluxo normal | Uso recorrente de exceções para representar falhas esperadas |
 
-### V3 — catalogados, ainda não implementados
+### V3 — implementados
 
 | ID | Diagnóstico | O que pretende detectar |
 | --- | --- | --- |
-| PERF011 | Retenção indevida de objetos | Estruturas que mantêm memória viva sem limite de tamanho ou expiração |
-| PERF030 | Reconstrução de objetos pesados invariantes | Criação repetida de objetos caros cuja configuração não muda |
+| PERF011 | Retenção indevida de objetos | Adições repetidas a coleções mantidas em campos, sem remoção ou limpeza observável no método |
+| PERF030 | Reconstrução de objetos pesados invariantes | Criação repetida em loops com argumentos invariantes e inicialização observavelmente custosa |
+
+Essas regras reportam suspeitas estruturais. Não provam memory leaks, não medem memória viva ou custo de execução e não classificam automaticamente todo objeto com muitas propriedades como pesado.
 
 ## Severidade e confiança
 

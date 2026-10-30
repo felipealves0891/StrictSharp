@@ -50,9 +50,15 @@ public static class RuleCatalog
         s_all[16], s_all[20], s_all[22], s_all[23], s_all[27], s_all[28]
     ];
 
+    private static readonly RuleDefinition[] s_v3 =
+    [
+        s_all[10], s_all[29]
+    ];
+
     public static IReadOnlyList<RuleDefinition> All => s_all;
     public static IReadOnlyList<RuleDefinition> V1 => s_v1;
     public static IReadOnlyList<RuleDefinition> V2 => s_v2;
+    public static IReadOnlyList<RuleDefinition> V3 => s_v3;
 
     public static RuleDefinition Get(string id)
     {

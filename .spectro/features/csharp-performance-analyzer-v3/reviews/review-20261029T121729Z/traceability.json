@@ -1,0 +1,233 @@
+{
+  "schema_version": "1.0",
+  "feature_id": "csharp-performance-analyzer-v3",
+  "review_id": "review-20261029T121729Z",
+  "requirements": [
+    {
+      "id": "CON-001",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "CON-002",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "CON-003",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "CON-004",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "CON-005",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "CON-006",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "CON-007",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-001",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-002",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-003",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-004",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-005",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-006",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-007",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-008",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-009",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-010",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-011",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-001",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-002",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-003",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-004",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-005",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-006",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-007",
+      "linked_tasks": [],
+      "appears_in_plan": true
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-001",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": false
+    },
+    {
+      "id": "AC-002",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-003",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-004",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-005",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-006",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-007",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": false
+    },
+    {
+      "id": "AC-008",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": false
+    },
+    {
+      "id": "AC-009",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-010",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": false
+    },
+    {
+      "id": "AC-011",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": false
+    }
+  ],
+  "task_ids": [
+    "TASK-001",
+    "TASK-002",
+    "TASK-003",
+    "TASK-004",
+    "TASK-005",
+    "TASK-006",
+    "TASK-007"
+  ],
+  "uncovered_requirements": [
+    "CON-001",
+    "CON-002",
+    "CON-003",
+    "CON-004",
+    "CON-005",
+    "CON-006",
+    "CON-007",
+    "FR-001",
+    "FR-002",
+    "FR-003",
+    "FR-004",
+    "FR-005",
+    "FR-006",
+    "FR-007",
+    "FR-008",
+    "FR-009",
+    "FR-010",
+    "FR-011",
+    "NFR-001",
+    "NFR-002",
+    "NFR-003",
+    "NFR-004",
+    "NFR-005",
+    "NFR-006",
+    "NFR-007"
+  ],
+  "uncovered_acceptance_criteria": [
+    "AC-001",
+    "AC-007",
+    "AC-008",
+    "AC-010",
+    "AC-011"
+  ],
+  "result": "gaps"
+}

@@ -64,7 +64,7 @@ public readonly struct RuleDefinition
             messageFormat,
             category,
             ToDiagnosticSeverity(severity),
-            phase != RulePhase.V3,
+            true,
             impact,
             reference);
         SupportedDiagnostics = ImmutableArray.Create(Descriptor);

@@ -1,0 +1,45 @@
+{
+   "Title":"Perf011Benchmarks-20261029-113656",
+   "HostEnvironmentInfo":{
+      "BenchmarkDotNetCaption":"BenchmarkDotNet",
+      "BenchmarkDotNetVersion":"0.15.8",
+      "OsVersion":"Windows 11 (10.0.26300.9711)",
+      "ProcessorName":"Unknown processor",
+      "PhysicalProcessorCount":null,
+      "PhysicalCoreCount":null,
+      "LogicalCoreCount":null,
+      "RuntimeVersion":".NET 10.0.12 (10.0.12, 10.0.1226.42308)",
+      "Architecture":"X64",
+      "HasAttachedDebugger":false,
+      "HasRyuJit":true,
+      "Configuration":"RELEASE",
+      "DotNetCliVersion":"10.0.401",
+      "ChronometerFrequency":{
+         "Hertz":10000000
+      },
+      "HardwareTimerKind":"Unknown"
+   },
+   "Benchmarks":[
+      {
+         "DisplayInfo":"Perf011Benchmarks.'PERF011: retaining collection': Job-TASYDQ(InvocationCount=1, IterationCount=3, LaunchCount=1, UnrollFactor=1, WarmupCount=1) [Iterations=5000, PayloadSize=256]",
+         "Namespace":null,
+         "Type":"Perf011Benchmarks",
+         "Method":"Retaining",
+         "MethodTitle":"'PERF011: retaining collection'",
+         "Parameters":"Iterations=5000&PayloadSize=256",
+         "FullName":"Perf011Benchmarks.Retaining(Iterations: 5000, PayloadSize: 256)",
+         "HardwareIntrinsics":"",
+         "Statistics":null,
+         "Memory":{
+            "Gen0Collections":0,
+            "Gen1Collections":0,
+            "Gen2Collections":0,
+            "TotalOperations":0,
+            "BytesAllocatedPerOperation":null
+         },
+         "Measurements":[
+            
+         ]
+      }
+   ]
+}
