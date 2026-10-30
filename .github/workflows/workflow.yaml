@@ -78,8 +78,7 @@ jobs:
     runs-on: ubuntu-latest
 
     if: always() &&
-        github.event_name == 'push' &&
-        github.ref != 'refs/heads/main'
+        github.event_name == 'push'
 
     steps:
       - name: Checkout
