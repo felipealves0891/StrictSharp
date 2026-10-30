@@ -14,7 +14,7 @@ permissions:
 env:
   DOTNET_VERSION: '10.0.x'
   SOLUTION: 'StrictSharp.sln'
-  PROJECT: 'src\StrictSharp.Analyzers\StrictSharp.Analyzers.csproj'
+  PROJECT: 'src/StrictSharp.Analyzers/StrictSharp.Analyzers.csproj'
 
 jobs:
   ci:
