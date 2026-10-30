@@ -5,6 +5,7 @@ on:
     branches:
       - feat/**
       - develop
+      - main
 
 permissions:
   contents: read
@@ -79,7 +80,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         if: always() &&
-            github.event_name == 'push'
+            github.event_name == 'push' &&
+            github.ref != 'refs/heads/main'
         run: |
           SOURCE="${GITHUB_REF_NAME}"
 
@@ -89,6 +91,10 @@ jobs:
               ;;
             develop)
               TARGET="main"
+              ;;
+            main)
+              echo "Branch main não possui PR"
+              exit 1
               ;;
             *)
               echo "Branch não configurada: $SOURCE"
@@ -126,4 +132,63 @@ jobs:
             --head "$SOURCE" \
             --title "merge: $SOURCE into $TARGET" \
             --body "Pull Request criado automaticamente após aprovação do CI."
+
+    
+  publish:
+    name: Publish NuGet
+    needs: ci
+
+    if: >
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+    environment: production
+
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore ${{ env.SOLUTION }}
+
+      - name: Build
+        run: |
+          dotnet build ${{ env.SOLUTION }} \
+            --configuration Release \
+            --no-restore
+
+      - name: Pack NuGet
+        run: |
+          dotnet pack ${{ env.PROJECT }} \
+            --configuration Release \
+            --no-restore \
+            --output ./artifacts \
+            -p:PackageVersion=1.0.${{ github.run_number }} \
+            -p:ContinuousIntegrationBuild=true
+
+      - name: NuGet Login (OIDC)
+        id: nuget
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USER }}
+
+      - name: Publish
+        shell: bash
+        env:
+          NUGET_API_KEY: ${{ steps.nuget.outputs.NUGET_API_KEY }}
+        run: |
+          dotnet nuget push "./artifacts/*.nupkg" \
+            --api-key "$NUGET_API_KEY" \
+            --source "https://api.nuget.org/v3/index.json"
+
       
