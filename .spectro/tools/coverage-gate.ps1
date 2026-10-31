@@ -54,6 +54,32 @@ function Print-Metric([string]$Label, $Percentage, [double]$Minimum, [bool]$Pass
     $status = if ($Passed) { 'PASS' } else { 'FAIL' }
     Write-Host ('{0,-22} {1,8} (min {2:F2}%) [{3}]' -f $Label, $value, $Minimum, $status)
 }
+function Add-LineDetail([hashtable]$Details, [string]$Path, [int]$Number) {
+    $key = "$Path`:$Number"
+    if (-not $Details.ContainsKey($key)) {
+        $Details[$key] = [pscustomobject]@{ Path = $Path; Number = $Number }
+    }
+}
+function Add-BranchDetail([hashtable]$Details, [string]$Path, [int]$Number, [long]$Covered, [long]$Valid) {
+    $key = "$Path`:$Number"
+    if (-not $Details.ContainsKey($key)) {
+        $Details[$key] = [pscustomobject]@{ Path = $Path; Number = $Number; Covered = $Covered; Valid = $Valid }
+    }
+}
+function Print-LineDetails([string]$Title, [hashtable]$Details) {
+    if ($Details.Count -eq 0) { return }
+    Write-Host "`n$Title"
+    foreach ($detail in @($Details.Values | Sort-Object Path, Number)) {
+        Write-Host ('  {0}:{1}' -f $detail.Path, $detail.Number)
+    }
+}
+function Print-BranchDetails([string]$Title, [hashtable]$Details) {
+    if ($Details.Count -eq 0) { return }
+    Write-Host "`n$Title"
+    foreach ($detail in @($Details.Values | Sort-Object Path, Number)) {
+        Write-Host ('  {0}:{1} ({2}/{3} branches covered)' -f $detail.Path, $detail.Number, $detail.Covered, $detail.Valid)
+    }
+}
 
 try {
     $repoRoot = (& git rev-parse --show-toplevel 2>$null)
@@ -109,6 +135,10 @@ try {
         $totals = @{ lineCovered = [long]0; lineValid = [long]0; branchCovered = [long]0; branchValid = [long]0;
                      newLineCovered = [long]0; newLineValid = [long]0; newBranchCovered = [long]0; newBranchValid = [long]0 }
         $matchedChangedLines = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+        $uncoveredLines = @{}
+        $uncoveredBranches = @{}
+        $uncoveredNewLines = @{}
+        $uncoveredNewBranches = @{}
         $tracked = @(Invoke-Git -Arguments @('-c','core.quotePath=false','ls-files','--cached'))
         $trackedSet = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
         foreach ($file in $tracked) { [void]$trackedSet.Add((Normalize-Path ([string]$file))) }
@@ -150,24 +180,41 @@ try {
                     continue
                 }
                 $resolved = @($candidates)[0]
-                if (-not $changed.ContainsKey($resolved)) { continue }
+                $isChanged = $changed.ContainsKey($resolved)
                 foreach ($node in $classNode.SelectNodes('./lines/line')) {
                     $number = [int]$node.GetAttribute('number')
-                    if (-not $changed[$resolved].Contains($number)) { continue }
+                    $hits = [long]$node.GetAttribute('hits')
+                    $hasBranch = $node.GetAttribute('branch') -ieq 'true'
+                    $branchCovered = [long]0
+                    $branchValid = [long]0
+                    if ($hasBranch) {
+                        $detail = $node.GetAttribute('condition-coverage')
+                        if ($detail -notmatch '\((\d+)\s*/\s*(\d+)\)') { throw "Branch sem condition-coverage: $resolved`:$number" }
+                        $branchCovered = [long]$Matches[1]
+                        $branchValid = [long]$Matches[2]
+                        if ($branchCovered -gt $branchValid) { throw "Branch inconsistente: $resolved`:$number" }
+                        if ($branchCovered -lt $branchValid) {
+                            Add-BranchDetail $uncoveredBranches $resolved $number $branchCovered $branchValid
+                        }
+                    }
+                    if ($hits -eq 0) {
+                        Add-LineDetail $uncoveredLines $resolved $number
+                    }
+                    if (-not $isChanged -or -not $changed[$resolved].Contains($number)) { continue }
                     # Avoid double-counting the same file/line when Cobertura repeats
                     # classes, but different test reports may legitimately overlap;
                     # flag those as unsupported rather than silently overcounting.
                     $key = "$resolved`:$number"
                     if (-not $matchedChangedLines.Add($key)) { throw "Linha de código novo duplicada nos relatórios: $key. Gere relatório mesclado sem duplicatas." }
                     $totals.newLineValid++
-                    if ([long]$node.GetAttribute('hits') -gt 0) { $totals.newLineCovered++ }
-                    if ($node.GetAttribute('branch') -ieq 'true') {
-                        $detail = $node.GetAttribute('condition-coverage')
-                        if ($detail -notmatch '\((\d+)\s*/\s*(\d+)\)') { throw "Branch sem condition-coverage: $key" }
-                        $covered = [long]$Matches[1]; $valid = [long]$Matches[2]
-                        if ($covered -gt $valid) { throw "Branch inconsistente: $key" }
-                        $totals.newBranchCovered += $covered
-                        $totals.newBranchValid += $valid
+                    if ($hits -gt 0) { $totals.newLineCovered++ }
+                    if ($hits -eq 0) { Add-LineDetail $uncoveredNewLines $resolved $number }
+                    if ($hasBranch) {
+                        $totals.newBranchCovered += $branchCovered
+                        $totals.newBranchValid += $branchValid
+                        if ($branchCovered -lt $branchValid) {
+                            Add-BranchDetail $uncoveredNewBranches $resolved $number $branchCovered $branchValid
+                        }
                     }
                 }
             }
@@ -194,6 +241,10 @@ try {
         Print-Metric 'Branch Coverage' $branch $MinBranchCoverage $branchOK
         Print-Metric 'New Line Coverage' $newLine $MinNewLineCoverage $newLineOK
         Print-Metric 'New Branch Coverage' $newBranch $MinNewBranchCoverage $newBranchOK
+        if (-not $lineOK) { Print-LineDetails 'Uncovered lines' $uncoveredLines }
+        if (-not $branchOK) { Print-BranchDetails 'Uncovered branches' $uncoveredBranches }
+        if (-not $newLineOK) { Print-LineDetails 'Uncovered new lines' $uncoveredNewLines }
+        if (-not $newBranchOK) { Print-BranchDetails 'Uncovered new branches' $uncoveredNewBranches }
         $passed = $lineOK -and $branchOK -and $newLineOK -and $newBranchOK
         Write-Host ('RESULTADO: ' + $(if ($passed) { 'true' } else { 'false' }))
         if ($passed) { exit 0 } else { exit 1 }
