@@ -130,33 +130,33 @@ public sealed class V5AnalyzerTests
     }
 
     [Fact]
-    public async Task Perf107ComparesForEachAndForLoopEffects()
+    public async Task Perf107IgnoresDifferentLoopKindsEvenWhenBodiesMatch()
     {
         const string source = "using System.Collections.Generic; class Sample { void M(bool flag, IEnumerable<int> values) { if (flag) { foreach (var value in values) Process(); } else { for (var i = 0; i < 10; i++) Process(); } } void Process() { } }";
 
         var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
 
-        Assert.Equal("PERF107", Assert.Single(diagnostics).Id);
+        Assert.Empty(diagnostics);
     }
 
     [Fact]
-    public async Task Perf107ComparesDeconstructingForeachEffects()
+    public async Task Perf107DoesNotReportIdenticalDeconstructingForeachWork()
     {
         const string source = "using System.Collections.Generic; class Sample { void M(bool flag, IEnumerable<(int, int)> pairs) { if (flag) { foreach (var (left, right) in pairs) Process(); } else { foreach (var (left, right) in pairs) Process(); } } void Process() { } }";
 
         var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
 
-        Assert.Equal("PERF107", Assert.Single(diagnostics).Id);
+        Assert.Empty(diagnostics);
     }
 
     [Fact]
-    public async Task Perf107ComparesWhileAndDoWhileEffects()
+    public async Task Perf107IgnoresDifferentWhileLoopKinds()
     {
         const string source = "class Sample { void M(bool flag) { if (flag) { while (flag) { Process(); } } else { do { Process(); } while (flag); } } void Process() { } }";
 
         var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
 
-        Assert.Equal("PERF107", Assert.Single(diagnostics).Id);
+        Assert.Empty(diagnostics);
     }
 
     [Fact]
@@ -183,6 +183,76 @@ public sealed class V5AnalyzerTests
     public async Task Perf107IgnoresMatchingEffectsWhenComplexityIsUnknown()
     {
         const string source = "class Sample { void M(bool flag) { if (flag) { for (var i = 0; i < 2; i++) { for (var j = 0; j < 2; j++) { for (var k = 0; k < 2; k++) Process(); } } } else { for (var i = 0; i < 2; i++) { for (var j = 0; j < 2; j++) { for (var k = 0; k < 2; k++) Process(); } } } } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf107IgnoresAdditionalIncrementSideEffect()
+    {
+        const string source = "class Sample { void M(bool flag) { if (flag) { for (var i = 0; i < 10; i++) Process(); } else { for (var i = 0; i < 20; i++, Persist()) Process(); } } void Process() { } void Persist() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf107IgnoresDifferentForeachSources()
+    {
+        const string source = "using System.Collections.Generic; class Sample { void M(bool flag, IEnumerable<(int, int)> first, IEnumerable<(int, int)> second) { if (flag) { foreach (var (left, right) in first) Process(); } else { foreach (var (left, right) in second) Process(); } } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf107IgnoresDifferentWhileConditions()
+    {
+        const string source = "class Sample { void M(bool first, bool second) { if (first) { while (first) { Process(); } } else { while (second) { Process(); } } } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf107DoesNotReportIdenticalForeachWork()
+    {
+        const string source = "using System.Collections.Generic; class Sample { void M(bool flag, IEnumerable<int> items) { if (flag) { foreach (var item in items) Process(); } else { foreach (var item in items) Process(); } } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf107DoesNotReportIdenticalWhileWork()
+    {
+        const string source = "class Sample { void M(bool flag) { if (flag) { while (flag) { Process(); } } else { while (flag) { Process(); } } } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf107DoesNotReportIdenticalDoWhileWork()
+    {
+        const string source = "class Sample { void M(bool flag) { if (flag) { do { Process(); } while (flag); } else { do { Process(); } while (flag); } } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf107IgnoresForLoopWithMoreThanOneIncrementor()
+    {
+        const string source = "class Sample { void M(bool flag) { if (flag) { for (var i = 0; i < 10; i++) Process(); } else { for (var i = 0; i < 20; i++, i++) Process(); } } void Process() { } }";
 
         var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
 

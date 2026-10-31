@@ -32,9 +32,9 @@ public sealed class V5LoopCostInferenceTests
     [Fact]
     public void DerivesConstantForLoopMultiplierWhenBoundsAreLiteral()
     {
-        var method = ParseMethod("void M() { for (var i = 0; i < 10; i++) _ = i; }");
+        var (method, model) = CompileMethod("void M() { for (var i = 0; i < 10; i++) _ = i; }");
 
-        var evidence = LoopCostInference.Analyze(method, CancellationToken.None);
+        var evidence = LoopCostInference.Analyze(method, CancellationToken.None, model);
 
         var item = Assert.Single(evidence.Items);
         Assert.Equal(10, item.Count.Value);
@@ -79,9 +79,9 @@ public sealed class V5LoopCostInferenceTests
     [Fact]
     public void KeepsAssignmentInitializerAndInvalidBoundsUnknown()
     {
-        var method = ParseMethod("void M(int end) { for (var i = 1; i < end; i++) _ = i; }");
+        var (method, model) = CompileMethod("void M(int end) { for (var i = 1; i < end; i++) _ = i; }");
 
-        var evidence = LoopCostInference.Analyze(method, CancellationToken.None);
+        var evidence = LoopCostInference.Analyze(method, CancellationToken.None, model);
         var item = Assert.Single(evidence.Items);
 
         Assert.Equal(ComplexityKind.Linear, item.Complexity.Kind);
@@ -91,18 +91,82 @@ public sealed class V5LoopCostInferenceTests
     [Fact]
     public void SupportsAssignmentInitializerAndDescendingBounds()
     {
-        var assignment = ParseMethod("void M() { var i = 0; for (i = 0; i < 3; i++) _ = i; }")
+        var (assignmentMethod, assignmentModel) = CompileMethod("void M() { var i = 0; for (i = 0; i < 3; i++) _ = i; }");
+        var assignment = assignmentMethod
             .DescendantNodes()
             .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ForStatementSyntax>()
             .Single();
-        var invalid = ParseMethod("void M() { for (var i = 3; i < 1; i++) _ = i; }")
+        var (emptyMethod, emptyModel) = CompileMethod("void M() { for (var i = 3; i < 1; i++) _ = i; }");
+        var empty = emptyMethod
+            .DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ForStatementSyntax>()
+            .Single();
+        var (descendingMethod, descendingModel) = CompileMethod("void M() { for (var i = 5; i > 0; i--) _ = i; }");
+        var descending = descendingMethod
+            .DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ForStatementSyntax>()
+            .Single();
+        var (emptyDescendingMethod, emptyDescendingModel) = CompileMethod("void M() { for (var i = 0; i > 5; i--) _ = i; }");
+        var emptyDescending = emptyDescendingMethod
             .DescendantNodes()
             .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ForStatementSyntax>()
             .Single();
 
-        Assert.True(LoopCostInference.TryGetKnownIterationCount(assignment, out var count));
+        Assert.True(LoopCostInference.TryGetKnownIterationCount(assignment, assignmentModel, out var count));
         Assert.Equal(3, count);
-        Assert.False(LoopCostInference.TryGetKnownIterationCount(invalid, out _));
+        Assert.True(LoopCostInference.TryGetKnownIterationCount(empty, emptyModel, out var emptyCount));
+        Assert.Equal(0, emptyCount);
+        Assert.True(LoopCostInference.TryGetKnownIterationCount(descending, descendingModel, out var descendingCount));
+        Assert.Equal(5, descendingCount);
+        Assert.True(LoopCostInference.TryGetKnownIterationCount(emptyDescending, emptyDescendingModel, out var emptyDescendingCount));
+        Assert.Equal(0, emptyDescendingCount);
+    }
+
+    [Theory]
+    [InlineData("for (var i = 0; i <= 5; i++) _ = i;")]
+    [InlineData("for (var i = 0; i < 10; i += 2) _ = i;")]
+    [InlineData("for (var i = 0; i < 10; i--) _ = i;")]
+    [InlineData("for (var i = 0; i < 10; i++, i++) _ = i;")]
+    [InlineData("for (var i = 0; i < 10; j++) _ = i;")]
+    [InlineData("for (var i = 0; j < 10; i++) _ = i;")]
+    public void KeepsIterationCountUnknownWhenLoopShapeIsNotProven(string loop)
+    {
+        var (method, model) = CompileMethod($"void M() {{ {loop} }}");
+        var statement = method
+            .DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ForStatementSyntax>()
+            .Single();
+
+        Assert.False(LoopCostInference.TryGetKnownIterationCount(statement, model, out _));
+    }
+
+    [Fact]
+    public void KeepsCountUnknownWhenTheIntegralTypeCouldOverflowTheBound()
+    {
+        var (method, model) = CompileMethod("void M() { for (byte i = 0; i < 256; i++) _ = i; }");
+        var statement = method
+            .DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ForStatementSyntax>()
+            .Single();
+
+        Assert.False(LoopCostInference.TryGetKnownIterationCount(statement, model, out _));
+    }
+
+    private static (Microsoft.CodeAnalysis.SyntaxNode Method, Microsoft.CodeAnalysis.SemanticModel Model) CompileMethod(string source)
+    {
+        var tree = CSharpSyntaxTree.ParseText(
+            $"class Sample {{ {source} }}",
+            new CSharpParseOptions(LanguageVersion.CSharp14));
+        var compilation = Microsoft.CodeAnalysis.CSharp.CSharpCompilation.Create(
+            "V5LoopCostInferenceTests",
+            [tree],
+            [Microsoft.CodeAnalysis.MetadataReference.CreateFromFile(typeof(object).Assembly.Location)],
+            new Microsoft.CodeAnalysis.CSharp.CSharpCompilationOptions(Microsoft.CodeAnalysis.OutputKind.DynamicallyLinkedLibrary));
+        var method = tree.GetRoot()
+            .DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>()
+            .Single();
+        return (method, compilation.GetSemanticModel(tree));
     }
 
     private static Microsoft.CodeAnalysis.SyntaxNode ParseMethod(string source)

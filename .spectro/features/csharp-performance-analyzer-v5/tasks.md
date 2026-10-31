@@ -27,7 +27,8 @@
 ## Progresso
 
 - Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-008`, `TASK-009`, `TASK-REV-001`, `TASK-REV-002`, `TASK-REV-003`, `TASK-REV-004`, `TASK-REV-005`
-- Bloqueadas: `TASK-010` (cobertura local com os novos testes passou: 85,94% de branches novas; executar o gate formal em árvore limpa após commit dos testes para registrar evidência final)
+- Em andamento: `TASK-REV-006`, `TASK-REV-007` (correções e testes focados concluídos; aguardando gates formais na revisão commitada)
+- Bloqueada: `TASK-010` (medição local com `-AllowDirtyTree`: 273 testes; 96,56% de linhas, 85,21% de branches, 96,90% de linhas novas e 85,21% de branches novos; renovar os gates formais em árvore limpa após commit)
 
 ## TASK-REV-001 - Remediate FINDING-001
 
@@ -80,6 +81,42 @@
 - **Severity:** High
 - **Return stage:** implement
 - **Description:** Implementar comportamento do PERF107Analyzer e cobrir a comparação pública com teste comportamental.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
+
+## TASK-REV-006 - Remediate FINDING-006
+
+- **Status:** running
+- **Finding:** FINDING-006
+- **Severity:** High
+- **Return stage:** implement
+- **Description:** Restringir contagens exatas de iteração a loops cujo operador, inicializador e incremento permitam derivar o total sem ambiguidade; preservar Unknown nos demais casos.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
+
+## TASK-REV-007 - Remediate FINDING-007
+
+- **Status:** running
+- **Finding:** FINDING-007
+- **Severity:** High
+- **Return stage:** implement
+- **Description:** Garantir que PERF107 considere efeitos e limites dos cabeçalhos dos loops ao decidir se dois caminhos são comparáveis; adicionar caso negativo com efeito adicional no incremento.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
+
+## TASK-REV-008 - Remediate FINDING-008
+
+- **Status:** pending
+- **Finding:** FINDING-008
+- **Severity:** Medium
+- **Return stage:** plan
+- **Description:** Sincronizar TASK-010 com o último resultado aprovado dos gates e renovar a evidência após a atualização de tasks.md.
 - **Dependencies:** none
 - **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
 - **Expected tests:** Add or update behavior-focused coverage as required.

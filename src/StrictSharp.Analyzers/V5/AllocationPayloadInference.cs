@@ -19,7 +19,7 @@ public static class AllocationPayloadInference
             var payload = TryGetPayload(allocation, model, out var bytes)
                 ? PayloadEstimate.Known(bytes)
                 : PayloadEstimate.Unknown;
-            var allocationCount = TryGetLoopMultiplier(allocation, out var multiplier)
+            var allocationCount = TryGetLoopMultiplier(allocation, model, out var multiplier)
                 ? KnownCount.Exact(multiplier)
                 : KnownCount.Unknown;
             var totalPayload = payload.IsKnown && allocationCount.IsKnown
@@ -76,7 +76,7 @@ public static class AllocationPayloadInference
         return true;
     }
 
-    private static bool TryGetLoopMultiplier(SyntaxNode node, out long multiplier)
+    private static bool TryGetLoopMultiplier(SyntaxNode node, SemanticModel model, out long multiplier)
     {
         multiplier = 1;
         foreach (var ancestor in node.Ancestors())
@@ -84,7 +84,7 @@ public static class AllocationPayloadInference
             if (!IsLoop(ancestor))
                 continue;
 
-            if (!LoopCostInference.TryGetKnownIterationCount(ancestor, out var count)
+            if (!LoopCostInference.TryGetKnownIterationCount(ancestor, model, out var count)
                 || count == 0
                 || multiplier > long.MaxValue / count)
             {

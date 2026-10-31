@@ -42,7 +42,7 @@ public static class IoConcurrencyInference
             if (dimension is not { } resolvedDimension)
                 continue;
 
-            var knownMultiplier = TryGetLoopMultiplier(invocation, out var multiplier);
+            var knownMultiplier = TryGetLoopMultiplier(invocation, model, out var multiplier);
             var count = knownMultiplier ? KnownCount.Exact(multiplier) : KnownCount.Unknown;
             evidence.Add(new CostEvidence(
                 resolvedDimension,
@@ -86,7 +86,7 @@ public static class IoConcurrencyInference
             && name is "Run" or "WhenAll" or "WhenAny";
     }
 
-    private static bool TryGetLoopMultiplier(SyntaxNode node, out long multiplier)
+    private static bool TryGetLoopMultiplier(SyntaxNode node, SemanticModel model, out long multiplier)
     {
         multiplier = 1;
         foreach (var ancestor in node.Ancestors())
@@ -98,7 +98,7 @@ public static class IoConcurrencyInference
                 and not DoStatementSyntax)
                 continue;
 
-            if (!LoopCostInference.TryGetKnownIterationCount(ancestor, out var count)
+            if (!LoopCostInference.TryGetKnownIterationCount(ancestor, model, out var count)
                 || count == 0
                 || multiplier > long.MaxValue / count)
             {

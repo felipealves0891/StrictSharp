@@ -3,86 +3,80 @@
 
 ## Resumo
 
-A implementação V5 compila, passa os gates obrigatórios e possui cobertura acima dos limites configurados. A revisão independente confirmou o catálogo, a separação básica entre analyzers e serviços, a documentação e a preservação dos contratos anteriores. Permanecem duas lacunas funcionais de alta severidade e uma inconsistência de rastreabilidade.
+A revisão confirmou que as remediações anteriores estão presentes, que a rastreabilidade não tem lacunas e que os gates passaram na revisão de código `1517c175ec2592d29f13186cbf1fca630269a337`. Ainda há dois problemas funcionais de severidade alta na inferência de contagens e na comparação de caminhos do `PERF107`. O status de `TASK-010` também não acompanha o gate aprovado.
 
-**Decisão final:** `changes_requested`
+**Decisão:** `changes_requested`.
 
 ## Artefatos examinados
 
-- `spec.md`, `clarifications.md`, `plan.md` e `tasks.md`
-- `gates.json` da execução `gate-20261031T142145Z`
-- Snapshot independente `reviews/review-20261031T142331Z/`
-- Código V5, catálogo, integração interprocedural e testes
-- Diff de `origin/main` e estado do repositório
+- `spec.md`, `clarifications.md`, `plan.md` e `tasks.md`.
+- Relatório `gates.json`, execução `gate-20261031T144107Z`, validada pelo script de gates.
+- Snapshot independente `reviews/review-20261031T144831Z/` e diff contra `origin/main`.
+- Catálogo V5, inferência de loops, propagação interprocedural, `PERF107`, testes e documentação.
+- `.spectro/constitution.md` e `.spectro/config.yaml`.
 
 ## Consistência da evidência
 
-- O gate aprovado e o snapshot referem-se ao commit `480651e63557c4c956ae7cb44597a19f74181379`.
-- Build, testes, segurança e cobertura passaram; foram aprovados 249 testes.
-- Cobertura registrada: 97,53% de linhas, 85,45% de branches, 97,24% de linhas novas e 85,26% de branches novos.
-- O validador de gates aceitou o relatório.
-- O validador de rastreabilidade retornou `gaps`: 26 requisitos ficaram sem tarefas vinculadas porque o script procura tarefas em headings, enquanto a matriz principal está em tabela. `TASK-010` também permanece `pending` apesar do gate aprovado.
+- O snapshot e o relatório de gates identificam o mesmo commit de código: `1517c175ec2592d29f13186cbf1fca630269a337`.
+- Os quatro gates passaram: build, testes (259), segurança e cobertura. Cobertura: 97,54% de linhas, 85,74% de branches, 97,28% de linhas novas e 85,94% de branches novos.
+- A validação de rastreabilidade retornou `complete`, sem requisitos ou critérios de aceite descobertos.
+- Após a execução dos gates, esta revisão acrescentou tarefas de remediação a `tasks.md`. Por isso, o hash atual de `tasks.md` difere do hash registrado no gate; o gate continua referente ao mesmo código, mas precisa ser renovado depois que as novas remediações forem implementadas.
+- A ferramenta de criação de tarefas precisou de uma conversão explícita para `int` porque o PowerShell promovia o próximo número para `Double`. A correção foi exercitada ao criar as tarefas `TASK-REV-006` a `TASK-REV-008`.
 
 ## Requisitos verificados
 
-- Catálogo público contém `PERF101`–`PERF107`, todos com severidade High.
-- O núcleo V5 representa Big-O limitado, payload, dimensões, limitações e desconhecidos.
-- A integração V5 utiliza o grafo interprocedural V4 para evidências de chamadas conhecidas.
-- A comparação pública não apresenta percentual, custo monetário ou benchmark.
-- A suíte e os gates configurados foram executados sem envio de código a serviços externos.
+- O catálogo publica `PERF101`–`PERF107` com severidade `High` e preserva os contratos V1–V4.
+- A propagação interprocedural agora transporta multiplicadores conhecidos e mantém limites dinâmicos desconhecidos; testes cobrem os dois casos.
+- `PERF107` não compara ramos com corpos diferentes ou referências a símbolos diferentes; há testes positivos e negativos.
+- A comparação não informa percentuais nem benchmarks. A suíte e os gates são locais e não adicionam envio de código a serviços externos.
 
 ## Achados
 
-### FINDING-004 — Multiplicadores conhecidos são descartados na propagação interprocedural
+### FINDING-006 — Contagens exatas de loops não validam operador nem incremento
 
 - **Severity:** High
 - **Category:** Functional / consistency
-- **Location:** `src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:28-33`
-- **Evidence:** Toda evidência interprocedural criada pelo serviço recebe `KnownCount.Unknown` para contagem e multiplicador, inclusive `RepeatedCall`, `Allocation` e `Materialization`. O caminho de chamada é preservado no texto, mas o multiplicador observável do loop não é transportado.
-- **Impact:** Um loop conhecido que chama um método conhecido não informa a quantidade estrutural que amplifica a operação, contrariando `FR-004`, `AC-004` e o princípio de contagens estruturais do plano. `PERF104` pode ser emitido apenas pela dimensão `Repetition`, sem número conhecido quando ele é derivável.
-- **Recommendation:** Propagar a contagem/multiplicador do caminho de chamada ou enriquecer a evidência do grafo com essa informação; manter `Unknown` somente quando limite, dispatch ou entrada não forem resolvidos.
+- **Location:** `src/StrictSharp.Analyzers/V5/LoopCostInference.cs:93-115`
+- **Evidence:** `GetKnownCount` usa o início e o literal à direita da condição para retornar `end - start`, mas não restringe o operador da condição nem valida os incrementos. Por exemplo, `for (var i = 0; i <= 5; i++)` informa 5 embora execute 6 iterações; `i += 2` ou `i--` também recebe uma contagem que não representa seu comportamento.
+- **Impact:** Os diagnósticos V5 podem publicar contagens e multiplicadores exatos incorretos, contrariando `FR-003`, `FR-004` e `FR-011`.
+- **Recommendation:** Derivar a contagem somente para comparadores, inicializadores e incrementos cuja semântica esteja comprovada; retornar desconhecido nos demais casos. Cobrir `<`, `<=`, passos diferentes de um e decrementos.
 - **Return stage:** `implement`
+- **Remediation task:** `TASK-REV-006`.
 
-### FINDING-005 — PERF107 compara ramos sem demonstrar equivalência semântica
+### FINDING-007 — `PERF107` ignora efeitos nos cabeçalhos dos loops
 
 - **Severity:** High
 - **Category:** Functional / scope
-- **Location:** `src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:23-43`
-- **Evidence:** O analyzer compara o primeiro item de custo de qualquer ramo `if/else` que contenha loops. O teste `Perf107ReportsStructuralComparisonBetweenConditionalPaths` usa ramos estruturalmente diferentes (`foreach` sobre `items` versus `for` de 10 iterações) e espera diagnóstico, mas não há verificação de que os ramos sejam alternativas semanticamente comparáveis ou produzam o mesmo efeito.
-- **Impact:** O diagnóstico pode sugerir uma alternativa melhor para dois caminhos que não são substituíveis, contrariando `CON-008`, `FR-009`, `AC-009` e a exigência de preservar semântica.
-- **Recommendation:** Restringir a comparação a alternativas com contexto comparável demonstrável, ou expor a comparação somente pela API pública com responsabilidade explícita do chamador; adicionar testes negativos para ramos não equivalentes.
+- **Location:** `src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:62-78`
+- **Evidence:** `HaveComparableLoopEffects` compara o texto dos corpos e os símbolos usados nesses corpos, mas não compara inicializadores, condições, incrementos ou a expressão enumerada. Dois ramos com `Process()` no corpo passam pela verificação mesmo se um incremento também chamar `Persist()`.
+- **Impact:** A comparação não descreve todo o trabalho executado e pode apresentar ramos com efeitos distintos como alternativas comparáveis, contrariando `FR-009`, `AC-009` e `CON-008`.
+- **Recommendation:** Incluir efeitos observáveis de cabeçalho no critério de comparabilidade, ou permanecer em silêncio quando não puder demonstrar que os caminhos são comparáveis. Adicionar um teste negativo com efeito extra no incremento e casos equivalentes para cada forma de loop.
 - **Return stage:** `implement`
+- **Remediation task:** `TASK-REV-007`.
 
-### FINDING-003 — Rastreabilidade automatizada e estado de tarefas permanecem inconsistentes
+### FINDING-008 — `TASK-010` diverge do gate aprovado
 
 - **Severity:** Medium
 - **Category:** Consistency / scope
-- **Location:** `.spectro/features/csharp-performance-analyzer-v5/tasks.md` e `.codex/skills/spectro-review/scripts/validate_traceability.ps1`
-- **Evidence:** `validate_traceability.ps1` retornou `result: gaps` e listou 26 requisitos como `uncovered`, embora `plan.md` e a tabela de tarefas contenham as ligações. `TASK-010` está `pending` mesmo com `gate-20261031T142145Z` aprovado.
-- **Impact:** A auditoria não consegue provar automaticamente a cobertura dos requisitos e o estado do fluxo não representa o resultado atual dos gates.
-- **Recommendation:** Corrigir o parser/formato de rastreabilidade e sincronizar `TASK-010`; regenerar `traceability.json` e repetir a validação.
+- **Location:** `.spectro/features/csharp-performance-analyzer-v5/tasks.md`, linha de `TASK-010`
+- **Evidence:** `TASK-010` permanece `blocked` e o progresso diz que falta executar o gate formal após commit, embora `gate-20261031T144107Z` tenha passado. A atualização das tarefas de remediação desta revisão também altera o hash de `tasks.md` desde o gate.
+- **Impact:** O status da feature e o registro de tarefas não refletem a evidência atual; a revisão não pode considerar a trilha de auditoria sincronizada.
+- **Recommendation:** Após as remediações funcionais, sincronizar o status de `TASK-010` com os gates e renovar a evidência na revisão final.
 - **Return stage:** `plan`
+- **Remediation task:** `TASK-REV-008`.
 
 ## Riscos residuais
 
-- A classificação Big-O continua limitada a formas sintáticas simples; entradas dinâmicas, recursão profunda e dispatch permanecem incompletos.
-- I/O e concorrência não medem latência, throughput, disponibilidade ou capacidade efetiva do runtime.
-- A margem de cobertura de branches novos é estreita (85,26% contra 85%); alterações no núcleo V5 devem preservar os testes de exceção.
-
-## Tarefas de remediação
-
-- `TASK-REV-003` cobre `FINDING-003`.
-- `TASK-REV-004` cobre `FINDING-004`.
-- `TASK-REV-005` cobre `FINDING-005`.
+- A inferência é estática e limitada; limites de entrada, dispatch, chamadas externas e comportamento de runtime continuam desconhecidos.
+- A comparação de caminhos requer evidência de equivalência dos efeitos, incluindo cabeçalhos, antes de ser confiável.
+- A evidência de gates precisa ser renovada depois das correções e da atualização final das tarefas.
 
 ## Decisão
 
-`changes_requested`. Os dois achados High impedem aprovação. O retorno recomendado é `spectro-implement`, seguido de `spectro-gates` e nova revisão.
+`changes_requested`. Os achados High `FINDING-006` e `FINDING-007` retornam à implementação. `FINDING-008` requer sincronização do plano e da evidência ao final.
 
-## Atualização das remediações — 2026-10-31
+## Atualização de implementação — 2026-10-31
 
-- `FINDING-003`: resolvido. O validador agora lê tarefas em tabelas e headings; a validação regenerada em `reviews/review-20261031T142331Z/traceability.json` retorna `complete`. `TASK-010` reflete o bloqueio atual de cobertura.
-- `FINDING-004`: resolvido. Evidências interprocedurais propagam contagem e multiplicador conhecidos e mantêm limites dinâmicos como desconhecidos. Testes cobrem multiplicador conhecido e desconhecido.
-- `FINDING-005`: resolvido. `PERF107` compara corpos de loop equivalentes sintaticamente e com referências de símbolos iguais; testes cobrem caminhos comparáveis, incompatíveis e funções locais distintas.
-- Testes direcionados: 13 aprovados. Gate `gate-20261031T143206Z`: build, suíte completa e segurança passaram; a cobertura não iniciou porque a árvore estava suja. Após commit, `gate-20261031T143403Z` executou os 253 testes e mediu 84,65% de branches novos, abaixo do mínimo de 85%; linhas novas ficaram em 96,84%. A recuperação classificou a falha como `implementation-defect` e moveu o fluxo para `waiting_input`, com retorno à implementação.
-- Remediação de cobertura: adicionados casos positivos para `for`, `foreach`, `foreach` com desestruturação, `while` e `do/while`, e casos negativos para quantidades de loops diferentes, símbolos externos não resolvidos e complexidade desconhecida. A medição local com `-AllowDirtyTree` executou 259 testes e passou: 97,54% linhas, 85,74% branches, 97,28% linhas novas e 85,94% branches novos. O gate formal deve ser repetido em árvore limpa para gerar evidência final da revisão atual.
+As correções de `FINDING-006` e `FINDING-007` foram implementadas no workspace e os testes focados foram adicionados. A contagem exata agora exige modelo semântico, limites integrais `int`/`long`, comparador estrito e incremento/decremento unitário compatível; as demais formas permanecem desconhecidas. O `PERF107` só compara cabeçalhos de loops compatíveis e evita relatar alternativas com a mesma complexidade e contagem conhecida igual (ou sem diferença demonstrável).
+
+Verificação local de cobertura executada com `-AllowDirtyTree`: 273 testes passaram; cobertura de linhas 96,56%, branches 85,21%, linhas novas 96,90% e branches novos 85,21%. Esse resultado é uma medição local da árvore modificada, não substitui o gate formal. `gates.json` ainda aponta para a revisão `1517c175ec2592d29f13186cbf1fca630269a337`; os gates formais e a revisão final precisam ser renovados após commit. Até lá, `TASK-REV-006` e `TASK-REV-007` permanecem em andamento, e `TASK-010` permanece bloqueada para o gate formal.

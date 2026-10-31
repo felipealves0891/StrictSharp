@@ -18,7 +18,8 @@ public static class InterproceduralEvidenceAnalyzer
         foreach (var callSite in graph.CallSites)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var multiplier = GetLoopMultiplier(callSite.Invocation);
+            var semanticModel = compilation.GetSemanticModel(callSite.Invocation.SyntaxTree);
+            var multiplier = GetLoopMultiplier(callSite.Invocation, semanticModel, cancellationToken);
 
             if (callSite.Flow == CallFlowKind.Blocking && IsInsideLoop(callSite.Invocation))
                 evidence.Add(new InterproceduralEvidence(
@@ -134,7 +135,7 @@ public static class InterproceduralEvidenceAnalyzer
         return operations.ToImmutable();
     }
 
-    private static KnownCount GetLoopMultiplier(SyntaxNode node)
+    private static KnownCount GetLoopMultiplier(SyntaxNode node, SemanticModel semanticModel, CancellationToken cancellationToken)
     {
         long multiplier = 1;
         var foundLoop = false;
@@ -144,7 +145,7 @@ public static class InterproceduralEvidenceAnalyzer
                 continue;
 
             foundLoop = true;
-            if (!LoopCostInference.TryGetKnownIterationCount(ancestor, out var count)
+            if (!LoopCostInference.TryGetKnownIterationCount(ancestor, semanticModel, out var count, cancellationToken)
                 || count == 0
                 || multiplier > long.MaxValue / count)
                 return KnownCount.Unknown;

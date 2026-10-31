@@ -20,7 +20,7 @@ public sealed class Perf101Analyzer : RuleAnalyzerBase
 
     private void AnalyzeMethod(SyntaxNodeAnalysisContext context)
     {
-        var evidence = LoopCostInference.Analyze(context.Node, context.CancellationToken);
+        var evidence = LoopCostInference.Analyze(context.Node, context.CancellationToken, context.SemanticModel);
         var method = (IMethodSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, context.CancellationToken)!;
         evidence = InterproceduralCostInference.Merge(evidence, InterproceduralCostInference.Analyze(context.SemanticModel.Compilation, method, context.CancellationToken));
         V5DiagnosticAnalysis.Report(Rule, context, evidence, item => item.Complexity.IsKnown);
