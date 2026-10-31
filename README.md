@@ -14,13 +14,14 @@ O StrictSharp não substitui profiling ou benchmarks. Frequência de execução,
 
 ## Estado atual
 
-O catálogo contém 30 diagnósticos, organizados em três fases:
+O catálogo contém 31 diagnósticos, organizados em quatro fases:
 
 | Fase | Quantidade | Situação |
 | --- | ---: | --- |
 | V1 | 15 | Implementados e registrados em `V1AnalyzerCatalog` |
 | V2 | 13 | Implementados e registrados em `V2AnalyzerCatalog` |
 | V3 | 2 | Implementados e registrados em `V3AnalyzerCatalog` |
+| V4 | 1 | Implementado e registrado em `V4AnalyzerCatalog` |
 
 Os diagnósticos V1 usam C# 14 e são compilados como um analisador Roslyn para `netstandard2.1`. Cada ocorrência possui severidade, categoria, impacto, escalabilidade, correção sugerida, exceções e referência documental.
 
@@ -120,6 +121,16 @@ Cada regra descreve um padrão observado no código e o risco potencial associad
 
 As recomendações são condicionais: mutabilidade, igualdade, propriedade dos dados, ciclo de vida, thread safety, tamanho da entrada e frequência de execução precisam ser considerados. As regras reportam suspeitas estruturais; não provam memory leaks, não medem memória viva ou custo de execução e não classificam automaticamente todo objeto com muitas propriedades como pesado.
 
+### V4 — implementado
+
+A V4 amplia o contexto da análise para além do método isolado. Quando os alvos são resolvidos, o analyzer relaciona chamadores e métodos chamados, repetição por item, loops, alocações, materializações, chamadas redundantes, bloqueios, recursão e caminhos assíncronos. A evidência pode apresentar dimensões como `CPU`, `Memory`, `I/O`, `Concurrency`, `Recursion` e `Async`; a categoria do diagnóstico permanece `Performance`.
+
+| ID | Diagnóstico | O que significa | Severidade | Confiança | Orientação principal |
+| --- | --- | --- | --- | --- | --- |
+| PERF100 | Custo interprocedural propagado | Pode ampliar CPU, memória, I/O ou bloqueios quando uma operação potencialmente custosa é propagada por uma cadeia de chamadas e repetida em um fluxo maior. | High | Média | Revisar o ponto apropriado do fluxo e validar a alternativa com medição representativa. |
+
+`PERF100` não mede frequência real, CPU, memória, GC, I/O, complexidade efetiva ou percentual de ganho. Corpos ausentes, dependências externas, interfaces, delegates e dispatch sem alvo resolvido permanecem desconhecidos e não são tratados como custo zero. A recomendação é uma orientação para revisão, não uma prova de que toda chamada analisada seja um gargalo.
+
 ## Severidade e confiança
 
 O catálogo separa risco operacional de confiança da detecção:
@@ -129,7 +140,7 @@ O catálogo separa risco operacional de confiança da detecção:
 - `Medium`: risco moderado; exibido como info;
 - `Low`: risco baixo; exibido como hidden.
 
-A confiança indica quão forte é a evidência estrutural, mas não significa que o impacto ocorrerá em toda execução. Por exemplo, uma busca linear pode ser irrelevante para uma coleção pequena e custosa para uma coleção grande dentro de um caminho quente. `PERF001`–`PERF030` são IDs do StrictSharp, não IDs oficiais do .NET; quando houver uma regra oficial relacionada, a documentação detalhada indica a relação.
+A confiança indica quão forte é a evidência estrutural, mas não significa que o impacto ocorrerá em toda execução. Por exemplo, uma busca linear pode ser irrelevante para uma coleção pequena e custosa para uma coleção grande dentro de um caminho quente. `PERF001`–`PERF030` e `PERF100` são IDs do StrictSharp, não IDs oficiais do .NET; quando houver uma regra oficial relacionada, a documentação detalhada indica a relação.
 
 ## Organização do código
 
@@ -146,7 +157,7 @@ Os analyzers delegam metadados ao `RuleCatalog` e habilitam execução concorren
 
 ## Documentação e contribuição
 
-A especificação detalhada, incluindo exemplos positivos e negativos, limitações e critérios de aceitação, está em [docs/csharp-performance-analyzer.md](docs/csharp-performance-analyzer.md).
+A especificação detalhada das regras V1–V3, incluindo exemplos positivos e negativos, limitações e critérios de aceitação, está em [docs/csharp-performance-analyzer.md](docs/csharp-performance-analyzer.md). A documentação específica da V4 e de `PERF100` está em [docs/csharp-performance-analyzer-v4.md](docs/csharp-performance-analyzer-v4.md); o contexto do roadmap interprocedural está em [docs/csharp-performance-analyzer-2.md](docs/csharp-performance-analyzer-2.md).
 
 Ao adicionar ou alterar uma regra:
 
