@@ -19,10 +19,16 @@ public static class V5DiagnosticAnalysis
             if (reported || !shouldReport(item))
                 continue;
 
+            var explanation = item.Explanation;
+            if (item.Count.IsKnown)
+                explanation += $" Contagem estrutural: {item.Count.Value}.";
+            if (item.Multiplier.IsKnown)
+                explanation += $" Multiplicador estrutural: {item.Multiplier.Value}.";
+
             context.ReportDiagnostic(Diagnostic.Create(
                 rule.Descriptor,
                 context.Node.GetLocation(),
-                item.Explanation,
+                explanation,
                 item.Dimension,
                 item.Limitations));
             reported = true;

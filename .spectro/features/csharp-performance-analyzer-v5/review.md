@@ -3,76 +3,85 @@
 
 ## Resumo
 
-A implementação V5 compila, passa os gates obrigatórios e possui cobertura nova acima dos limites configurados. A revisão independente, porém, encontrou duas lacunas funcionais de alta severidade entre o contrato aprovado e o comportamento entregue: a propagação interprocedural prevista não está conectada aos analyzers V5, e `PERF107` permanece como analyzer sem análise registrada.
+A implementação V5 compila, passa os gates obrigatórios e possui cobertura acima dos limites configurados. A revisão independente confirmou o catálogo, a separação básica entre analyzers e serviços, a documentação e a preservação dos contratos anteriores. Permanecem duas lacunas funcionais de alta severidade e uma inconsistência de rastreabilidade.
 
 **Decisão final:** `changes_requested`
 
 ## Artefatos examinados
 
-- `spec.md`, `clarifications.md`, `plan.md`, `tasks.md`
-- `gates.json` da execução `gate-20261031T140814Z`
-- Snapshot independente `reviews/review-20261031T140934Z/`
-- Constituição e configuração Spectro
-- Catálogo, analyzers e serviços V5
-- Testes V5 e suíte completa reportada pelos gates
+- `spec.md`, `clarifications.md`, `plan.md` e `tasks.md`
+- `gates.json` da execução `gate-20261031T142145Z`
+- Snapshot independente `reviews/review-20261031T142331Z/`
+- Código V5, catálogo, integração interprocedural e testes
+- Diff de `origin/main` e estado do repositório
 
 ## Consistência da evidência
 
-- O snapshot e o gate aprovado referem-se ao mesmo código: `699a47a3c97bd045d0e8a020aa80541a6d620736`.
-- Build, testes, segurança e cobertura passaram; o gate registrou 242 testes e branch coverage nova de 85,04%.
-- O validador automático de rastreabilidade retornou gaps porque procura tarefas em headings `TASK-###`, enquanto `tasks.md` usa tabela. Isso é uma limitação do validador, mas impede considerar a rastreabilidade automatizada completa sem correção do formato ou da ferramenta.
+- O gate aprovado e o snapshot referem-se ao commit `480651e63557c4c956ae7cb44597a19f74181379`.
+- Build, testes, segurança e cobertura passaram; foram aprovados 249 testes.
+- Cobertura registrada: 97,53% de linhas, 85,45% de branches, 97,24% de linhas novas e 85,26% de branches novos.
+- O validador de gates aceitou o relatório.
+- O validador de rastreabilidade retornou `gaps`: 26 requisitos ficaram sem tarefas vinculadas porque o script procura tarefas em headings, enquanto a matriz principal está em tabela. `TASK-010` também permanece `pending` apesar do gate aprovado.
 
 ## Requisitos verificados
 
-- Catálogo V5 contém `PERF101`–`PERF107`, todos `High`, com matriz e testes.
-- O modelo representa Big-O limitado, payload de arrays, contagens, I/O, concorrência e desconhecidos.
-- A comparação pública evita percentuais e benchmarks.
-- A suíte completa e os gates configurados passaram.
-- Não foram identificadas dependências externas novas nem envio de código a serviços.
+- Catálogo público contém `PERF101`–`PERF107`, todos com severidade High.
+- O núcleo V5 representa Big-O limitado, payload, dimensões, limitações e desconhecidos.
+- A integração V5 utiliza o grafo interprocedural V4 para evidências de chamadas conhecidas.
+- A comparação pública não apresenta percentual, custo monetário ou benchmark.
+- A suíte e os gates configurados foram executados sem envio de código a serviços externos.
 
 ## Achados
 
-### FINDING-001 — Propagação interprocedural V5 não implementada
+### FINDING-004 — Multiplicadores conhecidos são descartados na propagação interprocedural
 
 - **Severity:** High
 - **Category:** Functional / consistency
-- **Location:** `src/StrictSharp.Analyzers/Analyzers/Perf101Analyzer.cs:21-24`, `src/StrictSharp.Analyzers/V5/LoopCostInference.cs:9-61`, analyzers `Perf102`/`Perf104`/`Perf105`/`Perf106`
-- **Evidence:** Os analyzers chamam somente `LoopCostInference`, `AllocationPayloadInference` ou `IoConcurrencyInference` sobre `context.Node`. Nenhum deles constrói ou consulta `InterproceduralGraphBuilder`, `InterproceduralEvidenceAnalyzer` ou `CallSite`.
-- **Impact:** Chamadas custosas em outro método, multiplicadores por cadeia de chamadas e fronteiras conhecidas da V4 não são propagados para os diagnósticos V5. Isso viola `FR-004`, `FR-008`, `AC-004` e a tarefa `TASK-006`.
-- **Recommendation:** Criar um serviço V5 que consuma o grafo V4 e combine evidências locais/interprocedurais, mantendo alvos ausentes e dispatch desconhecido explícitos. Adicionar testes de chamada conhecida dentro de loop e alvo externo.
+- **Location:** `src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:28-33`
+- **Evidence:** Toda evidência interprocedural criada pelo serviço recebe `KnownCount.Unknown` para contagem e multiplicador, inclusive `RepeatedCall`, `Allocation` e `Materialization`. O caminho de chamada é preservado no texto, mas o multiplicador observável do loop não é transportado.
+- **Impact:** Um loop conhecido que chama um método conhecido não informa a quantidade estrutural que amplifica a operação, contrariando `FR-004`, `AC-004` e o princípio de contagens estruturais do plano. `PERF104` pode ser emitido apenas pela dimensão `Repetition`, sem número conhecido quando ele é derivável.
+- **Recommendation:** Propagar a contagem/multiplicador do caminho de chamada ou enriquecer a evidência do grafo com essa informação; manter `Unknown` somente quando limite, dispatch ou entrada não forem resolvidos.
 - **Return stage:** `implement`
 
-### FINDING-002 — `PERF107Analyzer` é no-op
+### FINDING-005 — PERF107 compara ramos sem demonstrar equivalência semântica
 
 - **Severity:** High
 - **Category:** Functional / scope
-- **Location:** `src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:16-18`
-- **Evidence:** `RegisterAnalysis` possui corpo vazio. O serviço `CostComparison.Compare` existe e tem testes unitários, mas nenhum analyzer ou resultado Roslyn o utiliza.
-- **Impact:** O ID público `PERF107` é anunciado na especificação e documentação, mas não produz diagnóstico/evidência por meio do analyzer. A capacidade de comparação não está integrada ao contrato público V5, contrariando `FR-009`, `FR-010`, `AC-009` e `TASK-REV-002`.
-- **Recommendation:** Definir e implementar o ponto de entrada público para comparar alternativas, ou ajustar o contrato antes da implementação. Cobrir o fluxo completo com teste comportamental do analyzer, sem inventar equivalência semântica.
+- **Location:** `src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:23-43`
+- **Evidence:** O analyzer compara o primeiro item de custo de qualquer ramo `if/else` que contenha loops. O teste `Perf107ReportsStructuralComparisonBetweenConditionalPaths` usa ramos estruturalmente diferentes (`foreach` sobre `items` versus `for` de 10 iterações) e espera diagnóstico, mas não há verificação de que os ramos sejam alternativas semanticamente comparáveis ou produzam o mesmo efeito.
+- **Impact:** O diagnóstico pode sugerir uma alternativa melhor para dois caminhos que não são substituíveis, contrariando `CON-008`, `FR-009`, `AC-009` e a exigência de preservar semântica.
+- **Recommendation:** Restringir a comparação a alternativas com contexto comparável demonstrável, ou expor a comparação somente pela API pública com responsabilidade explícita do chamador; adicionar testes negativos para ramos não equivalentes.
 - **Return stage:** `implement`
 
-### FINDING-003 — Tarefas e rastreabilidade automatizada inconsistentes
+### FINDING-003 — Rastreabilidade automatizada e estado de tarefas permanecem inconsistentes
 
 - **Severity:** Medium
 - **Category:** Consistency / scope
-- **Location:** `.spectro/features/csharp-performance-analyzer-v5/tasks.md` e `validate_traceability.ps1`
-- **Evidence:** O validador retornou todos os requisitos como `uncovered` e todos os critérios como sem validação, embora `plan.md` tenha uma matriz de rastreabilidade e `tasks.md` tenha tabela com requisitos/AC por tarefa. `TASK-010` também permanece `blocked`, enquanto o último `gates.json` está `passed`.
-- **Impact:** A auditoria automática não consegue provar cobertura de requisitos e o estado da tarefa contradiz o gate atual.
-- **Recommendation:** Atualizar o formato esperado pelo validador ou migrar as tarefas para headings reconhecidos; depois sincronizar `TASK-010` e regenerar a rastreabilidade.
+- **Location:** `.spectro/features/csharp-performance-analyzer-v5/tasks.md` e `.codex/skills/spectro-review/scripts/validate_traceability.ps1`
+- **Evidence:** `validate_traceability.ps1` retornou `result: gaps` e listou 26 requisitos como `uncovered`, embora `plan.md` e a tabela de tarefas contenham as ligações. `TASK-010` está `pending` mesmo com `gate-20261031T142145Z` aprovado.
+- **Impact:** A auditoria não consegue provar automaticamente a cobertura dos requisitos e o estado do fluxo não representa o resultado atual dos gates.
+- **Recommendation:** Corrigir o parser/formato de rastreabilidade e sincronizar `TASK-010`; regenerar `traceability.json` e repetir a validação.
 - **Return stage:** `plan`
 
 ## Riscos residuais
 
-- A classificação Big-O continua deliberadamente limitada a formas sintáticas simples; entradas dinâmicas, recursão profunda e dispatch permanecem incompletos.
-- I/O e concorrência não medem runtime, latência, throughput ou capacidade efetiva.
-- A cobertura passou por margem estreita no branch novo (85,04% contra 85%), portanto mudanças no núcleo V5 devem preservar os testes de exceção.
+- A classificação Big-O continua limitada a formas sintáticas simples; entradas dinâmicas, recursão profunda e dispatch permanecem incompletos.
+- I/O e concorrência não medem latência, throughput, disponibilidade ou capacidade efetiva do runtime.
+- A margem de cobertura de branches novos é estreita (85,26% contra 85%); alterações no núcleo V5 devem preservar os testes de exceção.
 
 ## Tarefas de remediação
 
-- `TASK-REV-001` cobre `FINDING-001`.
-- `TASK-REV-002` cobre `FINDING-002`.
+- `TASK-REV-003` cobre `FINDING-003`.
+- `TASK-REV-004` cobre `FINDING-004`.
+- `TASK-REV-005` cobre `FINDING-005`.
 
 ## Decisão
 
-`changes_requested`. Os gates são aprovados, mas os dois achados High impedem aprovação da implementação. O retorno recomendado é `spectro-implement`, seguido de `spectro-gates` e nova revisão.
+`changes_requested`. Os dois achados High impedem aprovação. O retorno recomendado é `spectro-implement`, seguido de `spectro-gates` e nova revisão.
+
+## Atualização das remediações — 2026-10-31
+
+- `FINDING-003`: resolvido. O validador agora lê tarefas em tabelas e headings; a validação regenerada em `reviews/review-20261031T142331Z/traceability.json` retorna `complete`. `TASK-010` reflete o bloqueio atual de cobertura.
+- `FINDING-004`: resolvido. Evidências interprocedurais propagam contagem e multiplicador conhecidos e mantêm limites dinâmicos como desconhecidos. Testes cobrem multiplicador conhecido e desconhecido.
+- `FINDING-005`: resolvido. `PERF107` compara corpos de loop equivalentes sintaticamente e com referências de símbolos iguais; testes cobrem caminhos comparáveis, incompatíveis e funções locais distintas.
+- Testes direcionados: 13 aprovados. Gate final `gate-20261031T143206Z`: build, suíte completa e segurança passaram; cobertura não iniciou a medição porque o gate exige alterações tracked commitadas. A recuperação registrou a terceira falha de ambiente e moveu o fluxo para `waiting_input`. `TASK-010` permanece `blocked` até a cobertura ser medida em uma revisão commitada.

@@ -40,16 +40,16 @@ public sealed class V5AnalyzerTests
     }
 
     [Fact]
-    public async Task Perf104ReportsKnownInterproceduralRepeatedCall()
+    public async Task Perf104ReportsKnownInterproceduralRepeatedCallMultiplier()
     {
         const string source = """
             using System.Collections.Generic;
             class Sample
             {
-                void Root(List<int> ids)
+                void Root()
                 {
-                    foreach (var id in ids)
-                        GetItems(id);
+                    for (var i = 0; i < 5; i++)
+                        GetItems(i);
                 }
 
                 byte[] GetItems(int id) => new byte[8];
@@ -60,6 +60,7 @@ public sealed class V5AnalyzerTests
 
         var diagnostic = Assert.Single(diagnostics);
         Assert.Equal("PERF104", diagnostic.Id);
+        Assert.Contains("Multiplicador estrutural: 5", diagnostic.GetMessage(), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -86,9 +87,9 @@ public sealed class V5AnalyzerTests
     }
 
     [Fact]
-    public async Task Perf107ReportsStructuralComparisonBetweenConditionalPaths()
+    public async Task Perf107ReportsStructuralComparisonBetweenMatchingLoopEffects()
     {
-        const string source = "class Sample { void M(bool flag, int[] items) { if (flag) { foreach (var item in items) _ = item; } else { for (var i = 0; i < 10; i++) _ = i; } } }";
+        const string source = "class Sample { void M(bool flag) { if (flag) { for (var i = 0; i < 10; i++) Process(); } else { for (var i = 0; i < 20; i++) Process(); } } void Process() { } }";
 
         var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
 
@@ -102,6 +103,26 @@ public sealed class V5AnalyzerTests
     public async Task Perf107IgnoresConditionalWithoutTwoLoopPaths()
     {
         const string source = "class Sample { void M(bool flag, int[] items) { if (flag) foreach (var item in items) _ = item; } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf107IgnoresConditionalPathsWithDifferentEffects()
+    {
+        const string source = "class Sample { void M(bool flag) { if (flag) { for (var i = 0; i < 10; i++) Process(); } else { for (var i = 0; i < 20; i++) Persist(); } } void Process() { } void Persist() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf107IgnoresMatchingSyntaxThatResolvesToDifferentLocalFunctions()
+    {
+        const string source = "class Sample { void M(bool flag) { if (flag) { void Process() { } for (var i = 0; i < 10; i++) Process(); } else { void Process() { } for (var i = 0; i < 20; i++) Process(); } } }";
 
         var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
 

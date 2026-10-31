@@ -28,10 +28,10 @@ public static class InterproceduralCostInference
             evidence.Add(new CostEvidence(
                 dimension,
                 complexity,
-                KnownCount.Unknown,
-                KnownCount.Unknown,
+                item.Count,
+                item.Multiplier,
                 PayloadEstimate.Unknown,
-                $"Evidência {item.Kind} propagada por {item.Caller.Name} -> {target}.",
+                $"Evidência {item.Kind} propagada por {item.Caller.Name} -> {target}; {FormatCount(item.Count, "contagem")}; {FormatCount(item.Multiplier, "multiplicador estrutural") }.",
                 "O grafo interprocedural V4 resolveu a relação de chamada para este caminho.",
                 item.Target is null
                     ? "O corpo ou alvo externo permanece desconhecido; a análise não trata isso como custo zero."
@@ -39,6 +39,13 @@ public static class InterproceduralCostInference
         }
 
         return CostEvidenceSet.Create(evidence.ToImmutable());
+    }
+
+    private static string FormatCount(KnownCount count, string label)
+    {
+        return count.IsKnown
+            ? $"{label}: {count.Value}"
+            : $"{label} desconhecido";
     }
 
     public static CostEvidenceSet Merge(CostEvidenceSet first, CostEvidenceSet second)

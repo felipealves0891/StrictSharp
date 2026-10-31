@@ -102,7 +102,7 @@ Cada `FR` e `NFR` será validado por testes de serviço/analyzer, testes de cat�
 | Requisito | Critério de aceite | Tarefa |
 |---|---|---|
 | `FR-001`, `FR-012`, `CON-006` | `AC-001`, `AC-011` | `TASK-001`, `TASK-009` |
-| `FR-002`, `FR-004`, `FR-011` | `AC-002`, `AC-004`, `AC-010` | `TASK-003`, `TASK-004`, `TASK-006` |
+| `FR-002`, `FR-004`, `FR-011`, `CON-005` | `AC-002`, `AC-004`, `AC-010` | `TASK-003`, `TASK-004`, `TASK-006` |
 | `FR-003`, `FR-005` | `AC-003`, `AC-005` | `TASK-005` |
 | `FR-006`, `FR-007` | `AC-006`, `AC-007` | `TASK-006` |
 | `FR-008`, `FR-010` | `AC-008`, `AC-010` | `TASK-003`, `TASK-006`, `TASK-007` |
