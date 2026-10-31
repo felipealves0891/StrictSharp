@@ -1,0 +1,275 @@
+diff --git a/.spectro/features/perf013-string-not-enumerable/clarifications.md b/.spectro/features/perf013-string-not-enumerable/clarifications.md
+new file mode 100644
+index 0000000..ad396d9
+--- /dev/null
++++ b/.spectro/features/perf013-string-not-enumerable/clarifications.md
+@@ -0,0 +1,10 @@
++<!-- spectro-managed: true -->
++# Esclarecimentos: Correção de falso positivo do PERF013 em strings
++
++## Decisões
++
++- `D-001` — Pergunta: a correção deve excluir todo receptor `string` da análise do `PERF013` ou somente evitar falso positivo para buscas de texto, como `string.Contains`, preservando enumerações reais de caracteres? **Decisão:** excluir da classificação de enumeração as APIs próprias de busca de texto em `string`; preservar a análise de operações cobertas pelo `PERF013` que realmente enumerem caracteres. **Racional:** o exemplo fornecido usa buscas por terminadores de linha, que são operações de texto; uma exclusão total de strings poderia esconder uma enumeração real, contrariando a preservação de precisão e baixo ruído prevista na constituição e na especificação existente de `PERF013`. **Requisitos afetados:** `FR-001`, `FR-002`, `FR-003`, `AC-001` a `AC-004`. **Data:** 2026-10-31.
++
++## Questões remanescentes
++
++- Nenhuma questão bloqueante, major ou minor identificada.
+diff --git a/.spectro/features/perf013-string-not-enumerable/plan.md b/.spectro/features/perf013-string-not-enumerable/plan.md
+new file mode 100644
+index 0000000..0bd4cf7
+--- /dev/null
++++ b/.spectro/features/perf013-string-not-enumerable/plan.md
+@@ -0,0 +1,67 @@
++<!-- spectro-managed: true -->
++# Plano: Correção de falso positivo do PERF013 em strings
++
++## Contexto e objetivo técnico
++
++- A especificação foi esclarecida; não há questões bloqueantes. A decisão `D-001` limita a correção às APIs próprias de busca de texto, preservando enumerações reais de caracteres.
++- `Perf013Analyzer.IsEnumeration` atualmente aceita qualquer receptor para o qual `RuleAnalysis.IsEnumerable` retorne verdadeiro e compara o nome do método com uma lista fixa. `string` implementa `IEnumerable<char>` e sua busca de instância `Contains` coincide com um nome dessa lista, embora essa chamada use a API de texto de `System.String`.
++- Objetivo técnico: distinguir a busca de texto resolvida para `System.String.Contains` de métodos que de fato enumeram a sequência, sem alterar o contrato `PERF013` ou a detecção das demais sequências.
++
++## Solução proposta
++
++- Usar o símbolo Roslyn resolvido da invocação para identificar chamadas `Contains` cuja API declarante é `System.String`; não classificá-las como enumeração do `PERF013`.
++- Manter elegíveis os métodos LINQ e demais operações da lista atual que realmente enumeram o receptor, inclusive quando o receptor é uma string e o método é, por exemplo, `Enumerable.Count`.
++- Manter `RuleAnalysis.IsEnumerable` inalterado: ele é um helper compartilhado e retirar `string` da definição genérica de enumerável poderia afetar outras regras e enumerações genuínas de caracteres.
++- Manter o fallback atual para nome do método quando o símbolo não estiver resolvido, exceto quando a semântica de tipo e membro permitir reconhecer com segurança a busca de instância de `string`. Implementar a verificação localmente ao PERF013.
++- Não adicionar dependências, opções, diagnósticos, configuração ou efeitos persistentes. O fluxo continua sendo análise sintática por método, consulta semântica e emissão do diagnóstico existente.
++
++## Arquitetura e contratos
++
++- Componente de produção afetado: `src/StrictSharp.Analyzers/Analyzers/Perf013Analyzer.cs`, especificamente a classificação de invocações em `IsEnumeration`.
++- Helper consultado: `src/StrictSharp.Analyzers/Infrastructure/RuleAnalysis.cs`; `IsString` e `IsEnumerable` já existem. Não alterar o helper compartilhado nesta correção.
++- Componente de validação: `tests/StrictSharp.Analyzers.Tests/Perf013AnalyzerTests.cs`, usando o `AnalyzerTestHarness` e o compilador Roslyn configurado para C# 14.
++- Contrato externo: `PERF013`, severidade, localização e configuração permanecem como estão. Uma chamada de busca de texto em string não entra no conjunto de enumerações repetidas; operações LINQ que enumeram string continuam sujeitas à regra.
++- Fluxo de dados: cada método analisado fornece suas invocações; o modelo semântico resolve tipo e método; a classificação separa a API de busca de texto do conjunto atual de enumeração; receptores repetidos ainda são comparados como atualmente e os diagnósticos são reportados na localização da invocação repetida.
++- Erros e símbolos incompletos: não lançar exceções nem introduzir falha de análise. Manter o comportamento de fallback existente para invocações cujo símbolo não pode ser resolvido, sem classificar como enumeração uma chamada de busca de instância de string reconhecível pelo tipo do receptor e nome do membro.
++- Persistência, I/O, concorrência e observabilidade externa: não aplicáveis. O estado `seen` permanece local à análise de cada método; nenhuma informação do código-fonte sai do processo.
++- Compatibilidade: analyzer em `netstandard2.1`, C# 14 e Roslyn 5.0.0; testes em `net10.0`, C# 14 e xUnit. A solução não depende de API nova.
++
++## Alternativas consideradas
++
++- Excluir todo receptor `string` da verificação de `IEnumerable`: rejeitada porque suprimiria enumerações reais de caracteres, incluindo operadores LINQ que enumeram a string, contrariando `D-001` e `AC-004`.
++- Alterar `RuleAnalysis.IsEnumerable` para retornar falso para `string`: rejeitada porque o helper é compartilhado e a mudança alteraria a semântica de outras regras fora do escopo.
++- Ignorar todas as chamadas `Contains` por nome: rejeitada porque há métodos de enumeração `Contains` em outros receptores; isso poderia ocultar diagnósticos válidos.
++- Distinguir a API de instância pelo símbolo Roslyn declarante: escolhida por separar a busca própria de string de operações de enumeração cobertas, mantendo a mudança restrita ao PERF013.
++
++## Riscos e compatibilidade
++
++- Risco de regressão: um filtro baseado apenas no tipo de receptor esconderia enumerações LINQ válidas; mitigação: teste de `string.Count()` repetido (ou operação equivalente resolvida para `Enumerable`) junto aos testes de busca em texto.
++- Risco de símbolo ausente/ambíguo: classificação pode depender do fallback sintático existente; mitigação: reconhecer o caso de string sem tornar buscas próprias de texto diagnósticos e preservar o caminho existente para chamadas resolvidas normalmente.
++- Risco de sobreajuste: cobrir apenas a forma com literal poderia deixar outras sobrecargas próprias de `Contains` como falso positivo; mitigação: testes com argumento string e char quando aplicável, além do exemplo de terminadores de linha.
++- Sem mudanças em IDs, mensagens, severidade, configuração, dependências, documentação do produto ou outros analyzers.
++
++## Estratégia de testes
++
++- Adicionar regressão do exemplo `text.Contains("\r") || text.Contains("\n")`; esperado: nenhum `PERF013`.
++- Cobrir chamadas repetidas de `string.Contains` nas sobrecargas de texto relevantes para garantir que a regra classifica o método resolvido, não apenas um literal específico.
++- Cobrir enumeração repetida real em `IEnumerable<T>` não string; esperado: exatamente um `PERF013`, preservando o teste existente.
++- Cobrir enumeração repetida real da string via operador LINQ reconhecido, como `text.Count()`; esperado: `PERF013`, demonstrando que `string` não foi excluída globalmente.
++- Cobrir caso único de busca e caso único de enumeração; esperado: nenhum diagnóstico de enumeração repetida.
++- Validar AC-001 a AC-005 pela suíte `Perf013AnalyzerTests` e verificar compatibilidade por build/testes da solução durante a implementação. Nenhum teste ou comando é executado nesta fase de planejamento.
++
++## Rastreabilidade
++
++| Requisito | Critérios de aceite | Tarefas |
++|---|---|---|
++| `FR-001` | `AC-001`, `AC-002`, `AC-004` | `TASK-001`, `TASK-002` |
++| `FR-002` | `AC-003`, `AC-004` | `TASK-001`, `TASK-002` |
++| `FR-003` | `AC-001`, `AC-002` | `TASK-001`, `TASK-002` |
++| `NFR-001` | `AC-005` e ausência de regressões nos AC-001 a AC-004 | `TASK-001`, `TASK-002` |
++| `CON-001` | `AC-003` | `TASK-001`, `TASK-002` |
++
++## Ordem de execução
++
++1. `TASK-001`: especificar os cenários de regressão nos testes do analyzer, incluindo o exemplo, operações enumeração reais e casos únicos.
++2. `TASK-002`: alterar a classificação semântica local do PERF013 e validar a suíte direcionada e os gates definidos para a implementação.
++
++Não há ciclos de dependência. A tarefa de implementação depende dos cenários de regressão.
+diff --git a/.spectro/features/perf013-string-not-enumerable/spec.md b/.spectro/features/perf013-string-not-enumerable/spec.md
+new file mode 100644
+index 0000000..804b83b
+--- /dev/null
++++ b/.spectro/features/perf013-string-not-enumerable/spec.md
+@@ -0,0 +1,58 @@
++<!-- spectro-managed: true -->
++# Especificação: Correção de falso positivo do PERF013 em strings
++
++## Problema e objetivo
++
++- Problema: o `PERF013` identifica enumeração repetida a partir do tipo do receptor. Como `string` implementa `IEnumerable<char>`, operações próprias de texto, como `text.Contains("\n")`, podem ser confundidas com enumeração de uma sequência e gerar um diagnóstico indevido.
++- Objetivo: evitar que operações de texto em `string` sejam interpretadas como enumerações repetidas pelo `PERF013`, preservando a detecção de enumerações repetidas em sequências aplicáveis.
++
++## Escopo
++
++### Incluído
++
++- Corrigir a classificação de buscas de texto em que o receptor tem tipo `string` na análise do `PERF013`.
++- Cobrir chamadas de busca em texto como `string.Contains(string)`, incluindo o exemplo `text.Contains("\n")`.
++- Preservar a detecção de chamadas repetidas sobre sequências `IEnumerable` que não sejam strings.
++- Preservar a possibilidade de diagnosticar operações de enumeração explícita de caracteres de uma string quando a operação coberta pelo `PERF013` realmente enumera seus elementos.
++
++### Excluído
++
++- Alterar o propósito, identificador, severidade, mensagem ou configuração do `PERF013`.
++- Alterar outros diagnósticos, regras de enumeração ou recomendações gerais sobre operações de string.
++- Definir otimizações ou recomendar substituições de API para buscas em texto.
++
++## Requisitos
++
++### Requisitos funcionais
++
++- `FR-001`: A análise do `PERF013` não deve classificar buscas de texto próprias de `string` como enumeração repetida apenas porque `string` implementa `IEnumerable<char>`.
++- `FR-002`: A análise deve continuar identificando enumeração repetida para sequências `IEnumerable` aplicáveis que não sejam strings.
++- `FR-003`: O comportamento corrigido deve contemplar chamadas de busca de texto sobre strings, incluindo as sobrecargas de `Contains` e buscas por terminadores de linha.
++
++### Requisitos não funcionais
++
++- `NFR-001`: A correção deve reduzir falso positivos sem degradar a precisão da detecção de enumeração repetida em sequências.
++
++### Restrições
++
++- `CON-001`: O diagnóstico continua sendo `PERF013` e conserva seu contrato e configuração existentes.
++
++## Critérios de aceite
++
++- `AC-001` (`FR-001`, `FR-003`): Dado código que chama `text.Contains("\r")` e `text.Contains("\n")` na mesma expressão, em que `text` é `string`, quando analisado pelo `PERF013`, então as buscas por terminadores de linha não são tratadas como enumeração de `IEnumerable` e não geram diagnóstico de enumeração repetida.
++- `AC-002` (`FR-001`, `FR-003`): Dado código que chama repetidamente APIs próprias de busca de texto em uma variável `string`, quando analisado pelo `PERF013`, então essas chamadas não geram diagnóstico por serem confundidas com enumeração.
++- `AC-003` (`FR-002`, `CON-001`): Dado código que enumera repetidamente a mesma sequência `IEnumerable<T>` não string por operações cobertas pelo `PERF013`, quando analisado, então o diagnóstico `PERF013` continua sendo emitido conforme o comportamento existente.
++- `AC-004` (`FR-001`, `FR-002`): Dado código que enumera repetidamente caracteres de uma string por uma operação de enumeração coberta pelo `PERF013`, quando analisado, então a correção das buscas de texto não suprime esse caso de enumeração.
++- `AC-005` (`NFR-001`): Dado código com uma única operação sobre string ou uma única enumeração de sequência, quando analisado, então não é emitido diagnóstico de enumeração repetida.
++
++## Riscos, dependências e perguntas abertas
++
++- Risco: uma exclusão excessivamente ampla de operações de `string` pode ocultar uma enumeração de caracteres intencional que a regra pretenda identificar; os casos de teste devem distinguir buscas próprias de texto de operações que realmente enumeram caracteres.
++- Dependência: implementação e testes existentes do `PERF013`.
++- Pergunta: nenhuma pergunta bloqueante remanescente.
++
++## Estado
++
++- Estado da fase: `clarified`.
++- Pronto para esclarecimento: não; as ambiguidades identificadas foram resolvidas.
++- Pronto para planejamento: sim.
+diff --git a/.spectro/features/perf013-string-not-enumerable/tasks.md b/.spectro/features/perf013-string-not-enumerable/tasks.md
+new file mode 100644
+index 0000000..edfdda9
+--- /dev/null
++++ b/.spectro/features/perf013-string-not-enumerable/tasks.md
+@@ -0,0 +1,40 @@
++<!-- spectro-managed: true -->
++# Tarefas: Correção de falso positivo do PERF013 em strings
++
++| ID | Tarefa | Requisito | Critério de aceite | Dependências | Status |
++|---|---|---|---|---|---|
++| `TASK-001` | Adicionar cobertura de regressão para buscas em string, enumeração LINQ real, sequência `IEnumerable<T>` e casos únicos | `FR-001`, `FR-002`, `FR-003`, `NFR-001`, `CON-001` | `AC-001` a `AC-005` | Nenhuma | completed |
++| `TASK-002` | Ajustar a classificação de invocações do PERF013 para excluir buscas próprias de `System.String` sem excluir operações que realmente enumeram string | `FR-001`, `FR-002`, `FR-003`, `NFR-001`, `CON-001` | `AC-001` a `AC-005` | `TASK-001` | completed |
++
++## Detalhes das tarefas
++
++### `TASK-001` — Cobertura de regressão
++
++- Componentes: `tests/StrictSharp.Analyzers.Tests/Perf013AnalyzerTests.cs`.
++- Critérios de conclusão: testes demonstram que o exemplo com `Contains("\r")` e `Contains("\n")` e buscas próprias de texto repetidas não geram diagnóstico; enumeração repetida em `IEnumerable<T>` e via LINQ sobre string continuam gerando `PERF013`; usos únicos continuam sem diagnóstico.
++- Testes esperados: cenários de analyzer usando `AnalyzerTestHarness`; verificar IDs e quantidade de diagnósticos.
++- Risco: baixa cobertura de uma sobrecarga ou regressão do caso válido; incluir pelo menos busca de texto e operação LINQ resolvida em símbolos distintos.
++
++### `TASK-002` — Classificação semântica do PERF013
++
++- Componentes: `src/StrictSharp.Analyzers/Analyzers/Perf013Analyzer.cs`; helper existente `RuleAnalysis.IsString` se necessário. `RuleAnalysis.IsEnumerable` não deve ser alterado.
++- Critérios de conclusão: chamadas de busca de instância de `System.String` não são classificadas como enumeração; chamadas cobertas que realmente enumeram continuam elegíveis; o diagnóstico mantém ID, mensagem, localização e configuração; custo não acrescenta travessia sintática nem consulta semântica redundante além da necessária à classificação já existente.
++- Testes esperados: executar `Perf013AnalyzerTests`, depois a suíte/build configurados na fase de implementação.
++- Risco: filtro amplo baseado em tipo ou apenas no nome `Contains` suprimir enumeração legítima; restringir a decisão pela API resolvida e conferir os testes de regressão.
++
++## Regras de execução
++
++- Seguir a decisão `D-001` em `clarifications.md` e a especificação consolidada.
++- Não alterar outros diagnósticos, o helper compartilhado `IsEnumerable`, catálogo, documentação de produto, configuração ou dependências.
++- Resolver a classificação pela semântica disponível no Roslyn, preservando o fallback atual para demais invocações e evitando falsos positivos quando uma busca de instância de string puder ser reconhecida.
++- Executar os testes definidos nos critérios e gates apenas durante a implementação, não durante o planejamento.
++
++## Progresso
++
++- Concluídas: `TASK-001`, `TASK-002`.
++- Bloqueadas: nenhuma.
++
++## Evidências
++
++- `dotnet test tests/StrictSharp.Analyzers.Tests/StrictSharp.Analyzers.Tests.csproj --no-restore --filter FullyQualifiedName~Perf013AnalyzerTests`: aprovado, 4 testes.
++- `dotnet test StrictSharp.sln --no-restore`: aprovado, 294 testes.
+diff --git a/src/StrictSharp.Analyzers/Analyzers/Perf013Analyzer.cs b/src/StrictSharp.Analyzers/Analyzers/Perf013Analyzer.cs
+index 8e8ff6e..ed52512 100644
+--- a/src/StrictSharp.Analyzers/Analyzers/Perf013Analyzer.cs
++++ b/src/StrictSharp.Analyzers/Analyzers/Perf013Analyzer.cs
+@@ -35,12 +35,21 @@ public sealed class Perf013Analyzer : RuleAnalyzerBase
+     private static bool IsEnumeration(InvocationExpressionSyntax invocation, SemanticModel model, out ExpressionSyntax receiver)
+     {
+         receiver = null!;
+-        if (invocation.Expression is not MemberAccessExpressionSyntax member
+-            || !RuleAnalysis.IsEnumerable(model.GetTypeInfo(member.Expression).Type))
++        if (invocation.Expression is not MemberAccessExpressionSyntax member)
++            return false;
++
++        var receiverType = model.GetTypeInfo(member.Expression).Type;
++        if (!RuleAnalysis.IsEnumerable(receiverType))
+             return false;
+ 
+         var method = model.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
+-        var name = method?.Name ?? member.Name.Identifier.Text;
++        var memberName = member.Name.Identifier.Text;
++        if (memberName == "Contains"
++            && RuleAnalysis.IsString(receiverType)
++            && (method is null || method.ContainingType.SpecialType == SpecialType.System_String))
++            return false;
++
++        var name = method?.Name ?? memberName;
+         if (name is not ("Count" or "LongCount" or "Any" or "First" or "FirstOrDefault" or "Single"
+             or "SingleOrDefault" or "Last" or "LastOrDefault" or "ToList" or "ToArray" or "ToDictionary"
+             or "ToLookup" or "Sum" or "Average" or "Min" or "Max" or "Contains" or "ElementAt" or "ElementAtOrDefault"))
+diff --git a/tests/StrictSharp.Analyzers.Tests/Perf013AnalyzerTests.cs b/tests/StrictSharp.Analyzers.Tests/Perf013AnalyzerTests.cs
+index 1c6b262..cee748d 100644
+--- a/tests/StrictSharp.Analyzers.Tests/Perf013AnalyzerTests.cs
++++ b/tests/StrictSharp.Analyzers.Tests/Perf013AnalyzerTests.cs
+@@ -43,4 +43,41 @@ public sealed class Perf013AnalyzerTests
+ 
+         Assert.Empty(diagnostics);
+     }
++
++    [Fact]
++    public async Task DoesNotReportRepeatedStringSearches()
++    {
++        const string source = """
++            class Sample
++            {
++                bool ContainsLineTerminator(string text) => text.Contains("\r") || text.Contains("\n");
++
++                bool ContainsCharacters(string text) => text.Contains('x') || text.Contains('y');
++            }
++            """;
++
++        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf013Analyzer());
++
++        Assert.Empty(diagnostics);
++    }
++
++    [Fact]
++    public async Task ReportsRepeatedEnumerationOfStringCharacters()
++    {
++        const string source = """
++            using System.Linq;
++            class Sample
++            {
++                void Read(string text)
++                {
++                    var first = text.Count();
++                    var second = text.Count();
++                }
++            }
++            """;
++
++        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf013Analyzer());
++
++        Assert.Equal("PERF013", Assert.Single(diagnostics).Id);
++    }
+ }
+
