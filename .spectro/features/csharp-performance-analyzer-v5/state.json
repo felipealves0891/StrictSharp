@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
   "feature_id": "csharp-performance-analyzer-v5",
-  "current_phase": "implement",
-  "status": "running",
+  "current_phase": "review",
+  "status": "completed",
   "phases": {
     "gates": {
-      "status": "invalidated",
-      "execution_id": "gate-20261031T151134Z",
+      "status": "completed",
+      "execution_id": "gate-20261031T152116Z",
       "report": ".spectro/features/csharp-performance-analyzer-v5/gates.json"
     }
   },
@@ -37,7 +37,6 @@
     ],
     "detected_at": "2026-10-31T15:01:02.450Z"
   },
-  "last_execution_id": "gate-20261031T151134Z",
-  "updated_at": "2026-10-31T15:19:17.000Z",
-  "invalidation_reason": "Correções de FINDING-009 e FINDING-010 e sincronização das tarefas alteraram o código e os artefatos após gate-20261031T151134Z; gates formais devem ser renovados para a revisão atual."
+  "last_execution_id": "gate-20261031T152116Z",
+  "updated_at": "2026-10-31T15:22:16.782Z"
 }

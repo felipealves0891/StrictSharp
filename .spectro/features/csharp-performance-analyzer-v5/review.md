@@ -1,74 +1,53 @@
-# Revisão: Modelo de custo computacional V5
+# Revisão final: Modelo de custo computacional V5
 
 ## Resumo
 
-**Decisão:** `changes_requested`.
+**Decisão:** `approved`.
 
-A revisão independente confirmou que o HEAD `d1c43178b4fc814079c51606bf9bf45b2c02ff8d` corresponde à revisão de código registrada pelos gates `gate-20261031T151134Z`. Os quatro gates obrigatórios passaram, e a validação de rastreabilidade não encontrou requisitos ou critérios de aceite sem vínculo. Ainda há uma falha alta que pode lançar exceção durante a análise e uma forma comum de comparação que `PERF107` não cobre. O status de `TASK-010` e das tarefas de revisão também continua inconsistente com a evidência atual.
+A implementação revisada está no commit `b52e44fb1458eebc147430cf2f16a09f84ef37cd`, igual à revisão de código registrada em `gate-20261031T152116Z`. Os quatro gates obrigatórios passaram, e a validação de rastreabilidade retornou `complete`. Os achados funcionais altos/medium da revisão anterior foram tratados: `PERF107` agora inclui loops que são o próprio ramo, e a multiplicação do payload total preserva desconhecido no overflow. Há um acompanhamento administrativo medium, sem bloqueio da aprovação: o resumo de progresso em `tasks.md` ainda aponta para a execução de gates anterior.
 
 ## Artefatos examinados
 
 - `spec.md`, `clarifications.md`, `plan.md`, `tasks.md`, `.spectro/constitution.md` e `.spectro/config.yaml`.
-- `gates.json` e evidências da execução `gate-20261031T151134Z`.
-- Pacote independente `reviews/review-v5-post-gates-20261031T151500Z/`, diff contra `origin/main` e manifesto.
-- Implementação V5, grafo interprocedural, analyzers, testes e documentação.
+- `gates.json` e evidências da execução `gate-20261031T152116Z`.
+- Pacote independente `reviews/review-v5-final-20261031T152300Z/` e diff contra `origin/main`.
+- Implementação V5, testes, documentação e remediações `TASK-REV-006` a `TASK-REV-010`.
 
 ## Consistência da evidência
 
-- O gate e o pacote de revisão identificam o mesmo HEAD: `d1c43178b4fc814079c51606bf9bf45b2c02ff8d`.
-- Build, testes (290), segurança e coverage passaram. Coverage: 96,80% de linhas, 85,47% de branches, 95,99% de linhas novas e 85,35% de branches novos.
-- `validate_traceability.ps1` retornou `complete`: nenhum requisito ou critério de aceite descoberto.
-- Durante esta revisão, foram adicionadas tarefas de remediação a `tasks.md`; o hash desse artefato mudou depois do pacote e dos gates. O pacote preserva o estado examinado; gates devem ser renovados após implementar as correções.
+- Pacote de revisão e gates referem-se ao mesmo commit: `b52e44fb1458eebc147430cf2f16a09f84ef37cd`.
+- O relatório de gates é válido. Build, testes (292), segurança e coverage passaram.
+- Coverage: 96,81% de linhas, 85,50% de branches, 96,00% de linhas novas e 85,41% de branches novos.
+- A validação de rastreabilidade retornou `complete`, sem requisitos nem critérios de aceite descobertos.
+- Os hashes de `spec.md`, `clarifications.md`, `plan.md` e `tasks.md` registrados no gate correspondem aos artefatos examinados.
 
 ## Requisitos verificados
 
-- O catálogo V5 publica `PERF101`–`PERF107` e mantém a separação entre os analyzers e os serviços de inferência.
-- A contagem exata de loops agora restringe comparador e incremento a formas demonstráveis; há testes negativos para limites inclusivos e passos não unitários.
-- A comparação `PERF107` cobre diferenças de cabeçalho de loops e evita percentual ou benchmark.
-- A evidência desconhecida e as limitações de I/O, concorrência e payload permanecem explícitas.
-- A suíte e os gates foram executados localmente, sem envio de código ou dados a serviços externos.
+- O catálogo mantém os sete diagnósticos V5 separados e a lógica de análise nos serviços V5.
+- A contagem de iterações só é exata para comparadores, limites, tipos e incrementos suportados; casos ambíguos permanecem desconhecidos.
+- `PERF107` verifica cabeçalhos e efeitos dos loops e agora analisa o nó raiz quando o ramo é diretamente um loop. O novo teste comportamental cobre `if/else` sem blocos.
+- O payload total não lança exceção quando a multiplicação excede `long.MaxValue`; o valor permanece desconhecido e há teste de regressão.
+- A suíte não introduz serviço externo ou envio de código; as mensagens mantêm limitações explícitas sobre runtime, I/O, concorrência e memória total.
 
 ## Achados
 
-### FINDING-009 — `PERF107` ignora loops usados diretamente como ramos
-
-- **Severity:** Medium
-- **Category:** Functional
-- **Location:** `src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:32-35`; `src/StrictSharp.Analyzers/V5/LoopCostInference.cs:16-17`
-- **Evidence:** `HaveComparableLoopEffects` inclui o próprio nó com `DescendantNodesAndSelf`, mas `LoopCostInference.Analyze` procura loops somente em `DescendantNodes()`. Quando `if (flag) for (...) ... else for (...) ...` usa os loops diretamente como statements, ambos os resultados ficam vazios e o analyzer retorna sem comparar. A cobertura positiva existente usa blocos em torno dos loops.
-- **Impact:** Uma forma válida e comum de alternativas com contagens diferentes não recebe o diagnóstico público `PERF107`, apesar de os limites e efeitos serem comparáveis.
-- **Recommendation:** Incluir o nó raiz quando ele próprio for um loop e adicionar teste comportamental com os dois loops diretamente nos ramos.
-- **Return stage:** `implement`
-- **Remediation task:** `TASK-REV-009`.
-
-### FINDING-010 — Overflow no payload total escapa como exceção do analyzer
-
-- **Severity:** High
-- **Category:** Functional
-- **Location:** `src/StrictSharp.Analyzers/V5/AllocationPayloadInference.cs:25-27`
-- **Evidence:** A multiplicação `checked(payload.Bytes * allocationCount.Value)` não trata `OverflowException`. Por exemplo, um array `decimal[1000000000]` alocado em um loop conhecido de 1.000.000.000 iterações produz valores individualmente representáveis, mas o produto excede `long.MaxValue`.
-- **Impact:** Ao analisar esse código, o serviço pode lançar uma exceção em vez de preservar o valor como desconhecido; um analyzer que falha pode gerar `AD0001` e interromper a análise do arquivo/projeto.
-- **Recommendation:** Detectar overflow antes da multiplicação ou capturar `OverflowException` e usar `PayloadEstimate.Unknown`; adicionar teste de regressão com produto total fora do intervalo.
-- **Return stage:** `implement`
-- **Remediation task:** `TASK-REV-010`.
-
-### FINDING-008 — Status das tarefas não acompanha os gates aprovados
+### FINDING-008 — Resumo de progresso cita gates desatualizados
 
 - **Severity:** Medium
 - **Category:** Consistency
-- **Location:** `tasks.md:15, 29-31, 89-122`
-- **Evidence:** `TASK-010` ainda está `blocked` pelo gate antigo `gate-20261031T150004Z`, embora `gate-20261031T151134Z` tenha passado. `TASK-REV-006` e `TASK-REV-007` permanecem `running` após as correções e a aprovação dos gates; `TASK-REV-008` continua `pending`.
-- **Impact:** O registro de conclusão da implementação diverge da evidência de gates, prejudicando a trilha de auditoria e mantendo trabalho marcado como bloqueado sem refletir o estado atual.
-- **Recommendation:** Sincronizar `TASK-010` e as tarefas REV-006/007 com o resultado atual e renovar os gates após atualizar `tasks.md` e concluir as correções pendentes.
+- **Location:** `tasks.md`, seção `Progresso`.
+- **Evidence:** O gate atual `gate-20261031T152116Z`, no commit revisado, passou com 292 testes e 85,41% de branches novos. O texto de progresso ainda identifica `gate-20261031T151134Z` como último gate e diz que essa evidência antecede as correções. `TASK-010` e `TASK-REV-008` permanecem `running`.
+- **Impact:** O status geral e o relatório de gates estão corretos, mas o resumo de progresso não representa a evidência atual e pode confundir quem retomar a tarefa.
+- **Recommendation:** Atualizar o resumo para a execução `gate-20261031T152116Z` e sincronizar os status de `TASK-010` e das remediações concluídas, renovando os hashes/evidência depois da alteração.
 - **Return stage:** `plan`
-- **Remediation task:** `TASK-REV-008` (já existente).
+- **Remediation task:** `TASK-REV-008` (existente).
+- **Approval impact:** Não bloqueante; os gates e a rastreabilidade atuais são válidos para o commit revisado.
 
 ## Riscos residuais
 
-- A especificação exige custo aceitável em IDE/build, mas não há gate de benchmark ou medição de desempenho V5 configurado. O custo repetido de construir o grafo por método/analyzer permanece sem medição; isso é um risco, não uma regressão medida.
-- A estimativa de payload dá suporte a um conjunto limitado de arrays e tipos primitivos; buffers e formas multidimensionais não reconhecidos devem permanecer explicitamente desconhecidos.
-- Limites de entrada, comportamento do runtime e chamadas externas continuam fora do que a análise estática pode medir.
+- Não há gate de desempenho V5 configurado. O custo dos analyzers em soluções grandes permanece sem medição; isto é risco não quantificado, não falha observada.
+- Payload de arrays não representa overhead de objetos, alinhamento, retenção ou efeitos de GC. Limites dinâmicos e comportamento de runtime continuam desconhecidos.
 
 ## Decisão final
 
-`changes_requested`. `FINDING-010` é High e bloqueia aprovação. Corrigir os achados `FINDING-009` e `FINDING-010` na implementação, sincronizar as tarefas e executar novamente os gates antes de uma nova revisão final.
+`approved`. Não há achados Critical ou High nem lacunas bloqueantes de rastreabilidade. O acompanhamento Medium `FINDING-008` permanece registrado para sincronizar o resumo/status das tarefas; se esse artefato for atualizado, renovar a evidência conforme a tarefa existente.
