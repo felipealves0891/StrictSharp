@@ -10,11 +10,12 @@ public sealed class RuleCatalogTests
     {
         var rules = RuleCatalog.All;
 
-        Assert.Equal(30, rules.Count);
-        Assert.Equal(30, rules.Select(rule => rule.Id).Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(31, rules.Count);
+        Assert.Equal(31, rules.Select(rule => rule.Id).Distinct(StringComparer.Ordinal).Count());
         var v1 = 0;
         var v2 = 0;
         var v3 = 0;
+        var v4 = 0;
         foreach (var rule in rules)
         {
             switch (rule.Phase)
@@ -28,12 +29,16 @@ public sealed class RuleCatalogTests
                 case RulePhase.V3:
                     v3++;
                     break;
+                case RulePhase.V4:
+                    v4++;
+                    break;
             }
         }
 
         Assert.Equal(15, v1);
         Assert.Equal(13, v2);
         Assert.Equal(2, v3);
+        Assert.Equal(1, v4);
     }
 
     [Fact]
@@ -69,6 +74,19 @@ public sealed class RuleCatalogTests
             Assert.Equal(RulePhase.V3, rule.Phase);
             Assert.True(rule.Descriptor.IsEnabledByDefault);
         });
+    }
+
+    [Fact]
+    public void V4ContainsExactlyPerf100WithWarningSeverityAndPerformanceCategory()
+    {
+        var rule = Assert.Single(RuleCatalog.V4);
+
+        Assert.Equal("PERF100", rule.Id);
+        Assert.Equal(RulePhase.V4, rule.Phase);
+        Assert.Equal(RiskSeverity.High, rule.Severity);
+        Assert.Equal("Performance", rule.Category);
+        Assert.Equal(Microsoft.CodeAnalysis.DiagnosticSeverity.Warning, rule.Descriptor.DefaultSeverity);
+        Assert.True(rule.EnabledInV4);
     }
 
     [Fact]
