@@ -45,6 +45,39 @@ public sealed class V5IoConcurrencyInferenceTests
         Assert.True(item.HasUnknownBoundary);
     }
 
+    [Fact]
+    public void ReportsFileIoAndStreamIoDimensions()
+    {
+        var (method, model) = ParseMethod("void M(System.IO.Stream stream) { System.IO.File.ReadAllText(\"file.txt\"); stream.ReadByte(); }");
+
+        var evidence = IoConcurrencyInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.Equal(2, evidence.Items.Length);
+        Assert.All(evidence.Items, item => Assert.Equal(CostDimension.Io, item.Dimension));
+    }
+
+    [Fact]
+    public void IgnoresNonIoAndUnknownTaskMethods()
+    {
+        var (method, model) = ParseMethod("void M() { System.Math.Abs(-1); System.Threading.Tasks.Task.Delay(1); }");
+
+        var evidence = IoConcurrencyInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.Empty(evidence.Items);
+    }
+
+    [Fact]
+    public void KeepsTaskMultiplierUnknownForDynamicLoop()
+    {
+        var (method, model) = ParseMethod("void M(int count) { for (var i = 0; i < count; i++) System.Threading.Tasks.Task.Run(() => { }); }");
+
+        var evidence = IoConcurrencyInference.Analyze(method, model, CancellationToken.None);
+        var item = Assert.Single(evidence.Items);
+
+        Assert.Equal(CostDimension.Concurrency, item.Dimension);
+        Assert.False(item.Count.IsKnown);
+    }
+
     private static (Microsoft.CodeAnalysis.SyntaxNode Method, SemanticModel Model) ParseMethod(string methodSource)
     {
         var tree = CSharpSyntaxTree.ParseText($"class Sample {{ {methodSource} }}", new CSharpParseOptions(LanguageVersion.CSharp14));

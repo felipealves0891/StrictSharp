@@ -45,4 +45,29 @@ public sealed class V5CostComparisonTests
         Assert.False(comparison.IsComparable);
         Assert.Contains("desconhecida", comparison.ComplexityChange, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void ComparesKnownCountsWhenComplexityIsUnknown()
+    {
+        var left = new CostEvidence(CostDimension.Memory, ComplexityClassification.Unknown, KnownCount.Exact(2), KnownCount.Exact(2), PayloadEstimate.Unknown, "left", "known", "unknown");
+        var right = new CostEvidence(CostDimension.Memory, ComplexityClassification.Unknown, KnownCount.Exact(4), KnownCount.Exact(4), PayloadEstimate.Unknown, "right", "known", "unknown");
+
+        var comparison = CostComparison.Compare(left, right);
+
+        Assert.True(comparison.IsComparable);
+        Assert.Equal("contagem estrutural 2 -> 4", comparison.WorkChange);
+        Assert.Contains("desconhecida", comparison.ComplexityChange, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void KeepsUnknownWorkWhenCountsAreUnavailable()
+    {
+        var left = CostEvidence.Unknown(CostDimension.Memory, "left", "unknown");
+        var right = CostEvidence.Unknown(CostDimension.Memory, "right", "unknown");
+
+        var comparison = CostComparison.Compare(left, right);
+
+        Assert.False(comparison.IsComparable);
+        Assert.Contains("contagem estrutural desconhecida", comparison.WorkChange, StringComparison.Ordinal);
+    }
 }

@@ -53,6 +53,41 @@ public sealed class V5LoopCostInferenceTests
         Assert.Equal(ComplexityKind.Unknown, item.Complexity.Kind);
     }
 
+    [Fact]
+    public void ReturnsEmptyForMethodWithoutLoopsOrSorts()
+    {
+        var method = ParseMethod("void M() { var value = 42; }");
+
+        var evidence = LoopCostInference.Analyze(method, CancellationToken.None);
+
+        Assert.True(evidence.IsEmpty);
+        Assert.Equal(ComplexityKind.Constant, LoopCostInference.Classify(method).Kind);
+    }
+
+    [Fact]
+    public void ClassifiesKnownSortAsLinearithmic()
+    {
+        var method = ParseMethod("void M(System.Collections.Generic.List<int> items) { items.Sort(); }");
+
+        var evidence = LoopCostInference.Analyze(method, CancellationToken.None);
+        var item = Assert.Single(evidence.Items);
+
+        Assert.Equal(ComplexityKind.Linearithmic, item.Complexity.Kind);
+        Assert.False(item.Count.IsKnown);
+    }
+
+    [Fact]
+    public void KeepsAssignmentInitializerAndInvalidBoundsUnknown()
+    {
+        var method = ParseMethod("void M(int end) { for (var i = 1; i < end; i++) _ = i; }");
+
+        var evidence = LoopCostInference.Analyze(method, CancellationToken.None);
+        var item = Assert.Single(evidence.Items);
+
+        Assert.Equal(ComplexityKind.Linear, item.Complexity.Kind);
+        Assert.False(item.Count.IsKnown);
+    }
+
     private static Microsoft.CodeAnalysis.SyntaxNode ParseMethod(string source)
     {
         return CSharpSyntaxTree.ParseText($"class Sample {{ {source} }}", new CSharpParseOptions(LanguageVersion.CSharp14))

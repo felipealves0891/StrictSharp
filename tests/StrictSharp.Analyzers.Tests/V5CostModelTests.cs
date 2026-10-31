@@ -47,4 +47,31 @@ public sealed class V5CostModelTests
 
         Assert.Equal(expected, classification.Label);
     }
+
+    [Fact]
+    public void CostEvidenceSetNormalizesDefaultArray()
+    {
+        var set = CostEvidenceSet.Create(default);
+
+        Assert.True(set.IsEmpty);
+        Assert.Empty(set.Items);
+    }
+
+    [Fact]
+    public void RejectsNegativeCountsAndPayloads()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => KnownCount.Exact(-1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => KnownCount.Maximum(-1));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PayloadEstimate.Known(-1));
+    }
+
+    [Fact]
+    public void RepresentsMaximumCount()
+    {
+        var count = KnownCount.Maximum(5);
+
+        Assert.True(count.IsKnown);
+        Assert.True(count.IsMaximum);
+        Assert.Equal(5, count.Value);
+    }
 }

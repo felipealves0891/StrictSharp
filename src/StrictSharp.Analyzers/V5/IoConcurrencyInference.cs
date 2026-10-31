@@ -74,7 +74,7 @@ public static class IoConcurrencyInference
                 || name?.StartsWith("Append", StringComparison.Ordinal) == true;
 
         return type is not null
-            && name is "Read" or "ReadAsync" or "Write" or "WriteAsync" or "Flush" or "FlushAsync" or "CopyTo" or "CopyToAsync"
+            && name is "Read" or "ReadAsync" or "ReadByte" or "Write" or "WriteAsync" or "Flush" or "FlushAsync" or "CopyTo" or "CopyToAsync"
             && (type.Contains("System.IO.Stream", StringComparison.Ordinal)
                 || type.Contains("System.IO.TextReader", StringComparison.Ordinal)
                 || type.Contains("System.IO.TextWriter", StringComparison.Ordinal));

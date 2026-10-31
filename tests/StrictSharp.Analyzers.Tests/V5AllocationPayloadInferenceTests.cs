@@ -33,6 +33,39 @@ public sealed class V5AllocationPayloadInferenceTests
         Assert.False(item.Payload.IsKnown);
     }
 
+    [Fact]
+    public void ReportsUnknownForReferenceArrayAndDynamicSize()
+    {
+        var (method, model) = ParseMethod("void M(int count) { var names = new string[count]; var values = new int[count]; }");
+
+        var evidence = AllocationPayloadInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.Equal(2, evidence.Items.Length);
+        Assert.All(evidence.Items, item => Assert.False(item.Payload.IsKnown));
+    }
+
+    [Fact]
+    public void CoversSupportedPrimitivePayloadSizes()
+    {
+        var (method, model) = ParseMethod("void M() { var a = new bool[1]; var b = new char[1]; var c = new int[1]; var d = new long[1]; var e = new decimal[1]; }");
+
+        var evidence = AllocationPayloadInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.Equal(5, evidence.Items.Length);
+        Assert.All(evidence.Items, item => Assert.True(item.Payload.IsKnown));
+    }
+
+    [Fact]
+    public void KeepsPayloadUnknownWhenLoopHasZeroIterations()
+    {
+        var (method, model) = ParseMethod("void M() { for (var i = 0; i < 0; i++) { var buffer = new byte[10]; } }");
+
+        var evidence = AllocationPayloadInference.Analyze(method, model, CancellationToken.None);
+        var item = Assert.Single(evidence.Items);
+
+        Assert.False(item.Payload.IsKnown);
+    }
+
     private static (Microsoft.CodeAnalysis.SyntaxNode Method, SemanticModel Model) ParseMethod(string methodSource)
     {
         var tree = CSharpSyntaxTree.ParseText($"class Sample {{ {methodSource} }}", new CSharpParseOptions(LanguageVersion.CSharp14));
