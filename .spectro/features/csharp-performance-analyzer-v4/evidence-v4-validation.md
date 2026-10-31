@@ -1,7 +1,7 @@
 <!-- spectro-managed: true -->
 # Evidência de validação V4
 
-Data: 2026-10-30
+Data: 2026-10-31
 
 ## Escopo validado
 
@@ -17,6 +17,7 @@ Data: 2026-10-30
 - `dotnet test tests/StrictSharp.Analyzers.Tests/StrictSharp.Analyzers.Tests.csproj --no-restore --filter FullyQualifiedName~InterproceduralEvidenceTests`
 - `dotnet test tests/StrictSharp.Analyzers.Tests/StrictSharp.Analyzers.Tests.csproj --no-restore --filter "FullyQualifiedName~Perf100AnalyzerTests|FullyQualifiedName~V4TestMatrixTests"`
 - `dotnet test tests/StrictSharp.Analyzers.Tests/StrictSharp.Analyzers.Tests.csproj --no-restore`
+- `node .codex/skills/spectro-gates/scripts/run_gates.mjs --feature-id csharp-performance-analyzer-v4`
 
 ## Resultados
 
@@ -24,7 +25,7 @@ Data: 2026-10-30
 - Grafo interprocedural: 6 testes aprovados.
 - Evidência propagada: 2 testes aprovados.
 - Integração/matriz V4: 4 testes aprovados.
-- Suíte completa: 193 testes aprovados, 0 falhas, 0 ignorados.
+- Suíte completa: 204 testes aprovados, 0 falhas, 0 ignorados.
 
 ## Benchmark comparativo
 
@@ -43,7 +44,9 @@ Data: 2026-10-30
 
 ## Gates finais
 
+- Execução oficial: `gate-20261031T011418Z`, revisão `fc94d24a364dbcd1b194a07e9330091bcdd8f409`.
 - Build: aprovado com `dotnet build --no-restore -v d`.
-- Testes: aprovado com 193 testes, 0 falhas e 0 ignorados.
+- Testes: aprovado com 204 testes, 0 falhas e 0 ignorados.
 - Segurança: aprovado; o projeto `StrictSharp.Analyzers` não possui pacote vulnerável nas fontes NuGet consultadas.
-- Cobertura: aprovada com `-AllowDirtyTree`; linhas `96,48%`, branches `81,75%`, linhas novas `97,16%` e branches novos `85,12%`.
+- Cobertura: aprovada em árvore limpa; linhas `97,57%`, branches `86,13%`, linhas novas `96,88%` e branches novos `87,64%`.
+- Evidências: `.spectro/features/csharp-performance-analyzer-v4/outputs/gate-20261031T011418Z/evidence/`.

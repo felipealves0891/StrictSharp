@@ -28,11 +28,7 @@ public static class InterproceduralGraphBuilder
             if (!analyzed.Add(method))
                 return;
 
-            if (!visiting.Add(method))
-            {
-                containsCycle = true;
-                return;
-            }
+            visiting.Add(method);
 
             foreach (var invocation in GetInvocations(method))
             {

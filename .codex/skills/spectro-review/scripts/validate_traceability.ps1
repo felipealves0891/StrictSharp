@@ -24,7 +24,7 @@ $requirementIds = @([regex]::Matches($spec, '\b(?:FR|NFR|CON)-\d+\b') | ForEach-
 $acceptanceIds = @([regex]::Matches($spec, '\bAC-\d+\b') | ForEach-Object Value | Sort-Object -Unique)
 $taskIds = @([regex]::Matches($tasks, '\bTASK(?:-[A-Z]+)?-\d+\b') | ForEach-Object Value | Sort-Object -Unique)
 $requirements = @()
-$taskSections = @([regex]::Matches($tasks, '(?ms)^##\s+(TASK(?:-[A-Z]+)?-\d+).*?(?=^##\s+TASK|\z)'))
+$taskSections = @([regex]::Matches($tasks, '(?ms)^#{2,3}\s+(TASK(?:-[A-Z]+)?-\d+).*?(?=^#{2,3}\s+TASK|\z)'))
 foreach ($id in $requirementIds) {
     $linked = @($taskSections | Where-Object { $_.Value -match "\b$([regex]::Escape($id))\b" } | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
     $requirements += [pscustomobject]@{
@@ -35,10 +35,15 @@ foreach ($id in $requirementIds) {
 }
 $acceptance = @()
 foreach ($id in $acceptanceIds) {
+    $appearsInPlanOrTasks = (($plan + "`n" + $tasks) -match "\b$([regex]::Escape($id))\b")
+    $hasValidationEvidence = @($taskSections | Where-Object {
+        $_.Value -match "\b$([regex]::Escape($id))\b"
+        $_.Value -match "(?i)(test|validat|gate|evidence)"
+    }).Count -gt 0
     $acceptance += [pscustomobject]@{
         id = $id
-        appears_in_plan_or_tasks = (($plan + "`n" + $tasks) -match "\b$([regex]::Escape($id))\b")
-        validation_hint = (($plan + "`n" + $tasks) -match "(?i)(test|validat|gate|evidence).{0,180}\b$([regex]::Escape($id))\b|\b$([regex]::Escape($id))\b.{0,180}(test|validat|gate|evidence)")
+        appears_in_plan_or_tasks = $appearsInPlanOrTasks
+        validation_hint = $hasValidationEvidence
     }
 }
 $uncoveredRequirements = @($requirements | Where-Object { $_.linked_tasks.Count -eq 0 } | ForEach-Object id)
