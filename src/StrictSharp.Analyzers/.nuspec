@@ -10,6 +10,10 @@
   </metadata>
   <files>
     <file src="..\..\README.md" target="docs\" />
+    <file src="..\..\docs\csharp-performance-analyzer.md" target="docs\" />
+    <file src="..\..\docs\csharp-performance-analyzer-2.md" target="docs\" />
+    <file src="..\..\docs\csharp-performance-analyzer-v4.md" target="docs\" />
+    <file src="..\..\docs\csharp-performance-analyzer-v5.md" target="docs\" />
   </files>
   <!-- Elementos opcionais -->
 </package>

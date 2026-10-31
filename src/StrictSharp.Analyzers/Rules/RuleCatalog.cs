@@ -4,6 +4,7 @@ public static class RuleCatalog
 {
     private const string Documentation = "docs/csharp-performance-analyzer.md";
     private const string DocumentationV4 = "docs/csharp-performance-analyzer-v4.md";
+    private const string DocumentationV5 = "docs/csharp-performance-analyzer-v5.md";
 
     private static readonly RuleDefinition[] s_all =
     [
@@ -38,6 +39,13 @@ public static class RuleCatalog
         Create("PERF029", "Exceções como fluxo normal", RiskSeverity.High, "CPU", "Média", "Cria exceções e stack traces para falhas esperadas.", "O custo cresce com a frequência de falhas.", "Usar TryParse, TryGetValue ou resultado explícito.", "Permitir falha excepcional, rara ou exigida pelo contrato.", Documentation, RulePhase.V2),
         Create("PERF030", "Reconstrução de objetos pesados invariantes", RiskSeverity.High, "Memory", "Baixa", "Repete inicialização, alocações e pressão sobre o GC.", "O custo cresce com a frequência de reconstrução.", "Compartilhar instâncias imutáveis ou cachear no escopo apropriado.", "Permitir estado variável, não thread-safe ou isolamento por operação.", Documentation, RulePhase.V3),
         Create("PERF100", "Custo interprocedural propagado", RiskSeverity.High, "Performance", "Média", "Pode propagar CPU, memória, I/O ou bloqueios por uma cadeia de chamadas e repetição.", "O impacto potencial depende do caminho de chamadas, da repetição e do volume de entrada.", "Revisar a operação custosa no ponto apropriado do fluxo e validar a alternativa com medição representativa.", "Não emitir quando o alvo, a repetição, a invariância ou o bloqueio não forem demonstráveis; desconhecidos permanecem explícitos.", DocumentationV4, RulePhase.V4, "[PERF100] Custo interprocedural propagado. Severidade: High. Categoria: Performance. Evidência: {0}. Dimensão: {1}. Cadeia: {2} -> {3}. Impacto: pode ampliar custo no fluxo analisado. Escalabilidade: depende de repetição, entrada e carga. Correção: revisar o ponto apropriado e validar com medição representativa. Exceções: alvos ou comportamentos desconhecidos não são tratados como custo zero. Confiança: Média. Exemplo: consulte a documentação V4. Referência: docs/csharp-performance-analyzer-2.md. Limitação: custo efetivo, frequência e ganho percentual não são medidos pela análise estática.")
+        ,Create("PERF101", "Complexidade algorítmica observável", RiskSeverity.High, "Complexity", "Média", "Pode ampliar o trabalho conforme o tamanho estrutural das entradas.", "A classificação informa O(1), O(n), O(n log n), O(n²) ou desconhecido quando sustentada pelo código.", "Revisar loops, buscas e transformações que determinam a forma de crescimento.", "Não emitir classificação exata para limites dinâmicos, dispatch ou comportamento não resolvido.", DocumentationV5, RulePhase.V5),
+        Create("PERF102", "Alocação conhecida por repetição", RiskSeverity.High, "Allocation", "Média", "Pode multiplicar alocações por iterações ou chamadas conhecidas.", "O custo estrutural depende do multiplicador de repetição observável.", "Reutilizar ou mover a alocação quando a semântica permitir.", "Não emitir quando a quantidade de execuções não puder ser derivada com confiança.", DocumentationV5, RulePhase.V5),
+        Create("PERF103", "Payload de memória estimável", RiskSeverity.High, "Memory", "Média", "Pode produzir pressão de memória proporcional ao payload conhecido.", "Bytes de payload são separados de cabeçalhos, alinhamento e efeitos de runtime.", "Revisar tamanho, ciclo de vida e estratégia de armazenamento do buffer.", "Não tratar payload como memória total, pausa de GC ou memória viva.", DocumentationV5, RulePhase.V5),
+        Create("PERF104", "Trabalho amplificado por repetição", RiskSeverity.High, "Repetition", "Média", "Pode repetir uma operação ao longo de loops ou cadeias de chamadas.", "Multiplicadores conhecidos são apresentados por caminho; fronteiras desconhecidas permanecem explícitas.", "Revisar invariantes e o ponto de execução da operação repetida.", "Não emitir multiplicador exato quando o limite depender de entrada ou runtime não resolvido.", DocumentationV5, RulePhase.V5),
+        Create("PERF105", "Operação de I/O repetida", RiskSeverity.High, "I/O", "Média", "Pode repetir operações externas e ampliar consumo de recursos ou espera.", "A análise informa quantidade estrutural conhecida, não duração ou latência.", "Revisar batching, cache, streaming ou posição da operação no fluxo.", "Não inferir disponibilidade, volume transferido ou tempo de resposta.", DocumentationV5, RulePhase.V5),
+        Create("PERF106", "Concorrência estruturalmente amplificada", RiskSeverity.High, "Concurrency", "Média", "Pode aumentar tarefas, filas, bloqueios ou coordenação concorrente.", "Limites estruturais conhecidos são separados da capacidade efetiva do runtime.", "Revisar limites, filas e ciclo de vida das tarefas antes de alterar a concorrência.", "Não inferir throughput, execução simultânea efetiva ou capacidade do runtime.", DocumentationV5, RulePhase.V5),
+        Create("PERF107", "Comparação estrutural de alternativas", RiskSeverity.High, "Performance", "Média", "Pode evidenciar uma alternativa com menor trabalho estrutural conhecido.", "A comparação limita-se a Big-O e contagens demonstráveis, sem percentual de ganho.", "Validar a alternativa com medição representativa antes de adotá-la.", "Não emitir comparação quando a equivalência semântica ou a forma estrutural não puder ser demonstrada.", DocumentationV5, RulePhase.V5)
     ];
 
     private static readonly RuleDefinition[] s_v1 =
@@ -62,11 +70,17 @@ public static class RuleCatalog
         s_all[30]
     ];
 
+    private static readonly RuleDefinition[] s_v5 =
+    [
+        s_all[31], s_all[32], s_all[33], s_all[34], s_all[35], s_all[36], s_all[37]
+    ];
+
     public static IReadOnlyList<RuleDefinition> All => s_all;
     public static IReadOnlyList<RuleDefinition> V1 => s_v1;
     public static IReadOnlyList<RuleDefinition> V2 => s_v2;
     public static IReadOnlyList<RuleDefinition> V3 => s_v3;
     public static IReadOnlyList<RuleDefinition> V4 => s_v4;
+    public static IReadOnlyList<RuleDefinition> V5 => s_v5;
 
     public static RuleDefinition Get(string id)
     {

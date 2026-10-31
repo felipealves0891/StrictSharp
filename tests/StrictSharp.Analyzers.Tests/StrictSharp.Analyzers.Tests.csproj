@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <LangVersion>14.0</LangVersion>
+    <NoWarn>$(NoWarn);PERF101;PERF102;PERF103;PERF104;PERF105;PERF106;PERF107</NoWarn>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <IsPackable>false</IsPackable>

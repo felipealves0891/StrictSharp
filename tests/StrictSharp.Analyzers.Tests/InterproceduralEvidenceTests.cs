@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using StrictSharp.Analyzers.Interprocedural;
+using StrictSharp.Analyzers.V5;
 using Xunit;
 
 namespace StrictSharp.Analyzers.Tests;
@@ -76,6 +77,34 @@ public sealed class InterproceduralEvidenceTests
 
         Assert.Contains(evidence, item => item.Kind == EvidenceKind.RedundantWork);
         Assert.Contains(evidence, item => item.Kind == EvidenceKind.BlockingCall);
+    }
+
+    [Fact]
+    public void PropagatesKnownLoopMultiplierToV5CostEvidence()
+    {
+        const string source = "class Sample { void Root() { for (var i = 0; i < 5; i++) Work(); } void Work() { _ = new byte[8]; } }";
+        var compilation = CreateCompilation(source);
+
+        var evidence = InterproceduralCostInference.Analyze(
+            compilation,
+            GetMethod(compilation, "Root"),
+            CancellationToken.None);
+
+        Assert.Contains(evidence.Items, item => item.Multiplier.IsKnown && item.Multiplier.Value == 5);
+    }
+
+    [Fact]
+    public void PreservesUnknownLoopMultiplierForV5CostEvidence()
+    {
+        const string source = "class Sample { void Root(int limit) { for (var i = 0; i < limit; i++) Work(); } void Work() { _ = new byte[8]; } }";
+        var compilation = CreateCompilation(source);
+
+        var evidence = InterproceduralCostInference.Analyze(
+            compilation,
+            GetMethod(compilation, "Root"),
+            CancellationToken.None);
+
+        Assert.Contains(evidence.Items, item => !item.Multiplier.IsKnown);
     }
 
     private static CSharpCompilation CreateCompilation(string source)
