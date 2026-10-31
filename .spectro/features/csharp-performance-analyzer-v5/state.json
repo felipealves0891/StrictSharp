@@ -1,36 +1,37 @@
 {
   "schema_version": "1.0",
   "feature_id": "csharp-performance-analyzer-v5",
-  "current_phase": "review",
-  "status": "completed",
+  "current_phase": "gates",
+  "status": "failed",
   "phases": {
     "gates": {
-      "status": "completed",
-      "execution_id": "gate-20261031T140814Z",
+      "status": "failed",
+      "execution_id": "gate-20261031T142046Z",
       "report": ".spectro/features/csharp-performance-analyzer-v5/gates.json"
     }
   },
   "attempts": {
     "environment-failure:GATE-004": 2,
-    "implementation-defect:GATE-004": 1
+    "implementation-defect:GATE-004": 2
   },
   "invalidated_executions": [
     "gate-20261031T135930Z",
     "gate-20261031T140150Z",
-    "gate-20261031T140656Z"
+    "gate-20261031T140656Z",
+    "gate-20261031T141726Z"
   ],
   "last_failure": {
-    "category": "environment-failure",
-    "stage": "gates",
-    "execution_id": "gate-20261031T140656Z",
+    "category": "implementation-defect",
+    "stage": "implement",
+    "execution_id": "gate-20261031T141726Z",
     "gate_ids": [
       "GATE-004"
     ],
     "diagnostics": [
-      "coverage: ERRO: Working tree possui altera��es tracked n�o commitadas. Commit antes de medir ou use -AllowDirtyTree (n�o recomendado).\r\nRESULTADO: false"
+      "coverage: Executando: dotnet test . --collect:XPlat Code Coverage\r\n  Determinando os projetos a serem restaurados...\r\n  Todos os projetos estão atualizados para restauração.\r\n  StrictSharp.Analyzers -> D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\src\\StrictSharp.Analyzers\\bin\\Debug\\netstandard2.1\\StrictSharp.Analyzers.dll\r\n  StrictSharp.Analyzers.Tests -> D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\tests\\StrictSharp.Analyzers.Tests\\bin\\Debug\\net10.0\\StrictSharp.Analyzers.Tests.dll\r\nExecução de teste para D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\tests\\StrictSharp.Analyzers.Tests\\bin\\Debug\\net10.0\\StrictSharp.Analyzers.Tests.dll (.NETCoreApp,Version=v10.0)\r\n1 arquivos de teste no total corresponderam ao padrão especificado.\r\n\r\nAprovado!  – Com falha:     0, Aprovado:   244, Ignorado:     0, Total:   244, Duração: 6 s - StrictSharp.Analyzers.Tests.dll (net10.0)\r\n\r\nAnexos:\r\n  C:\\Users\\cfalv\\AppData\\Local\\Temp\\coverage-gate-fea5df66ca874faca024a2b9ce8f40c2\\531d1a0c-3952-4c00-9090-8af541662640\\coverage.cobertura.xml\r\nRelat�rios: 1 | Linhas C# modificadas no Git: 3920 | Linhas instrumentadas modificadas: 1049\r\n\n=========== QUALITY GATE ===========\r\nLine Coverage            97,05% (min 90,00%) [PASS]\r\nBranch Coverage          85,04% (min 75,00%) [PASS]\r\nNew Line Coverage        96,28% (min 90,00%) [PASS]\r\nNew Branch Coverage      84,28% (min 85,00%) [FAIL]\r\n\nUncovered new branches\r\n  src/StrictSharp.Analyzers/Analyzers/Perf011Analyzer.cs:18 (8/10 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf011Analyzer.cs:43 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf011Analyzer.cs:53 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf030Analyzer.cs:41 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf100Analyzer.cs:40 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf100Analyzer.cs:56 (2/4 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf104Analyzer.cs:26 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:25 (4/6 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:31 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/Infrastructure/RuleAnalysis.cs:287 (21/32 branches covered)\r\n  src/StrictSharp.Analyzers/Infrastructure/RuleAnalysis.cs:294 (5/6 branches covered)\r\n  src/StrictSharp.Analyzers/Infrastructure/RuleAnalysis.cs:300 (5/6 branches covered)\r\n  src/StrictSharp.Analyzers/Infrastructure/RuleAnalysis.cs:304 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralEvidenceAnalyzer.cs:42 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralEvidenceAnalyzer.cs:67 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralEvidenceAnalyzer.cs:105 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralEvidenceAnalyzer.cs:115 (5/6 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralEvidenceAnalyzer.cs:117 (20/24 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralEvidenceAnalyzer.cs:152 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralGraphBuilder.cs:61 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralGraphBuilder.cs:83 (5/6 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralGraphBuilder.cs:110 (2/4 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralGraphBuilder.cs:113 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralGraphBuilder.cs:114 (15/18 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralGraphBuilder.cs:117 (29/34 branches covered)\r\n  src/StrictSharp.Analyzers/V5/AllocationPayloadInference.cs:54 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/V5/AllocationPayloadInference.cs:72 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/CostComparison.cs:24 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/V5/CostComparison.cs:27 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/V5/CostComparison.cs:30 (7/8 branches covered)\r\n  src/StrictSharp.Analyzers/V5/CostEvidence.cs:35 (4/6 branches covered)\r\n  src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:22 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:27 (2/4 branches covered)\r\n  src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:28 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:59 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:60 (0/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:63 (3/6 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:20 (2/4 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:23 (10/16 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:34 (5/6 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:35 (5/6 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:68 (7/10 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:71 (4/14 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:76 (17/32 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:67 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:103 (3/8 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:106 (0/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:112 (2/4 branches covered)\r\nRESULTADO: false"
     ],
-    "detected_at": "2026-10-31T14:07:12.897Z"
+    "detected_at": "2026-10-31T14:20:44.454Z"
   },
-  "last_execution_id": "gate-20261031T140814Z",
-  "updated_at": "2026-10-31T14:08:48.691Z"
+  "last_execution_id": "gate-20261031T142046Z",
+  "updated_at": "2026-10-31T14:21:00.708Z"
 }
