@@ -27,7 +27,7 @@
 ## Progresso
 
 - Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-008`, `TASK-009`, `TASK-REV-001`, `TASK-REV-002`, `TASK-REV-003`, `TASK-REV-004`, `TASK-REV-005`
-- Bloqueadas: `TASK-010` (cobertura requer alterações tracked commitadas para medir o delta novo; build, testes e segurança passaram)
+- Bloqueadas: `TASK-010` (cobertura local com os novos testes passou: 85,94% de branches novas; executar o gate formal em árvore limpa após commit dos testes para registrar evidência final)
 
 ## TASK-REV-001 - Remediate FINDING-001
 

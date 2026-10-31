@@ -128,4 +128,64 @@ public sealed class V5AnalyzerTests
 
         Assert.Empty(diagnostics);
     }
+
+    [Fact]
+    public async Task Perf107ComparesForEachAndForLoopEffects()
+    {
+        const string source = "using System.Collections.Generic; class Sample { void M(bool flag, IEnumerable<int> values) { if (flag) { foreach (var value in values) Process(); } else { for (var i = 0; i < 10; i++) Process(); } } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Equal("PERF107", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
+    public async Task Perf107ComparesDeconstructingForeachEffects()
+    {
+        const string source = "using System.Collections.Generic; class Sample { void M(bool flag, IEnumerable<(int, int)> pairs) { if (flag) { foreach (var (left, right) in pairs) Process(); } else { foreach (var (left, right) in pairs) Process(); } } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Equal("PERF107", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
+    public async Task Perf107ComparesWhileAndDoWhileEffects()
+    {
+        const string source = "class Sample { void M(bool flag) { if (flag) { while (flag) { Process(); } } else { do { Process(); } while (flag); } } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Equal("PERF107", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
+    public async Task Perf107IgnoresLoopPathsWithDifferentLoopCounts()
+    {
+        const string source = "class Sample { void M(bool flag) { if (flag) { for (var i = 0; i < 2; i++) { for (var j = 0; j < 2; j++) Process(); } } else { for (var i = 0; i < 2; i++) Process(); } } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf107IgnoresUnresolvedMatchingLoopEffects()
+    {
+        const string source = "class Sample { void M(bool flag) { if (flag) { for (var i = 0; i < 10; i++) Missing(); } else { for (var i = 0; i < 20; i++) Missing(); } } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf107IgnoresMatchingEffectsWhenComplexityIsUnknown()
+    {
+        const string source = "class Sample { void M(bool flag) { if (flag) { for (var i = 0; i < 2; i++) { for (var j = 0; j < 2; j++) { for (var k = 0; k < 2; k++) Process(); } } } else { for (var i = 0; i < 2; i++) { for (var j = 0; j < 2; j++) { for (var k = 0; k < 2; k++) Process(); } } } } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
 }
