@@ -63,6 +63,29 @@ public sealed class V5AnalyzerTests
     }
 
     [Fact]
+    public async Task Perf102ReportsInterproceduralAllocation()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                void Root(List<int> ids)
+                {
+                    foreach (var id in ids)
+                        GetItems(id);
+                }
+
+                byte[] GetItems(int id) => new byte[8];
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf102Analyzer());
+
+        Assert.Contains(diagnostics, diagnostic => diagnostic.Id == "PERF102"
+            && diagnostic.GetMessage().Contains("propagada", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task Perf107ReportsStructuralComparisonBetweenConditionalPaths()
     {
         const string source = "class Sample { void M(bool flag, int[] items) { if (flag) { foreach (var item in items) _ = item; } else { for (var i = 0; i < 10; i++) _ = i; } } }";
@@ -73,5 +96,15 @@ public sealed class V5AnalyzerTests
         Assert.Equal("PERF107", diagnostic.Id);
         Assert.Contains("Alternativas", diagnostic.GetMessage(), StringComparison.Ordinal);
         Assert.DoesNotContain("%", diagnostic.GetMessage(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Perf107IgnoresConditionalWithoutTwoLoopPaths()
+    {
+        const string source = "class Sample { void M(bool flag, int[] items) { if (flag) foreach (var item in items) _ = item; } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
     }
 }

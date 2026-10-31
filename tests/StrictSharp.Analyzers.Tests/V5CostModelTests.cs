@@ -74,4 +74,17 @@ public sealed class V5CostModelTests
         Assert.True(count.IsMaximum);
         Assert.Equal(5, count.Value);
     }
+
+    [Fact]
+    public void MergePreservesNonEmptyEvidenceSets()
+    {
+        var evidence = CostEvidence.Unknown(CostDimension.Io, "external call", "runtime dependent");
+        var set = CostEvidenceSet.Create(System.Collections.Immutable.ImmutableArray.Create(evidence));
+
+        Assert.Equal(set, InterproceduralCostInference.Merge(CostEvidenceSet.Empty, set));
+        Assert.Equal(set, InterproceduralCostInference.Merge(set, CostEvidenceSet.Empty));
+
+        var merged = InterproceduralCostInference.Merge(set, set);
+        Assert.Equal(2, merged.Items.Length);
+    }
 }

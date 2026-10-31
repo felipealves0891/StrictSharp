@@ -66,6 +66,17 @@ public sealed class V5AllocationPayloadInferenceTests
         Assert.False(item.Payload.IsKnown);
     }
 
+    [Fact]
+    public void KeepsOverflowingArrayPayloadUnknown()
+    {
+        var (method, model) = ParseMethod("void M() { var buffer = new decimal[9223372036854775807]; }");
+
+        var evidence = AllocationPayloadInference.Analyze(method, model, CancellationToken.None);
+        var item = Assert.Single(evidence.Items);
+
+        Assert.False(item.Payload.IsKnown);
+    }
+
     private static (Microsoft.CodeAnalysis.SyntaxNode Method, SemanticModel Model) ParseMethod(string methodSource)
     {
         var tree = CSharpSyntaxTree.ParseText($"class Sample {{ {methodSource} }}", new CSharpParseOptions(LanguageVersion.CSharp14));

@@ -88,6 +88,23 @@ public sealed class V5LoopCostInferenceTests
         Assert.False(item.Count.IsKnown);
     }
 
+    [Fact]
+    public void SupportsAssignmentInitializerAndDescendingBounds()
+    {
+        var assignment = ParseMethod("void M() { var i = 0; for (i = 0; i < 3; i++) _ = i; }")
+            .DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ForStatementSyntax>()
+            .Single();
+        var invalid = ParseMethod("void M() { for (var i = 3; i < 1; i++) _ = i; }")
+            .DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ForStatementSyntax>()
+            .Single();
+
+        Assert.True(LoopCostInference.TryGetKnownIterationCount(assignment, out var count));
+        Assert.Equal(3, count);
+        Assert.False(LoopCostInference.TryGetKnownIterationCount(invalid, out _));
+    }
+
     private static Microsoft.CodeAnalysis.SyntaxNode ParseMethod(string source)
     {
         return CSharpSyntaxTree.ParseText($"class Sample {{ {source} }}", new CSharpParseOptions(LanguageVersion.CSharp14))
