@@ -21,6 +21,8 @@ public sealed class Perf106Analyzer : RuleAnalyzerBase
     private void AnalyzeMethod(SyntaxNodeAnalysisContext context)
     {
         var evidence = IoConcurrencyInference.Analyze(context.Node, context.SemanticModel, context.CancellationToken);
+        var method = (IMethodSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, context.CancellationToken)!;
+        evidence = InterproceduralCostInference.Merge(evidence, InterproceduralCostInference.Analyze(context.SemanticModel.Compilation, method, context.CancellationToken));
         V5DiagnosticAnalysis.Report(Rule, context, evidence, item => item.Dimension == CostDimension.Concurrency);
     }
 }

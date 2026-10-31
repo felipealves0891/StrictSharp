@@ -21,6 +21,8 @@ public sealed class Perf104Analyzer : RuleAnalyzerBase
     private void AnalyzeMethod(SyntaxNodeAnalysisContext context)
     {
         var evidence = LoopCostInference.Analyze(context.Node, context.CancellationToken);
-        V5DiagnosticAnalysis.Report(Rule, context, evidence, item => item.Multiplier.IsKnown);
+        var method = (IMethodSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, context.CancellationToken)!;
+        evidence = InterproceduralCostInference.Merge(evidence, InterproceduralCostInference.Analyze(context.SemanticModel.Compilation, method, context.CancellationToken));
+        V5DiagnosticAnalysis.Report(Rule, context, evidence, item => item.Multiplier.IsKnown || item.Dimension == CostDimension.Repetition);
     }
 }

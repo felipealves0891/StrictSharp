@@ -38,4 +38,40 @@ public sealed class V5AnalyzerTests
         var diagnostic = Assert.Single(diagnostics);
         Assert.Equal("PERF106", diagnostic.Id);
     }
+
+    [Fact]
+    public async Task Perf104ReportsKnownInterproceduralRepeatedCall()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                void Root(List<int> ids)
+                {
+                    foreach (var id in ids)
+                        GetItems(id);
+                }
+
+                byte[] GetItems(int id) => new byte[8];
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf104Analyzer());
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("PERF104", diagnostic.Id);
+    }
+
+    [Fact]
+    public async Task Perf107ReportsStructuralComparisonBetweenConditionalPaths()
+    {
+        const string source = "class Sample { void M(bool flag, int[] items) { if (flag) { foreach (var item in items) _ = item; } else { for (var i = 0; i < 10; i++) _ = i; } } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("PERF107", diagnostic.Id);
+        Assert.Contains("Alternativas", diagnostic.GetMessage(), StringComparison.Ordinal);
+        Assert.DoesNotContain("%", diagnostic.GetMessage(), StringComparison.Ordinal);
+    }
 }

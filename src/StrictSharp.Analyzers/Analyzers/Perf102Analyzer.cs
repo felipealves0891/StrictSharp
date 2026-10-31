@@ -21,6 +21,8 @@ public sealed class Perf102Analyzer : RuleAnalyzerBase
     private void AnalyzeMethod(SyntaxNodeAnalysisContext context)
     {
         var evidence = AllocationPayloadInference.Analyze(context.Node, context.SemanticModel, context.CancellationToken);
-        V5DiagnosticAnalysis.Report(Rule, context, evidence, item => item.Count.IsKnown);
+        var method = (IMethodSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, context.CancellationToken)!;
+        evidence = InterproceduralCostInference.Merge(evidence, InterproceduralCostInference.Analyze(context.SemanticModel.Compilation, method, context.CancellationToken));
+        V5DiagnosticAnalysis.Report(Rule, context, evidence, item => item.Dimension == CostDimension.Memory);
     }
 }

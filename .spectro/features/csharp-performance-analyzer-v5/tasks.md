@@ -12,7 +12,7 @@
 | `TASK-007` | Implementar comparação pública entre alternativas baseada em estrutura, Big-O e contagens conhecidas, sem percentual, custo monetário ou benchmark. | `FR-009`, `FR-010`, `CON-001` | `AC-009`, `AC-010`; saída documentada e determinística, com limitações explícitas. | `TASK-003`, `TASK-004`, `TASK-005` | completed |
 | `TASK-008` | Integrar cada analyzer `PERF101`–`PERF107` ao núcleo, definir deduplicação, mensagens públicas, orientação condicional e mapeamento das sete regras às dimensões documentadas. | `FR-008`, `FR-010`, `FR-012`, `FR-013`, `NFR-004`, `NFR-006` | `AC-008`, `AC-010`, `AC-011`, `AC-012`, `AC-014`; um diagnóstico só é emitido quando acrescenta contexto e não recomenda Code Fix sem equivalência demonstrada. | `TASK-002`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007` | completed |
 | `TASK-009` | Criar documentação V5 e suíte de testes positivos, negativos, exceções, catálogo, matriz, configuração, deduplicação e regressão V1–V4. | `FR-013`, `CON-007`, `CON-008`, `NFR-001`, `NFR-002` | `AC-011`, `AC-012`, `AC-013`; documentação cobre as seis dimensões, sete IDs, desconhecidos e comparação pública. | `TASK-001`, `TASK-008` | completed |
-| `TASK-010` | Executar build, testes, segurança e cobertura; revisar custo do analyzer, determinismo, privacidade e rastreabilidade dos critérios de aceite. | `NFR-003`, `NFR-007` | `AC-014`, `AC-015`; gates reproduzíveis sem envio de código, segredos ou dados de produção. | `TASK-009` | blocked |
+| `TASK-010` | Executar build, testes, segurança e cobertura; revisar custo do analyzer, determinismo, privacidade e rastreabilidade dos critérios de aceite. | `NFR-003`, `NFR-007` | `AC-014`, `AC-015`; gates reproduzíveis sem envio de código, segredos ou dados de produção. | `TASK-009` | pending |
 
 ## Regras de execução
 
@@ -27,4 +27,27 @@
 ## Progresso
 
 - Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-008`, `TASK-009`
-- Bloqueadas: `TASK-010` — `dotnet list package --vulnerable` falhou sem saída/diagnóstico em duas invocações; build, testes e cobertura passaram.
+- Bloqueadas: —
+
+## TASK-REV-001 - Remediate FINDING-001
+
+- **Status:** completed
+- **Finding:** FINDING-001
+- **Severity:** High
+- **Return stage:** implement
+- **Description:** Integrar a análise V5 ao grafo interprocedural V4 para propagar multiplicadores e evidências através de chamadas conhecidas, preservando fronteiras desconhecidas e cobrindo AC-004/FR-004.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
+## TASK-REV-002 - Remediate FINDING-002
+
+- **Status:** completed
+- **Finding:** FINDING-002
+- **Severity:** High
+- **Return stage:** implement
+- **Description:** Implementar comportamento do PERF107Analyzer e cobrir a comparação pública com teste comportamental.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
