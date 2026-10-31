@@ -1,34 +1,36 @@
 {
   "schema_version": "1.0",
   "feature_id": "csharp-performance-analyzer-v4",
-  "current_phase": "gates",
+  "current_phase": "implement",
   "status": "waiting_input",
   "phases": {
     "gates": {
       "status": "failed",
-      "execution_id": "gate-20261031T000815Z",
+      "execution_id": "gate-20261031T001001Z",
       "report": ".spectro/features/csharp-performance-analyzer-v4/gates.json"
     }
   },
   "attempts": {
-    "environment-failure:GATE-004": 1
+    "environment-failure:GATE-004": 1,
+    "test-defect:GATE-004": 1
   },
   "invalidated_executions": [
-    "gate-20261031T000815Z"
+    "gate-20261031T000815Z",
+    "gate-20261031T001001Z"
   ],
   "last_failure": {
-    "category": "environment-failure",
-    "stage": "gates",
-    "execution_id": "gate-20261031T000815Z",
+    "category": "test-defect",
+    "stage": "implement",
+    "execution_id": "gate-20261031T001001Z",
     "gate_ids": [
       "GATE-004"
     ],
     "diagnostics": [
-      "coverage: ERRO: Working tree possui altera��es tracked n�o commitadas. Commit antes de medir ou use -AllowDirtyTree (n�o recomendado).\r\nRESULTADO: false"
+      "coverage: Executando: dotnet test . --collect:XPlat Code Coverage\r\n  Determinando os projetos a serem restaurados...\r\n  Todos os projetos estão atualizados para restauração.\r\n  StrictSharp.Analyzers -> D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\src\\StrictSharp.Analyzers\\bin\\Debug\\netstandard2.1\\StrictSharp.Analyzers.dll\r\n  StrictSharp.Analyzers.Tests -> D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\tests\\StrictSharp.Analyzers.Tests\\bin\\Debug\\net10.0\\StrictSharp.Analyzers.Tests.dll\r\nExecução de teste para D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\tests\\StrictSharp.Analyzers.Tests\\bin\\Debug\\net10.0\\StrictSharp.Analyzers.Tests.dll (.NETCoreApp,Version=v10.0)\r\n1 arquivos de teste no total corresponderam ao padrão especificado.\r\n\r\nAprovado!  – Com falha:     0, Aprovado:   193, Ignorado:     0, Total:   193, Duração: 5 s - StrictSharp.Analyzers.Tests.dll (net10.0)\r\n\r\nAnexos:\r\n  C:\\Users\\cfalv\\AppData\\Local\\Temp\\coverage-gate-debd245620b949aba56126b66824a410\\315c4288-24a0-4ab7-b03b-f44fbb727b24\\coverage.cobertura.xml\r\nRelat�rios: 1 | Linhas C# modificadas no Git: 2023 | Linhas instrumentadas modificadas: 448\r\n\n=========== QUALITY GATE ===========\r\nLine Coverage            96,48% (min 90,00%) [PASS]\r\nBranch Coverage          81,75% (min 75,00%) [PASS]\r\nNew Line Coverage        93,30% (min 90,00%) [PASS]\r\nNew Branch Coverage      71,15% (min 85,00%) [FAIL]\r\nRESULTADO: false"
     ],
-    "detected_at": "2026-10-31T00:08:43.065Z"
+    "detected_at": "2026-10-31T00:10:39.760Z"
   },
-  "last_execution_id": "gate-20261031T000815Z",
-  "updated_at": "2026-10-31T00:08:43.066Z",
-  "invalidation_reason": "Recovery invalidated evidence for gate-20261031T000815Z."
+  "last_execution_id": "gate-20261031T001001Z",
+  "updated_at": "2026-10-31T00:10:39.761Z",
+  "invalidation_reason": "Recovery invalidated evidence for gate-20261031T001001Z."
 }
