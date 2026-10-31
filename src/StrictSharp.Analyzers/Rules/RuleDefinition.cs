@@ -7,7 +7,8 @@ public enum RulePhase
 {
     V1,
     V2,
-    V3
+    V3,
+    V4
 }
 
 public enum RiskSeverity
@@ -31,7 +32,8 @@ public readonly struct RuleDefinition
         string correction,
         string exceptions,
         string reference,
-        RulePhase phase)
+        RulePhase phase,
+        string? messageFormat = null)
     {
         Id = id;
         Title = title;
@@ -44,7 +46,7 @@ public readonly struct RuleDefinition
         Exceptions = exceptions;
         Reference = reference;
         Phase = phase;
-        var messageFormat = string.Join(
+        var defaultMessageFormat = string.Join(
             " ",
             $"[{id}] {title}.",
             $"Severidade: {severity}.",
@@ -61,7 +63,7 @@ public readonly struct RuleDefinition
         Descriptor = new DiagnosticDescriptor(
             id,
             title,
-            messageFormat,
+            messageFormat ?? defaultMessageFormat,
             category,
             ToDiagnosticSeverity(severity),
             true,
@@ -85,6 +87,7 @@ public readonly struct RuleDefinition
     public ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; }
     public bool EnabledInV1 => Phase == RulePhase.V1;
     public bool EnabledInV2 => Phase == RulePhase.V2;
+    public bool EnabledInV4 => Phase == RulePhase.V4;
 
     private static DiagnosticSeverity ToDiagnosticSeverity(RiskSeverity severity)
     {
