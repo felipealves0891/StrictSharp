@@ -14,7 +14,7 @@ O StrictSharp não substitui profiling ou benchmarks. Frequência de execução,
 
 ## Estado atual
 
-O catálogo contém 31 diagnósticos, organizados em quatro fases:
+O catálogo contém 38 diagnósticos, organizados em cinco fases:
 
 | Fase | Quantidade | Situação |
 | --- | ---: | --- |
@@ -22,8 +22,9 @@ O catálogo contém 31 diagnósticos, organizados em quatro fases:
 | V2 | 13 | Implementados e registrados em `V2AnalyzerCatalog` |
 | V3 | 2 | Implementados e registrados em `V3AnalyzerCatalog` |
 | V4 | 1 | Implementado e registrado em `V4AnalyzerCatalog` |
+| V5 | 7 | Implementados e registrados em `V5AnalyzerCatalog` |
 
-Os diagnósticos V1 usam C# 14 e são compilados como um analisador Roslyn para `netstandard2.1`. Cada ocorrência possui severidade, categoria, impacto, escalabilidade, correção sugerida, exceções e referência documental.
+Os diagnósticos são compilados como um analyzer Roslyn para `netstandard2.1`, com testes em C# 14. Cada ocorrência possui severidade, categoria, impacto, orientação e limitações documentadas.
 
 ## Como usar
 
@@ -68,7 +69,7 @@ dotnet_diagnostic.PERF027.severity = suggestion
 dotnet_diagnostic.PERF014.severity = none
 ```
 
-Os valores usuais são `none`, `silent`, `suggestion`, `warning` e `error`. A severidade controla como o diagnóstico aparece no fluxo de desenvolvimento; não é uma estimativa de ganho percentual.
+Os valores usuais são `none`, `silent`, `suggestion`, `warning` e `error`. A severidade controla como o diagnóstico aparece no fluxo de desenvolvimento; não é uma estimativa de ganho percentual. As regras V5 usam severidade `High`, mapeada para `warning`, e podem ser configuradas pelo ID como as demais regras.
 
 ## Diagnósticos
 
@@ -131,6 +132,22 @@ A V4 amplia o contexto da análise para além do método isolado. Quando os alvo
 
 `PERF100` não mede frequência real, CPU, memória, GC, I/O, complexidade efetiva ou percentual de ganho. Corpos ausentes, dependências externas, interfaces, delegates e dispatch sem alvo resolvido permanecem desconhecidos e não são tratados como custo zero. A recomendação é uma orientação para revisão, não uma prova de que toda chamada analisada seja um gargalo.
 
+### V5 — implementados
+
+A V5 acrescenta sete diagnósticos estruturais de custo. Todos têm severidade `High` (warning no Roslyn) e mantêm dimensões separadas; não produzem score agregado nem estimativa de ganho percentual.
+
+| ID | Dimensão | O que significa |
+| --- | --- | --- |
+| PERF101 | Complexidade | Classifica loops e ordenações observáveis como `O(1)`, `O(n)`, `O(n log n)`, `O(n²)` ou desconhecido. |
+| PERF102 | Alocação | Identifica alocações que podem se repetir por loops ou chamadas conhecidas. |
+| PERF103 | Memória | Estima payload de arrays quando tipo de elemento e tamanho são conhecidos. |
+| PERF104 | Repetição | Expõe multiplicadores estruturais conhecidos em loops e cadeias de chamadas. |
+| PERF105 | I/O | Identifica operações de arquivo, stream ou HTTP que podem ocorrer repetidamente. |
+| PERF106 | Concorrência | Identifica criação ou agendamento estrutural de tarefas, sem inferir capacidade do runtime. |
+| PERF107 | Performance transversal | Compara alternativas quando os efeitos e a estrutura dos loops são comparáveis e a diferença é demonstrável. |
+
+Contagens de iterações, alocações e bytes permanecem desconhecidas quando dependem de entrada, runtime ou forma não suportada. Payload representa apenas bytes dos elementos; cabeçalhos, alinhamento, memória viva, GC, latência e throughput não são calculados. A comparação não promete que uma alternativa será mais rápida: valide mudanças com profiling ou benchmarks representativos.
+
 ## Severidade e confiança
 
 O catálogo separa risco operacional de confiança da detecção:
@@ -140,7 +157,7 @@ O catálogo separa risco operacional de confiança da detecção:
 - `Medium`: risco moderado; exibido como info;
 - `Low`: risco baixo; exibido como hidden.
 
-A confiança indica quão forte é a evidência estrutural, mas não significa que o impacto ocorrerá em toda execução. Por exemplo, uma busca linear pode ser irrelevante para uma coleção pequena e custosa para uma coleção grande dentro de um caminho quente. `PERF001`–`PERF030` e `PERF100` são IDs do StrictSharp, não IDs oficiais do .NET; quando houver uma regra oficial relacionada, a documentação detalhada indica a relação.
+A confiança indica quão forte é a evidência estrutural, mas não significa que o impacto ocorrerá em toda execução. Por exemplo, uma busca linear pode ser irrelevante para uma coleção pequena e custosa para uma coleção grande dentro de um caminho quente. `PERF001`–`PERF030` e `PERF100`–`PERF107` são IDs do StrictSharp, não IDs oficiais do .NET; quando houver uma regra oficial relacionada, a documentação detalhada indica a relação.
 
 ## Organização do código
 
@@ -157,7 +174,7 @@ Os analyzers delegam metadados ao `RuleCatalog` e habilitam execução concorren
 
 ## Documentação e contribuição
 
-A especificação detalhada das regras V1–V3, incluindo exemplos positivos e negativos, limitações e critérios de aceitação, está em [docs/csharp-performance-analyzer.md](docs/csharp-performance-analyzer.md). A documentação específica da V4 e de `PERF100` está em [docs/csharp-performance-analyzer-v4.md](docs/csharp-performance-analyzer-v4.md); o contexto do roadmap interprocedural está em [docs/csharp-performance-analyzer-2.md](docs/csharp-performance-analyzer-2.md).
+A especificação detalhada das regras V1–V3, incluindo exemplos positivos e negativos, limitações e critérios de aceitação, está em [docs/csharp-performance-analyzer.md](docs/csharp-performance-analyzer.md). A documentação da V4 e de `PERF100` está em [docs/csharp-performance-analyzer-v4.md](docs/csharp-performance-analyzer-v4.md); a documentação da V5, com exemplos de payload e limites de inferência, está em [docs/csharp-performance-analyzer-v5.md](docs/csharp-performance-analyzer-v5.md). O contexto do roadmap interprocedural está em [docs/csharp-performance-analyzer-2.md](docs/csharp-performance-analyzer-2.md).
 
 Ao adicionar ou alterar uma regra:
 
