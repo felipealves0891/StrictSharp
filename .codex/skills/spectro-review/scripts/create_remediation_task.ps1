@@ -15,7 +15,7 @@ if (-not (Test-Path -LiteralPath $tasksPath)) { throw "tasks.md not found: $task
 $text = Get-Content -Raw -Encoding utf8 -LiteralPath $tasksPath
 if ($text -match [regex]::Escape($FindingId)) { throw "A remediation task already references $FindingId." }
 $existing = @([regex]::Matches($text, '\bTASK-REV-(\d+)\b') | ForEach-Object { [int]$_.Groups[1].Value })
-$number = if ($existing.Count) { (($existing | Measure-Object -Maximum).Maximum + 1) } else { 1 }
+$number = if ($existing.Count) { [int](($existing | Measure-Object -Maximum).Maximum + 1) } else { 1 }
 $task = @(
     "",
     ("## TASK-REV-{0:D3} - Remediate {1}" -f $number, $FindingId),

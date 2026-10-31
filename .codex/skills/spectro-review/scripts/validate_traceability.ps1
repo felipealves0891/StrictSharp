@@ -25,6 +25,7 @@ $acceptanceIds = @([regex]::Matches($spec, '\bAC-\d+\b') | ForEach-Object Value 
 $taskIds = @([regex]::Matches($tasks, '\bTASK(?:-[A-Z]+)?-\d+\b') | ForEach-Object Value | Sort-Object -Unique)
 $requirements = @()
 $taskSections = @([regex]::Matches($tasks, '(?ms)^#{2,3}\s+(TASK(?:-[A-Z]+)?-\d+).*?(?=^#{2,3}\s+TASK|\z)'))
+$taskSections += @([regex]::Matches($tasks, '(?m)^\|\s*`?(TASK(?:-[A-Z]+)?-\d+)`?\s*\|[^\r\n]*\|$'))
 foreach ($id in $requirementIds) {
     $linked = @($taskSections | Where-Object { $_.Value -match "\b$([regex]::Escape($id))\b" } | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
     $requirements += [pscustomobject]@{

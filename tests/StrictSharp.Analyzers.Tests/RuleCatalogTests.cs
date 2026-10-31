@@ -10,12 +10,13 @@ public sealed class RuleCatalogTests
     {
         var rules = RuleCatalog.All;
 
-        Assert.Equal(31, rules.Count);
-        Assert.Equal(31, rules.Select(rule => rule.Id).Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(38, rules.Count);
+        Assert.Equal(38, rules.Select(rule => rule.Id).Distinct(StringComparer.Ordinal).Count());
         var v1 = 0;
         var v2 = 0;
         var v3 = 0;
         var v4 = 0;
+        var v5 = 0;
         foreach (var rule in rules)
         {
             switch (rule.Phase)
@@ -32,6 +33,9 @@ public sealed class RuleCatalogTests
                 case RulePhase.V4:
                     v4++;
                     break;
+                case RulePhase.V5:
+                    v5++;
+                    break;
             }
         }
 
@@ -39,6 +43,7 @@ public sealed class RuleCatalogTests
         Assert.Equal(13, v2);
         Assert.Equal(2, v3);
         Assert.Equal(1, v4);
+        Assert.Equal(7, v5);
     }
 
     [Fact]
@@ -87,6 +92,24 @@ public sealed class RuleCatalogTests
         Assert.Equal("Performance", rule.Category);
         Assert.Equal(Microsoft.CodeAnalysis.DiagnosticSeverity.Warning, rule.Descriptor.DefaultSeverity);
         Assert.True(rule.EnabledInV4);
+    }
+
+    [Fact]
+    public void V5ContainsExactlyTheApprovedRulesWithWarningSeverity()
+    {
+        var expectedIds = new[]
+        {
+            "PERF101", "PERF102", "PERF103", "PERF104", "PERF105", "PERF106", "PERF107"
+        };
+
+        Assert.Equal(expectedIds, RuleCatalog.V5.Select(rule => rule.Id));
+        Assert.All(RuleCatalog.V5, rule =>
+        {
+            Assert.Equal(RulePhase.V5, rule.Phase);
+            Assert.Equal(RiskSeverity.High, rule.Severity);
+            Assert.Equal(Microsoft.CodeAnalysis.DiagnosticSeverity.Warning, rule.Descriptor.DefaultSeverity);
+            Assert.True(rule.EnabledInV5);
+        });
     }
 
     [Fact]

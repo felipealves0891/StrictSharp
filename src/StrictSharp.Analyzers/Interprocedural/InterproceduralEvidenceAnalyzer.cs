@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using StrictSharp.Analyzers.V5;
 using System.Collections.Immutable;
 
 namespace StrictSharp.Analyzers.Interprocedural;
@@ -17,6 +18,8 @@ public static class InterproceduralEvidenceAnalyzer
         foreach (var callSite in graph.CallSites)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            var semanticModel = compilation.GetSemanticModel(callSite.Invocation.SyntaxTree);
+            var multiplier = GetLoopMultiplier(callSite.Invocation, semanticModel, cancellationToken);
 
             if (callSite.Flow == CallFlowKind.Blocking && IsInsideLoop(callSite.Invocation))
                 evidence.Add(new InterproceduralEvidence(
@@ -25,7 +28,9 @@ public static class InterproceduralEvidenceAnalyzer
                     callSite.Caller,
                     callSite.Target,
                     callSite.Location,
-                    callSite.Location));
+                    callSite.Location,
+                    KnownCount.Exact(1),
+                    multiplier));
 
             if (callSite.State != CallTargetState.Known || callSite.Target is null)
                 continue;
@@ -46,7 +51,9 @@ public static class InterproceduralEvidenceAnalyzer
                         callSite.Caller,
                         callSite.Target,
                         callSite.Location,
-                        operation.Location));
+                        operation.Location,
+                        KnownCount.Exact(1),
+                        multiplier));
 
                 evidence.Add(new InterproceduralEvidence(
                     operation.Kind,
@@ -54,7 +61,9 @@ public static class InterproceduralEvidenceAnalyzer
                     callSite.Caller,
                     callSite.Target,
                     callSite.Location,
-                    operation.Location));
+                    operation.Location,
+                    KnownCount.Exact(1),
+                    multiplier));
             }
         }
 
@@ -72,7 +81,9 @@ public static class InterproceduralEvidenceAnalyzer
                 duplicate.Caller,
                 duplicate.Target,
                 duplicate.Location,
-                duplicate.Location));
+                duplicate.Location,
+                KnownCount.Exact(callCount.Value),
+                KnownCount.Exact(callCount.Value)));
         }
 
         if (graph.ContainsCycle && graph.CallSites.Length > 0)
@@ -84,7 +95,9 @@ public static class InterproceduralEvidenceAnalyzer
                 recursive.Caller,
                 recursive.Target,
                 recursive.Location,
-                recursive.Location));
+                recursive.Location,
+                KnownCount.Unknown,
+                KnownCount.Unknown));
         }
 
         return evidence.ToImmutable();
@@ -122,13 +135,39 @@ public static class InterproceduralEvidenceAnalyzer
         return operations.ToImmutable();
     }
 
+    private static KnownCount GetLoopMultiplier(SyntaxNode node, SemanticModel semanticModel, CancellationToken cancellationToken)
+    {
+        long multiplier = 1;
+        var foundLoop = false;
+        foreach (var ancestor in node.Ancestors())
+        {
+            if (!IsLoop(ancestor))
+                continue;
+
+            foundLoop = true;
+            if (!LoopCostInference.TryGetKnownIterationCount(ancestor, semanticModel, out var count, cancellationToken)
+                || count == 0
+                || multiplier > long.MaxValue / count)
+                return KnownCount.Unknown;
+
+            multiplier *= count;
+        }
+
+        return foundLoop ? KnownCount.Exact(multiplier) : KnownCount.Unknown;
+    }
+
     private static bool IsInsideLoop(SyntaxNode node)
     {
-        return node.Ancestors().Any(ancestor => ancestor is ForStatementSyntax
+        return node.Ancestors().Any(IsLoop);
+    }
+
+    private static bool IsLoop(SyntaxNode node)
+    {
+        return node is ForStatementSyntax
             or ForEachStatementSyntax
             or ForEachVariableStatementSyntax
             or WhileStatementSyntax
-            or DoStatementSyntax);
+            or DoStatementSyntax;
     }
 
     private readonly struct CostlyOperation
