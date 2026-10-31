@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0",
+  "feature_id": "workspace",
+  "current_phase": "gates",
+  "status": "failed",
+  "phases": {
+    "gates": {
+      "status": "failed",
+      "execution_id": "gate-20261031T000807Z",
+      "report": ".spectro/features/workspace/gates.json"
+    }
+  },
+  "attempts": {},
+  "invalidated_executions": [],
+  "last_failure": null,
+  "last_execution_id": "gate-20261031T000807Z",
+  "updated_at": "2026-10-31T00:08:28.230Z"
+}

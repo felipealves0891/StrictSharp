@@ -3,6 +3,7 @@ namespace StrictSharp.Analyzers.Rules;
 public static class RuleCatalog
 {
     private const string Documentation = "docs/csharp-performance-analyzer.md";
+    private const string DocumentationV4 = "docs/csharp-performance-analyzer-v4.md";
 
     private static readonly RuleDefinition[] s_all =
     [
@@ -35,7 +36,8 @@ public static class RuleCatalog
         Create("PERF027", "Logging com custo evitável", RiskSeverity.High, "Observability", "Alta", "Pode formatar ou serializar mesmo quando o nível está desabilitado.", "O custo cresce com frequência e complexidade da mensagem.", "Usar logging estruturado, LoggerMessage e checagem condicional para trabalho caro.", "Permitir mensagem pré-construída, valor disponível ou baixa frequência.", "CA1848; " + Documentation, RulePhase.V1),
         Create("PERF028", "Recursos IDisposable não liberados", RiskSeverity.High, "I/O", "Média", "Pode reter handles, conexões e buffers.", "O custo cresce com operações e duração do processo.", "Usar using, await using ou ciclo de vida controlado.", "Permitir propriedade transferida ou ciclo de vida externo.", Documentation, RulePhase.V2),
         Create("PERF029", "Exceções como fluxo normal", RiskSeverity.High, "CPU", "Média", "Cria exceções e stack traces para falhas esperadas.", "O custo cresce com a frequência de falhas.", "Usar TryParse, TryGetValue ou resultado explícito.", "Permitir falha excepcional, rara ou exigida pelo contrato.", Documentation, RulePhase.V2),
-        Create("PERF030", "Reconstrução de objetos pesados invariantes", RiskSeverity.High, "Memory", "Baixa", "Repete inicialização, alocações e pressão sobre o GC.", "O custo cresce com a frequência de reconstrução.", "Compartilhar instâncias imutáveis ou cachear no escopo apropriado.", "Permitir estado variável, não thread-safe ou isolamento por operação.", Documentation, RulePhase.V3)
+        Create("PERF030", "Reconstrução de objetos pesados invariantes", RiskSeverity.High, "Memory", "Baixa", "Repete inicialização, alocações e pressão sobre o GC.", "O custo cresce com a frequência de reconstrução.", "Compartilhar instâncias imutáveis ou cachear no escopo apropriado.", "Permitir estado variável, não thread-safe ou isolamento por operação.", Documentation, RulePhase.V3),
+        Create("PERF100", "Custo interprocedural propagado", RiskSeverity.High, "Performance", "Média", "Pode propagar CPU, memória, I/O ou bloqueios por uma cadeia de chamadas e repetição.", "O impacto potencial depende do caminho de chamadas, da repetição e do volume de entrada.", "Revisar a operação custosa no ponto apropriado do fluxo e validar a alternativa com medição representativa.", "Não emitir quando o alvo, a repetição, a invariância ou o bloqueio não forem demonstráveis; desconhecidos permanecem explícitos.", DocumentationV4, RulePhase.V4, "[PERF100] Custo interprocedural propagado. Severidade: High. Categoria: Performance. Evidência: {0}. Dimensão: {1}. Cadeia: {2} -> {3}. Impacto: pode ampliar custo no fluxo analisado. Escalabilidade: depende de repetição, entrada e carga. Correção: revisar o ponto apropriado e validar com medição representativa. Exceções: alvos ou comportamentos desconhecidos não são tratados como custo zero. Confiança: Média. Exemplo: consulte a documentação V4. Referência: docs/csharp-performance-analyzer-2.md. Limitação: custo efetivo, frequência e ganho percentual não são medidos pela análise estática.")
     ];
 
     private static readonly RuleDefinition[] s_v1 =
@@ -55,10 +57,16 @@ public static class RuleCatalog
         s_all[10], s_all[29]
     ];
 
+    private static readonly RuleDefinition[] s_v4 =
+    [
+        s_all[30]
+    ];
+
     public static IReadOnlyList<RuleDefinition> All => s_all;
     public static IReadOnlyList<RuleDefinition> V1 => s_v1;
     public static IReadOnlyList<RuleDefinition> V2 => s_v2;
     public static IReadOnlyList<RuleDefinition> V3 => s_v3;
+    public static IReadOnlyList<RuleDefinition> V4 => s_v4;
 
     public static RuleDefinition Get(string id)
     {
@@ -82,8 +90,9 @@ public static class RuleCatalog
         string correction,
         string exceptions,
         string reference,
-        RulePhase phase)
+        RulePhase phase,
+        string? messageFormat = null)
     {
-        return new RuleDefinition(id, title, severity, category, confidence, impact, scalability, correction, exceptions, reference, phase);
+        return new RuleDefinition(id, title, severity, category, confidence, impact, scalability, correction, exceptions, reference, phase, messageFormat);
     }
 }

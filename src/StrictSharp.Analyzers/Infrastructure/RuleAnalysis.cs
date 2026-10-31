@@ -33,6 +33,11 @@ public static class RuleAnalysis
         context.ReportDiagnostic(CreateDiagnostic(rule, location));
     }
 
+    public static void Report(RuleDefinition rule, SyntaxNodeAnalysisContext context, Location location, params object[] messageArgs)
+    {
+        context.ReportDiagnostic(Diagnostic.Create(rule.Descriptor, location, messageArgs));
+    }
+
     public static bool IsTaskLike(ITypeSymbol? type)
     {
         return type is INamedTypeSymbol named
