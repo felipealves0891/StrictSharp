@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0",
+  "feature_id": "perf013-string-not-enumerable",
+  "review_id": "review-perf013-7cdb1b0-final",
+  "requirements": [
+    {
+      "id": "CON-001",
+      "linked_tasks": [
+        "TASK-001",
+        "TASK-002"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-001",
+      "linked_tasks": [
+        "TASK-001",
+        "TASK-002"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-002",
+      "linked_tasks": [
+        "TASK-001",
+        "TASK-002"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "FR-003",
+      "linked_tasks": [
+        "TASK-001",
+        "TASK-002"
+      ],
+      "appears_in_plan": true
+    },
+    {
+      "id": "NFR-001",
+      "linked_tasks": [
+        "TASK-001",
+        "TASK-002"
+      ],
+      "appears_in_plan": true
+    }
+  ],
+  "acceptance_criteria": [
+    {
+      "id": "AC-001",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-002",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-003",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-004",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    },
+    {
+      "id": "AC-005",
+      "appears_in_plan_or_tasks": true,
+      "validation_hint": true
+    }
+  ],
+  "task_ids": [
+    "TASK-001",
+    "TASK-002"
+  ],
+  "uncovered_requirements": [],
+  "uncovered_acceptance_criteria": [],
+  "result": "complete"
+}

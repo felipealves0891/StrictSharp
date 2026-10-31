@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "review_id": "review-perf013-7cdb1b0",
+  "feature_id": "perf013-string-not-enumerable",
+  "code_revision": "7cdb1b0c3e940eb4e2f5da45547a3b8064bb7973",
+  "base_ref": "",
+  "created_at": "2026-10-31T22:05:40.4547224Z",
+  "artifacts": {
+    "spec.md": {
+      "path": ".spectro\\features\\perf013-string-not-enumerable\\spec.md",
+      "sha256": "a970f412b3e5e00a0606f9d3627925e876ca7d395f4e8bd4a336100a4b95b9b1"
+    },
+    "clarifications.md": {
+      "path": ".spectro\\features\\perf013-string-not-enumerable\\clarifications.md",
+      "sha256": "c77a9efe7145948830e82f6f43b843fdb2356f6782082a1930afaa53a2f3c4cc"
+    },
+    "plan.md": {
+      "path": ".spectro\\features\\perf013-string-not-enumerable\\plan.md",
+      "sha256": "6f527f68d277c8343ce960e56eff58f605ade926a38f97cbef7c4d1fcbf6aef7"
+    },
+    "tasks.md": {
+      "path": ".spectro\\features\\perf013-string-not-enumerable\\tasks.md",
+      "sha256": "ae40cd25e4795ac9ec430ea39e591b5ba42c10768b64568b4d83003e3b4c85c6"
+    },
+    "gates.json": {
+      "path": ".spectro\\features\\perf013-string-not-enumerable\\gates.json",
+      "sha256": "a0bd121b27be90dd013b8c671dda3543393f35a00940a57301a488f4a53802f7"
+    },
+    "state.json": {
+      "path": ".spectro\\features\\perf013-string-not-enumerable\\state.json",
+      "sha256": "888a178c1dcdc535688c07a4c976e8056ca37bd6fb4c544025552d01218d2830"
+    }
+  }
+}

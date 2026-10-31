@@ -35,12 +35,21 @@ public sealed class Perf013Analyzer : RuleAnalyzerBase
     private static bool IsEnumeration(InvocationExpressionSyntax invocation, SemanticModel model, out ExpressionSyntax receiver)
     {
         receiver = null!;
-        if (invocation.Expression is not MemberAccessExpressionSyntax member
-            || !RuleAnalysis.IsEnumerable(model.GetTypeInfo(member.Expression).Type))
+        if (invocation.Expression is not MemberAccessExpressionSyntax member)
+            return false;
+
+        var receiverType = model.GetTypeInfo(member.Expression).Type;
+        if (!RuleAnalysis.IsEnumerable(receiverType))
             return false;
 
         var method = model.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
-        var name = method?.Name ?? member.Name.Identifier.Text;
+        var memberName = member.Name.Identifier.Text;
+        if (memberName == "Contains"
+            && RuleAnalysis.IsString(receiverType)
+            && (method is null || method.ContainingType.SpecialType == SpecialType.System_String))
+            return false;
+
+        var name = method?.Name ?? memberName;
         if (name is not ("Count" or "LongCount" or "Any" or "First" or "FirstOrDefault" or "Single"
             or "SingleOrDefault" or "Last" or "LastOrDefault" or "ToList" or "ToArray" or "ToDictionary"
             or "ToLookup" or "Sum" or "Average" or "Min" or "Max" or "Contains" or "ElementAt" or "ElementAtOrDefault"))
