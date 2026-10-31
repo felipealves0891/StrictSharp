@@ -24,7 +24,7 @@
     <RepositoryType>git</RepositoryType>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeFile>docs\README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -40,7 +40,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+    <None Include="..\..\README.md" Pack="true" PackagePath="docs\"/>
+    <None Include="..\..\docs\csharp-performance-analyzer.md" Pack="true" PackagePath="docs\"/>
+    <None Include="..\..\docs\csharp-performance-analyzer-2.md" Pack="true" PackagePath="docs\"/>
+    <None Include="..\..\docs\csharp-performance-analyzer-v4.md" Pack="true" PackagePath="docs\"/>
+    <None Include="..\..\docs\csharp-performance-analyzer-v5.md" Pack="true" PackagePath="docs\"/>
     <None Include=".nuspec">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
