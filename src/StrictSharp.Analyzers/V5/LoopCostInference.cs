@@ -15,10 +15,10 @@ public static class LoopCostInference
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var loops = node.DescendantNodes()
+        var loops = node.DescendantNodesAndSelf()
             .Where(IsLoop)
             .ToArray();
-        var hasSort = node.DescendantNodes()
+        var hasSort = node.DescendantNodesAndSelf()
             .OfType<InvocationExpressionSyntax>()
             .Any(IsKnownSort);
 

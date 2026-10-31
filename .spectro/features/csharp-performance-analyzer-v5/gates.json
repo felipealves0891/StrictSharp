@@ -1,18 +1,18 @@
 {
   "schema_version": "1.0",
   "feature_id": "csharp-performance-analyzer-v5",
-  "execution_id": "gate-20261031T150004Z",
+  "execution_id": "gate-20261031T151134Z",
   "project_root": "D:\\Felipe\\Repos\\Dotnet\\StrictSharp",
-  "code_revision": "d8932076fc1e7df168cf9898bbc58987f48c0d3d",
+  "code_revision": "d1c43178b4fc814079c51606bf9bf45b2c02ff8d",
   "config_hash": "sha256:43df27bfa7d9b1b56ada6e92b9310b2e79c2d5e89c4993ef4682f5c0e91d519a",
   "artifact_hashes": {
     "spec.md": "f40e72e5b5e68f9e5763e732834f44498c712e9fad4caed35e2151363f402581",
     "clarifications.md": "9e6f629ed7e3a05a03b25f826f1be631025d254c09b43745bb772f9c25b13abb",
     "plan.md": "e0868e2489fc73fc53ffeed0829c271ae1d59c80c34dfebd52b2b3ab09596b1e",
-    "tasks.md": "ff9ea48cdb1a01fc8b93459292674ef97a57c60322c8cfad85006c7ceef71959"
+    "tasks.md": "d7d58e6727c1f89718b1da7f20fa7e8c4400abf8484cb2136e72f6f11110632d"
   },
-  "started_at": "2026-10-31T15:00:04.281Z",
-  "duration_ms": 49055,
+  "started_at": "2026-10-31T15:11:34.888Z",
+  "duration_ms": 45167,
   "gates": [
     {
       "id": "GATE-001",
@@ -21,12 +21,12 @@
       "status": "passed",
       "command": "dotnet build --no-restore -v d",
       "exit_code": 0,
-      "duration_ms": 5990,
+      "duration_ms": 4992,
       "diagnostics": [],
       "evidence": [
-        ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T150004Z/evidence/01-build.log"
+        ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T151134Z/evidence/01-build.log"
       ],
-      "output_directory": ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T150004Z/build",
+      "output_directory": ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T151134Z/build",
       "output_files": [],
       "output_file_count": 0
     },
@@ -37,12 +37,12 @@
       "status": "passed",
       "command": "dotnet test --no-restore --no-build",
       "exit_code": 0,
-      "duration_ms": 10066,
+      "duration_ms": 9199,
       "diagnostics": [],
       "evidence": [
-        ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T150004Z/evidence/02-test.log"
+        ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T151134Z/evidence/02-test.log"
       ],
-      "output_directory": ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T150004Z/test",
+      "output_directory": ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T151134Z/test",
       "output_files": [],
       "output_file_count": 0
     },
@@ -53,12 +53,12 @@
       "status": "passed",
       "command": "dotnet list package --vulnerable",
       "exit_code": 0,
-      "duration_ms": 5126,
+      "duration_ms": 2841,
       "diagnostics": [],
       "evidence": [
-        ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T150004Z/evidence/03-security.log"
+        ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T151134Z/evidence/03-security.log"
       ],
-      "output_directory": ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T150004Z/security",
+      "output_directory": ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T151134Z/security",
       "output_files": [],
       "output_file_count": 0
     },
@@ -66,20 +66,18 @@
       "id": "GATE-004",
       "name": "coverage",
       "required": true,
-      "status": "failed",
+      "status": "passed",
       "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \".spectro/tools/coverage-gate.ps1\" -Project \".\" -BaseBranch \"origin/main\" -MinLineCoverage 90 -MinBranchCoverage 75 -MinNewLineCoverage 90 -MinNewBranchCoverage 85",
-      "exit_code": 1,
-      "duration_ms": 27815,
-      "diagnostics": [
-        "Executando: dotnet test . --collect:XPlat Code Coverage\r\n  Determinando os projetos a serem restaurados...\r\n  Todos os projetos estão atualizados para restauração.\r\n  StrictSharp.Analyzers -> D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\src\\StrictSharp.Analyzers\\bin\\Debug\\netstandard2.1\\StrictSharp.Analyzers.dll\r\n  StrictSharp.Analyzers.Tests -> D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\tests\\StrictSharp.Analyzers.Tests\\bin\\Debug\\net10.0\\StrictSharp.Analyzers.Tests.dll\r\nExecução de teste para D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\tests\\StrictSharp.Analyzers.Tests\\bin\\Debug\\net10.0\\StrictSharp.Analyzers.Tests.dll (.NETCoreApp,Version=v10.0)\r\n1 arquivos de teste no total corresponderam ao padrão especificado.\r\n\r\nAprovado!  – Com falha:     0, Aprovado:   273, Ignorado:     0, Total:   273, Duração: 7 s - StrictSharp.Analyzers.Tests.dll (net10.0)\r\n\r\nAnexos:\r\n  C:\\Users\\cfalv\\AppData\\Local\\Temp\\coverage-gate-dc99573a70874315bd437449a2ea3714\\cd718486-f951-4549-a644-917a5bf0ce35\\coverage.cobertura.xml\r\nRelat�rios: 1 | Linhas C# modificadas no Git: 4566 | Linhas instrumentadas modificadas: 1276\r\n\n=========== QUALITY GATE ===========\r\nLine Coverage            96,56% (min 90,00%) [PASS]\r\nBranch Coverage          84,99% (min 75,00%) [PASS]\r\nNew Line Coverage        95,53% (min 90,00%) [PASS]\r\nNew Branch Coverage      84,35% (min 85,00%) [FAIL]\r\n\nUncovered new branches\r\n  src/StrictSharp.Analyzers/Analyzers/Perf011Analyzer.cs:18 (8/10 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf011Analyzer.cs:43 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf011Analyzer.cs:53 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf030Analyzer.cs:41 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf100Analyzer.cs:40 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf100Analyzer.cs:56 (2/4 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf104Analyzer.cs:26 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:25 (5/6 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:34 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:38 (8/10 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:61 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:74 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:100 (2/4 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:105 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:120 (27/36 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:136 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:151 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:159 (2/4 branches covered)\r\n  src/StrictSharp.Analyzers/Analyzers/Perf107Analyzer.cs:168 (9/10 branches covered)\r\n  src/StrictSharp.Analyzers/Infrastructure/RuleAnalysis.cs:287 (21/32 branches covered)\r\n  src/StrictSharp.Analyzers/Infrastructure/RuleAnalysis.cs:294 (5/6 branches covered)\r\n  src/StrictSharp.Analyzers/Infrastructure/RuleAnalysis.cs:300 (5/6 branches covered)\r\n  src/StrictSharp.Analyzers/Infrastructure/RuleAnalysis.cs:304 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralEvidenceAnalyzer.cs:47 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralEvidenceAnalyzer.cs:76 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralEvidenceAnalyzer.cs:118 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralEvidenceAnalyzer.cs:128 (5/6 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralEvidenceAnalyzer.cs:130 (20/24 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralEvidenceAnalyzer.cs:191 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralGraphBuilder.cs:61 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralGraphBuilder.cs:83 (5/6 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralGraphBuilder.cs:110 (2/4 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralGraphBuilder.cs:113 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralGraphBuilder.cs:114 (15/18 branches covered)\r\n  src/StrictSharp.Analyzers/Interprocedural/InterproceduralGraphBuilder.cs:117 (29/34 branches covered)\r\n  src/StrictSharp.Analyzers/V5/AllocationPayloadInference.cs:54 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/V5/CostComparison.cs:24 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/V5/CostComparison.cs:27 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/V5/CostComparison.cs:30 (7/8 branches covered)\r\n  src/StrictSharp.Analyzers/V5/CostEvidence.cs:35 (4/6 branches covered)\r\n  src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:22 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:27 (2/4 branches covered)\r\n  src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:28 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:66 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:67 (0/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/InterproceduralCostInference.cs:70 (3/6 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:20 (2/4 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:23 (10/16 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:34 (5/6 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:35 (5/6 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:68 (7/10 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:71 (4/14 branches covered)\r\n  src/StrictSharp.Analyzers/V5/IoConcurrencyInference.cs:76 (17/32 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:72 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:123 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:127 (7/14 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:152 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:154 (5/10 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:168 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:188 (3/6 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:212 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:225 (3/4 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:229 (9/10 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:245 (1/2 branches covered)\r\n  src/StrictSharp.Analyzers/V5/LoopCostInference.cs:250 (1/2 branches covered)\r\nRESULTADO: false"
-      ],
+      "exit_code": 0,
+      "duration_ms": 28071,
+      "diagnostics": [],
       "evidence": [
-        ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T150004Z/evidence/04-coverage.log"
+        ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T151134Z/evidence/04-coverage.log"
       ],
-      "output_directory": ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T150004Z/coverage",
+      "output_directory": ".spectro/features/csharp-performance-analyzer-v5/outputs/gate-20261031T151134Z/coverage",
       "output_files": [],
       "output_file_count": 0
     }
   ],
-  "result": "failed"
+  "result": "passed"
 }

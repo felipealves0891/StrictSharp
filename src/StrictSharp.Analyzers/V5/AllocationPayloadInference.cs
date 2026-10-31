@@ -22,9 +22,11 @@ public static class AllocationPayloadInference
             var allocationCount = TryGetLoopMultiplier(allocation, model, out var multiplier)
                 ? KnownCount.Exact(multiplier)
                 : KnownCount.Unknown;
-            var totalPayload = payload.IsKnown && allocationCount.IsKnown
-                ? PayloadEstimate.Known(checked(payload.Bytes * allocationCount.Value))
-                : PayloadEstimate.Unknown;
+            var totalPayload = payload.IsKnown
+                && allocationCount.IsKnown
+                && (allocationCount.Value == 0 || payload.Bytes <= long.MaxValue / allocationCount.Value)
+                    ? PayloadEstimate.Known(payload.Bytes * allocationCount.Value)
+                    : PayloadEstimate.Unknown;
             var limitation = totalPayload.IsKnown
                 ? "Cabeçalhos, alinhamento, sobrevivência e pausas de GC não são calculados."
                 : "O tamanho ou a quantidade depende de entrada, runtime ou estado não resolvido.";

@@ -2,11 +2,11 @@
   "schema_version": "1.0",
   "feature_id": "csharp-performance-analyzer-v5",
   "current_phase": "implement",
-  "status": "blocked",
+  "status": "running",
   "phases": {
     "gates": {
-      "status": "failed",
-      "execution_id": "gate-20261031T150004Z",
+      "status": "invalidated",
+      "execution_id": "gate-20261031T151134Z",
       "report": ".spectro/features/csharp-performance-analyzer-v5/gates.json"
     }
   },
@@ -22,7 +22,8 @@
     "gate-20261031T143206Z",
     "gate-20261031T143403Z",
     "gate-20261031T144107Z",
-    "gate-20261031T150004Z"
+    "gate-20261031T150004Z",
+    "gate-20261031T151134Z"
   ],
   "last_failure": {
     "category": "implementation-defect",
@@ -36,7 +37,7 @@
     ],
     "detected_at": "2026-10-31T15:01:02.450Z"
   },
-  "last_execution_id": "gate-20261031T150004Z",
-  "updated_at": "2026-10-31T15:01:02.450Z",
-  "invalidation_reason": "Recovery invalidated evidence for gate-20261031T150004Z."
+  "last_execution_id": "gate-20261031T151134Z",
+  "updated_at": "2026-10-31T15:19:17.000Z",
+  "invalidation_reason": "Correções de FINDING-009 e FINDING-010 e sincronização das tarefas alteraram o código e os artefatos após gate-20261031T151134Z; gates formais devem ser renovados para a revisão atual."
 }

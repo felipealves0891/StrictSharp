@@ -100,6 +100,16 @@ public sealed class V5AnalyzerTests
     }
 
     [Fact]
+    public async Task Perf107ComparesLoopsUsedDirectlyAsConditionalBranches()
+    {
+        const string source = "class Sample { void M(bool flag) { if (flag) for (var i = 0; i < 10; i++) Process(); else for (var i = 0; i < 20; i++) Process(); } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Equal("PERF107", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
     public async Task Perf107IgnoresConditionalWithoutTwoLoopPaths()
     {
         const string source = "class Sample { void M(bool flag, int[] items) { if (flag) foreach (var item in items) _ = item; } }";
