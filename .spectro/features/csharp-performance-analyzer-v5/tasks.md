@@ -28,7 +28,7 @@
 
 - Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-007`, `TASK-008`, `TASK-009`, `TASK-REV-001`, `TASK-REV-002`, `TASK-REV-003`, `TASK-REV-004`, `TASK-REV-005`
 - Em andamento: `TASK-REV-006`, `TASK-REV-007` (correções e testes focados concluídos; aguardando gates formais na revisão commitada)
-- Bloqueada: `TASK-010` (medição local com `-AllowDirtyTree`: 273 testes; 96,56% de linhas, 85,21% de branches, 96,90% de linhas novas e 85,21% de branches novos; renovar os gates formais em árvore limpa após commit)
+- Bloqueada: `TASK-010` (gate `gate-20261031T150004Z`: build, testes e segurança passaram; cobertura falhou com 84,35% de branches novos para mínimo de 85%; limite de tentativas atingido. Correções e testes adicionais ainda precisam de nova execução formal)
 
 ## TASK-REV-001 - Remediate FINDING-001
 

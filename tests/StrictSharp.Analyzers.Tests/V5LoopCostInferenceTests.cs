@@ -152,6 +152,43 @@ public sealed class V5LoopCostInferenceTests
         Assert.False(LoopCostInference.TryGetKnownIterationCount(statement, model, out _));
     }
 
+    [Fact]
+    public void SupportsLongBoundsAndNegativeStartingValues()
+    {
+        var (method, model) = CompileMethod("void M() { for (long i = -5; i < 2; ++i) _ = i; }");
+        var statement = method
+            .DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ForStatementSyntax>()
+            .Single();
+
+        Assert.True(LoopCostInference.TryGetKnownIterationCount(statement, model, out var count));
+        Assert.Equal(7, count);
+    }
+
+    [Fact]
+    public void KeepsCountUnknownWhenIntBoundIsOutsideItsRange()
+    {
+        var (method, model) = CompileMethod("void M() { for (int i = 0; i < 2147483648; i++) _ = i; }");
+        var statement = method
+            .DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ForStatementSyntax>()
+            .Single();
+
+        Assert.False(LoopCostInference.TryGetKnownIterationCount(statement, model, out _));
+    }
+
+    [Fact]
+    public void KeepsCountUnknownWhenInitializerIsNotALiteral()
+    {
+        var (method, model) = CompileMethod("void M(int start) { for (var i = start; i < 10; i++) _ = i; }");
+        var statement = method
+            .DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ForStatementSyntax>()
+            .Single();
+
+        Assert.False(LoopCostInference.TryGetKnownIterationCount(statement, model, out _));
+    }
+
     private static (Microsoft.CodeAnalysis.SyntaxNode Method, Microsoft.CodeAnalysis.SemanticModel Model) CompileMethod(string source)
     {
         var tree = CSharpSyntaxTree.ParseText(

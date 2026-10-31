@@ -258,4 +258,34 @@ public sealed class V5AnalyzerTests
 
         Assert.Empty(diagnostics);
     }
+
+    [Fact]
+    public async Task Perf107IgnoresForeachWhenTheBodyUsesDifferentIterationVariables()
+    {
+        const string source = "using System.Collections.Generic; class Sample { void M(bool flag, IEnumerable<int> items) { if (flag) { foreach (var item in items) Process(item); } else { foreach (var item in items) Process(item); } } void Process(int value) { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf107ComparesDescendingForLoopsWithDifferentKnownCounts()
+    {
+        const string source = "class Sample { void M(bool flag) { if (flag) { for (var i = 10; i > 0; i--) Process(); } else { for (var i = 20; i > 0; i--) Process(); } } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Equal("PERF107", Assert.Single(diagnostics).Id);
+    }
+
+    [Fact]
+    public async Task Perf107IgnoresForLoopsWithInclusiveConditions()
+    {
+        const string source = "class Sample { void M(bool flag) { if (flag) { for (var i = 0; i <= 10; i++) Process(); } else { for (var i = 0; i <= 20; i++) Process(); } } void Process() { } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf107Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
 }

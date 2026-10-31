@@ -124,10 +124,7 @@ public sealed class Perf107Analyzer : RuleAnalyzerBase
             || firstCondition.Left is not IdentifierNameSyntax firstVariable
             || secondCondition.Left is not IdentifierNameSyntax secondVariable
             || firstVariable.Identifier.ValueText != secondVariable.Identifier.ValueText
-            || first.Declaration?.WithoutTrivia().ToString() != second.Declaration?.WithoutTrivia().ToString()
-            || first.Initializers.Count != second.Initializers.Count
-            || first.Initializers.Count == 1
-                && first.Initializers[0].WithoutTrivia().ToString() != second.Initializers[0].WithoutTrivia().ToString()
+            || !HaveComparableForInitializers(semanticModel, first, second, cancellationToken)
             || first.Incrementors.Count != 1
             || second.Incrementors.Count != 1
             || first.Incrementors[0].WithoutTrivia().ToString() != second.Incrementors[0].WithoutTrivia().ToString())
@@ -135,6 +132,43 @@ public sealed class Perf107Analyzer : RuleAnalyzerBase
 
         return LoopCostInference.TryGetKnownIterationCount(first, semanticModel, out _, cancellationToken)
             && LoopCostInference.TryGetKnownIterationCount(second, semanticModel, out _, cancellationToken);
+    }
+
+    private static bool HaveComparableForInitializers(
+        SemanticModel semanticModel,
+        ForStatementSyntax first,
+        ForStatementSyntax second,
+        CancellationToken cancellationToken)
+    {
+        if (first.Declaration is not null || second.Declaration is not null)
+        {
+            if (first.Declaration is not { } declaredFirst
+                || second.Declaration is not { } declaredSecond
+                || declaredFirst.Type.WithoutTrivia().ToString() != declaredSecond.Type.WithoutTrivia().ToString()
+                || declaredFirst.Variables.Count != 1
+                || declaredSecond.Variables.Count != 1
+                || declaredFirst.Variables[0].Identifier.ValueText != declaredSecond.Variables[0].Identifier.ValueText)
+                return false;
+
+            if (semanticModel.GetDeclaredSymbol(declaredFirst.Variables[0], cancellationToken) is not ILocalSymbol firstSymbol
+                || semanticModel.GetDeclaredSymbol(declaredSecond.Variables[0], cancellationToken) is not ILocalSymbol secondSymbol)
+                return false;
+
+            return SymbolEqualityComparer.Default.Equals(firstSymbol.Type, secondSymbol.Type);
+        }
+
+        if (first.Initializers.Count != second.Initializers.Count)
+            return false;
+
+        for (var index = 0; index < first.Initializers.Count; index++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (first.Initializers[index].WithoutTrivia().ToString()
+                != second.Initializers[index].WithoutTrivia().ToString())
+                return false;
+        }
+
+        return true;
     }
 
     private static bool HaveSameBoundExpression(
