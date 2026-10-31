@@ -8,7 +8,8 @@ public enum RulePhase
     V1,
     V2,
     V3,
-    V4
+    V4,
+    V5
 }
 
 public enum RiskSeverity
@@ -46,20 +47,36 @@ public readonly struct RuleDefinition
         Exceptions = exceptions;
         Reference = reference;
         Phase = phase;
-        var defaultMessageFormat = string.Join(
-            " ",
-            $"[{id}] {title}.",
-            $"Severidade: {severity}.",
-            $"Categoria: {category}.",
-            "Evidência: padrão estrutural identificado nesta localização.",
-            $"Impacto: {impact}",
-            $"Escalabilidade: {scalability}",
-            $"Correção: {correction}",
-            $"Exceções: {exceptions}",
-            $"Confiança: {confidence}.",
-            "Exemplo: consulte o exemplo correspondente na documentação da regra.",
-            $"Referência: {reference}.",
-            "Limitação: custo efetivo, frequência e ganho percentual não são medidos pela análise estática.");
+        var defaultMessageFormat = phase == RulePhase.V5
+            ? string.Join(
+                " ",
+                $"[{id}] {title}.",
+                $"Severidade: {severity}.",
+                $"Categoria: {category}.",
+                "Evidência: {0}",
+                "Dimensão: {1}.",
+                $"Impacto: {impact}",
+                $"Escalabilidade: {scalability}",
+                $"Correção: {correction}",
+                $"Exceções: {exceptions}",
+                $"Confiança: {confidence}.",
+                "Limitações: {2}.",
+                "Exemplo: consulte o exemplo correspondente na documentação da regra.",
+                $"Referência: {reference}.")
+            : string.Join(
+                " ",
+                $"[{id}] {title}.",
+                $"Severidade: {severity}.",
+                $"Categoria: {category}.",
+                "Evidência: padrão estrutural identificado nesta localização.",
+                $"Impacto: {impact}",
+                $"Escalabilidade: {scalability}",
+                $"Correção: {correction}",
+                $"Exceções: {exceptions}",
+                $"Confiança: {confidence}.",
+                "Exemplo: consulte o exemplo correspondente na documentação da regra.",
+                $"Referência: {reference}.",
+                "Limitação: custo efetivo, frequência e ganho percentual não são medidos pela análise estática.");
         Descriptor = new DiagnosticDescriptor(
             id,
             title,
@@ -88,6 +105,7 @@ public readonly struct RuleDefinition
     public bool EnabledInV1 => Phase == RulePhase.V1;
     public bool EnabledInV2 => Phase == RulePhase.V2;
     public bool EnabledInV4 => Phase == RulePhase.V4;
+    public bool EnabledInV5 => Phase == RulePhase.V5;
 
     private static DiagnosticSeverity ToDiagnosticSeverity(RiskSeverity severity)
     {
