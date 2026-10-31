@@ -108,3 +108,48 @@
 - **Conclusão:** build, testes, segurança, cobertura, custo, deduplicação e rastreabilidade passam com evidências correspondentes.
 - **Validação:** gates configurados, revisão de diff e confirmação de ausência de dependências/calls externos.
 - **Risco:** evidência invalidada por mudança posterior; renovar gates quando hashes/configuração mudarem.
+
+## TASK-REV-001 - Remediate FINDING-001
+
+- **Status:** pending
+- **Finding:** FINDING-001
+- **Severity:** High
+- **Return stage:** gates
+- **Description:** Versionar CoverageGapTests.cs e rerodar os gates para que a evidência corresponda à revisão registrada.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
+## TASK-REV-002 - Remediate FINDING-002
+
+- **Status:** pending
+- **Finding:** FINDING-002
+- **Severity:** Medium
+- **Return stage:** implement
+- **Description:** Atualizar evidence-v4-validation.md com os testes, métricas e execution ID da execução aprovada atual.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
+## TASK-REV-003 - Remediate FINDING-003
+
+- **Status:** pending
+- **Finding:** FINDING-003
+- **Severity:** Medium
+- **Return stage:** gates
+- **Description:** Corrigir a validação de rastreabilidade para reconhecer a tabela e os headings TASK usados nos artefatos e rerodar a validação.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
+## TASK-REV-004 - Remediate FINDING-004
+
+- **Status:** pending
+- **Finding:** FINDING-004
+- **Severity:** Low
+- **Return stage:** implement
+- **Description:** Simplificar ou reorganizar a detecção de reentrada do grafo e preservar teste de ciclo.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
