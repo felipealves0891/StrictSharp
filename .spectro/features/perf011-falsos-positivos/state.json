@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
   "feature_id": "perf011-falsos-positivos",
-  "current_phase": "waiting_input",
-  "status": "waiting_input",
+  "current_phase": "review",
+  "status": "completed",
   "phases": {
     "gates": {
-      "status": "failed",
-      "execution_id": "gate-20261104T204949Z",
+      "status": "completed",
+      "execution_id": "gate-20261104T205350Z",
       "report": ".spectro/features/perf011-falsos-positivos/gates.json"
     }
   },
@@ -30,7 +30,6 @@
     ],
     "detected_at": "2026-11-04T20:50:46.549Z"
   },
-  "last_execution_id": "gate-20261104T204949Z",
-  "updated_at": "2026-11-04T20:50:46.550Z",
-  "invalidation_reason": "Recovery invalidated evidence for gate-20261104T204949Z."
+  "last_execution_id": "gate-20261104T205350Z",
+  "updated_at": "2026-11-04T20:54:26.158Z"
 }
