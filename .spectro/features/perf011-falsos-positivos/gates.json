@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "feature_id": "perf011-falsos-positivos",
-  "execution_id": "gate-20261104T205350Z",
+  "execution_id": "gate-20261104T205729Z",
   "project_root": "D:\\Felipe\\Repos\\Dotnet\\StrictSharp",
-  "code_revision": "bc41bc175d9fe962bf340d602b865c6e91081ee5",
+  "code_revision": "78f400b54040bac898e5f99b0e20f7585a7e8ca9",
   "config_hash": "sha256:43df27bfa7d9b1b56ada6e92b9310b2e79c2d5e89c4993ef4682f5c0e91d519a",
   "artifact_hashes": {
     "spec.md": "12988456fb67dac40063250c8e087b4f335be3324443abbb71991741c036cade",
@@ -11,8 +11,8 @@
     "plan.md": "14c5bcb9bad910204d829be7c2785255cc1bf74063f7f8cee5c2442e52727d02",
     "tasks.md": "6f629509a596dd2008fce831e64791cdf9d63c2c2f7a4f756aeb94a16d54b994"
   },
-  "started_at": "2026-11-04T20:53:50.116Z",
-  "duration_ms": 36039,
+  "started_at": "2026-11-04T20:57:29.431Z",
+  "duration_ms": 37824,
   "gates": [
     {
       "id": "GATE-001",
@@ -21,12 +21,12 @@
       "status": "passed",
       "command": "dotnet build --no-restore -v d",
       "exit_code": 0,
-      "duration_ms": 5263,
+      "duration_ms": 6566,
       "diagnostics": [],
       "evidence": [
-        ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205350Z/evidence/01-build.log"
+        ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205729Z/evidence/01-build.log"
       ],
-      "output_directory": ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205350Z/build",
+      "output_directory": ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205729Z/build",
       "output_files": [],
       "output_file_count": 0
     },
@@ -37,12 +37,12 @@
       "status": "passed",
       "command": "dotnet test --no-restore --no-build",
       "exit_code": 0,
-      "duration_ms": 10727,
+      "duration_ms": 11450,
       "diagnostics": [],
       "evidence": [
-        ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205350Z/evidence/02-test.log"
+        ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205729Z/evidence/02-test.log"
       ],
-      "output_directory": ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205350Z/test",
+      "output_directory": ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205729Z/test",
       "output_files": [],
       "output_file_count": 0
     },
@@ -53,12 +53,12 @@
       "status": "passed",
       "command": "dotnet list package --vulnerable",
       "exit_code": 0,
-      "duration_ms": 2759,
+      "duration_ms": 2806,
       "diagnostics": [],
       "evidence": [
-        ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205350Z/evidence/03-security.log"
+        ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205729Z/evidence/03-security.log"
       ],
-      "output_directory": ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205350Z/security",
+      "output_directory": ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205729Z/security",
       "output_files": [],
       "output_file_count": 0
     },
@@ -69,12 +69,12 @@
       "status": "passed",
       "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \".spectro/tools/coverage-gate.ps1\" -Project \".\" -BaseBranch \"origin/main\" -MinLineCoverage 90 -MinBranchCoverage 75 -MinNewLineCoverage 90 -MinNewBranchCoverage 85",
       "exit_code": 0,
-      "duration_ms": 17233,
+      "duration_ms": 16924,
       "diagnostics": [],
       "evidence": [
-        ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205350Z/evidence/04-coverage.log"
+        ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205729Z/evidence/04-coverage.log"
       ],
-      "output_directory": ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205350Z/coverage",
+      "output_directory": ".spectro/features/perf011-falsos-positivos/outputs/gate-20261104T205729Z/coverage",
       "output_files": [],
       "output_file_count": 0
     }
