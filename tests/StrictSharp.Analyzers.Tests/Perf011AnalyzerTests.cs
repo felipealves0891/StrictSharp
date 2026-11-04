@@ -284,8 +284,13 @@ public sealed class Perf011AnalyzerTests
 
                 public void Dispose()
                 {
+                    ReleaseMarker();
                     _values.Clear();
                 }
+
+                private static void ReleaseMarker() { }
+
+                private void Helper() { }
             }
             """;
 
@@ -336,6 +341,38 @@ public sealed class Perf011AnalyzerTests
             """;
 
         Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf011ReportsWhenBoundConditionIsNotProvable()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                private readonly List<string> _values = new();
+
+                void Run(string[] values, int limit)
+                {
+                    foreach (var value in values)
+                    {
+                        if (true)
+                        {
+                            if (_values.Count == 4)
+                                _values.Add(value);
+
+                            if (_values.Count < limit)
+                                _values.Add(value);
+                        }
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer());
+
+        Assert.Equal(2, diagnostics.Length);
+        Assert.All(diagnostics, diagnostic => Assert.Equal("PERF011", diagnostic.Id));
     }
 
     [Fact]
