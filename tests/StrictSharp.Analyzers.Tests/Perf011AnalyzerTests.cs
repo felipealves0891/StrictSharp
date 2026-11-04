@@ -397,4 +397,225 @@ public sealed class Perf011AnalyzerTests
 
         Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
     }
+
+    [Fact]
+    public async Task Perf011StaysSilentForLocallyCreatedOwnerWithoutEscape()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Holder
+            {
+                internal readonly List<string> Values = new();
+            }
+
+            class Sample
+            {
+                void Run(string[] values)
+                {
+                    var holder = new Holder();
+                    foreach (var value in values)
+                        holder.Values.Add(value);
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf011ReportsWhenLocallyCreatedOwnerEscapesToStaticOwner()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Holder
+            {
+                internal readonly List<string> Values = new();
+            }
+
+            static class Registry
+            {
+                public static void Register(Holder holder) { }
+            }
+
+            class Sample
+            {
+                void Run(string[] values)
+                {
+                    var holder = new Holder();
+                    foreach (var value in values)
+                        holder.Values.Add(value);
+
+                    Registry.Register(holder);
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer());
+
+        Assert.Single(diagnostics);
+        Assert.Equal("PERF011", diagnostics[0].Id);
+    }
+
+    [Fact]
+    public async Task Perf011StaysSilentWhenOwnerEscapeCannotBeResolved()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Holder
+            {
+                internal readonly List<string> Values = new();
+            }
+
+            class Sample
+            {
+                private void Forward(Holder holder) { }
+
+                void Run(string[] values)
+                {
+                    var holder = new Holder();
+                    foreach (var value in values)
+                        holder.Values.Add(value);
+
+                    Forward(holder);
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf011ReportsWhenLocallyCreatedOwnerIsReturned()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Holder
+            {
+                internal readonly List<string> Values = new();
+            }
+
+            class Sample
+            {
+                Holder Run(string[] values)
+                {
+                    var holder = new Holder();
+                    foreach (var value in values)
+                        holder.Values.Add(value);
+
+                    return holder;
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer());
+
+        Assert.Single(diagnostics);
+        Assert.Equal("PERF011", diagnostics[0].Id);
+    }
+
+    [Fact]
+    public async Task Perf011ReportsWhenLocallyCreatedOwnerIsStoredInStaticField()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Holder
+            {
+                internal readonly List<string> Values = new();
+            }
+
+            class Sample
+            {
+                private static Holder? _current;
+
+                void Run(string[] values)
+                {
+                    var holder = new Holder();
+                    foreach (var value in values)
+                        holder.Values.Add(value);
+
+                    _current = holder;
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer());
+
+        Assert.Single(diagnostics);
+        Assert.Equal("PERF011", diagnostics[0].Id);
+    }
+
+    [Fact]
+    public async Task Perf011StaysSilentWhenOwnerLifetimeIsUnknown()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Holder
+            {
+                internal readonly List<string> Values = new();
+            }
+
+            class Sample
+            {
+                void Run(Holder holder, string[] values)
+                {
+                    foreach (var value in values)
+                        holder.Values.Add(value);
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf011StaysSilentForParenthesizedTransientOwner()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Holder
+            {
+                internal readonly List<string> Values = new();
+            }
+
+            class Sample
+            {
+                void Run(string[] values)
+                {
+                    var holder = new Holder();
+                    foreach (var value in values)
+                        (holder).Values.Add(value);
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf011StaysSilentWhenOwnerIsAssignedToAnInstanceField()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Holder
+            {
+                internal readonly List<string> Values = new();
+            }
+
+            class Sample
+            {
+                private Holder? _current;
+
+                void Run(string[] values)
+                {
+                    var holder = new Holder();
+                    foreach (var value in values)
+                        holder.Values.Add(value);
+
+                    _current = holder;
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
 }

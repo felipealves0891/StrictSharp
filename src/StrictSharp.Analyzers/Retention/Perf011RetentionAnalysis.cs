@@ -12,10 +12,12 @@ internal static class Perf011RetentionAnalysis
     {
         if (invocation.Expression is not MemberAccessExpressionSyntax member
             || member.Name.Identifier.ValueText is not ("Add" or "AddRange" or "Subscribe")
-            || member.Expression is not IdentifierNameSyntax receiver
-            || model.GetSymbolInfo(receiver).Symbol is not IFieldSymbol field
+            || GetField(member, model) is not { } field
             || !IsRetainingOperation(invocation, field, model)
             || !RuleAnalysis.IsInsideLoop(invocation))
+            return false;
+
+        if (IsTransientOwnerWithoutEscape(member, invocation, model))
             return false;
 
         if (HasReleaseOperation(invocation, field, model)
@@ -23,6 +25,109 @@ internal static class Perf011RetentionAnalysis
             return false;
 
         return true;
+    }
+
+    private static IFieldSymbol? GetField(
+        MemberAccessExpressionSyntax member,
+        SemanticModel model)
+    {
+        return model.GetSymbolInfo(member.Expression).Symbol as IFieldSymbol;
+    }
+
+    private static bool IsTransientOwnerWithoutEscape(
+        MemberAccessExpressionSyntax member,
+        InvocationExpressionSyntax invocation,
+        SemanticModel model)
+    {
+        if (member.Expression is not ExpressionSyntax ownerExpression
+            || GetRootIdentifier(ownerExpression) is not { } root)
+            return false;
+
+        var ownerSymbol = model.GetSymbolInfo(root).Symbol;
+        if (ownerSymbol is not ILocalSymbol owner)
+            return ownerSymbol is IParameterSymbol;
+
+        if (!IsCreatedLocally(owner, model))
+            return true;
+
+        var containingMethod = invocation.Ancestors().OfType<BaseMethodDeclarationSyntax>().FirstOrDefault();
+        if (containingMethod is null)
+            return false;
+
+        var evidence = ClassifyOwnerUses(containingMethod, owner, invocation, model);
+        return evidence != OwnerEscapeEvidence.LongLivedEscape;
+    }
+
+    private static IdentifierNameSyntax? GetRootIdentifier(ExpressionSyntax expression)
+    {
+        while (true)
+        {
+            switch (expression)
+            {
+                case IdentifierNameSyntax identifier:
+                    return identifier;
+                case MemberAccessExpressionSyntax member:
+                    expression = member.Expression;
+                    continue;
+                case ParenthesizedExpressionSyntax parenthesized:
+                    expression = parenthesized.Expression;
+                    continue;
+                default:
+                    return null;
+            }
+        }
+    }
+
+    private static bool IsCreatedLocally(ILocalSymbol owner, SemanticModel model)
+    {
+        var declaration = owner.DeclaringSyntaxReferences.FirstOrDefault()?.GetSyntax() as VariableDeclaratorSyntax;
+        return declaration?.Initializer?.Value is ObjectCreationExpressionSyntax;
+    }
+
+    private static OwnerEscapeEvidence ClassifyOwnerUses(
+        BaseMethodDeclarationSyntax containingMethod,
+        ILocalSymbol owner,
+        InvocationExpressionSyntax currentInvocation,
+        SemanticModel model)
+    {
+        var evidence = OwnerEscapeEvidence.NoEscape;
+        foreach (var identifier in containingMethod.DescendantNodes().OfType<IdentifierNameSyntax>())
+        {
+            if (!SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(identifier).Symbol, owner)
+                || identifier == GetRootIdentifier(((MemberAccessExpressionSyntax)currentInvocation.Expression).Expression))
+                continue;
+
+            if (IsLongLivedEscape(identifier, model))
+                return OwnerEscapeEvidence.LongLivedEscape;
+
+            evidence = OwnerEscapeEvidence.UnknownEscape;
+        }
+
+        return evidence;
+    }
+
+    private static bool IsLongLivedEscape(IdentifierNameSyntax identifier, SemanticModel model)
+    {
+        if (identifier.Parent is ReturnStatementSyntax)
+            return true;
+
+        if (identifier.Parent is ArgumentSyntax
+            && identifier.Parent.Parent?.Parent is InvocationExpressionSyntax invocation)
+            return model.GetSymbolInfo(invocation).Symbol is IMethodSymbol method
+                && method.ContainingType?.IsStatic == true;
+
+        if (identifier.Parent is AssignmentExpressionSyntax assignment
+            && model.GetSymbolInfo(assignment.Left).Symbol is IFieldSymbol field)
+            return field.IsStatic;
+
+        return identifier.Ancestors().Any(node => node is AnonymousFunctionExpressionSyntax);
+    }
+
+    private enum OwnerEscapeEvidence
+    {
+        NoEscape,
+        UnknownEscape,
+        LongLivedEscape
     }
 
     private static bool IsRetainingOperation(
