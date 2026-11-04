@@ -5,6 +5,7 @@ public static class RuleCatalog
     private const string Documentation = "docs/csharp-performance-analyzer.md";
     private const string DocumentationV4 = "docs/csharp-performance-analyzer-v4.md";
     private const string DocumentationV5 = "docs/csharp-performance-analyzer-v5.md";
+    private const string DocumentationLifecycle = "docs/csharp-performance-analyzer-life-cycle.md";
 
     private static readonly RuleDefinition[] s_all =
     [
@@ -45,7 +46,12 @@ public static class RuleCatalog
         Create("PERF104", "Trabalho amplificado por repetição", RiskSeverity.High, "Repetition", "Média", "Pode repetir uma operação ao longo de loops ou cadeias de chamadas.", "Multiplicadores conhecidos são apresentados por caminho; fronteiras desconhecidas permanecem explícitas.", "Revisar invariantes e o ponto de execução da operação repetida.", "Não emitir multiplicador exato quando o limite depender de entrada ou runtime não resolvido.", DocumentationV5, RulePhase.V5),
         Create("PERF105", "Operação de I/O repetida", RiskSeverity.High, "I/O", "Média", "Pode repetir operações externas e ampliar consumo de recursos ou espera.", "A análise informa quantidade estrutural conhecida, não duração ou latência.", "Revisar batching, cache, streaming ou posição da operação no fluxo.", "Não inferir disponibilidade, volume transferido ou tempo de resposta.", DocumentationV5, RulePhase.V5),
         Create("PERF106", "Concorrência estruturalmente amplificada", RiskSeverity.High, "Concurrency", "Média", "Pode aumentar tarefas, filas, bloqueios ou coordenação concorrente.", "Limites estruturais conhecidos são separados da capacidade efetiva do runtime.", "Revisar limites, filas e ciclo de vida das tarefas antes de alterar a concorrência.", "Não inferir throughput, execução simultânea efetiva ou capacidade do runtime.", DocumentationV5, RulePhase.V5),
-        Create("PERF107", "Comparação estrutural de alternativas", RiskSeverity.High, "Performance", "Média", "Pode evidenciar uma alternativa com menor trabalho estrutural conhecido.", "A comparação limita-se a Big-O e contagens demonstráveis, sem percentual de ganho.", "Validar a alternativa com medição representativa antes de adotá-la.", "Não emitir comparação quando a equivalência semântica ou a forma estrutural não puder ser demonstrada.", DocumentationV5, RulePhase.V5)
+        Create("PERF107", "Comparação estrutural de alternativas", RiskSeverity.High, "Performance", "Média", "Pode evidenciar uma alternativa com menor trabalho estrutural conhecido.", "A comparação limita-se a Big-O e contagens demonstráveis, sem percentual de ganho.", "Validar a alternativa com medição representativa antes de adotá-la.", "Não emitir comparação quando a equivalência semântica ou a forma estrutural não puder ser demonstrada.", DocumentationV5, RulePhase.V5),
+        Create("PERF108", "Espera ativa em ciclo de serviço", RiskSeverity.High, "Concurrency", "Média", "Pode consumir CPU continuamente quando não há trabalho disponível.", "O risco cresce com a duração do serviço e a frequência das consultas.", "Usar espera, sinalização ou mecanismo de notificação apropriado.", "Não emitir quando houver espera temporal, espera por evento ou sincronização observável.", DocumentationLifecycle, RulePhase.V4, "[PERF108] Espera ativa em ciclo de serviço. Unidade de custo: {0}."),
+        Create("PERF109", "Trabalho repetido entre ciclos de serviço", RiskSeverity.High, "Performance", "Média", "Pode repetir materializações em cada ciclo.", "O custo cresce com a quantidade de ciclos e o volume processado.", "Revisar materialização e o ponto da operação no fluxo.", "Não emitir para alocação isolada sem materialização ou evidência de redundância.", DocumentationLifecycle, RulePhase.V4, "[PERF109] Trabalho repetido entre ciclos de serviço. Unidade de custo: {0}."),
+        Create("PERF110", "Operação bloqueante em ciclo de serviço", RiskSeverity.Critical, "Concurrency", "Média", "Pode manter threads bloqueadas durante a vida do serviço.", "O risco cresce com a duração da espera e a concorrência.", "Propagar async ou limitar a região de bloqueio quando a semântica permitir.", "Não emitir para espera assíncrona ou operação síncrona deliberada e delimitada.", DocumentationLifecycle, RulePhase.V4, "[PERF110] Operação bloqueante em ciclo de serviço. Unidade de custo: {0}."),
+        Create("PERF111", "Paralelismo crescente entre ciclos", RiskSeverity.Critical, "Concurrency", "Média", "Pode acumular tarefas e pressionar filas, memória e coordenação.", "O risco cresce com a frequência dos ciclos e o número de tarefas não concluídas.", "Limitar concorrência e aguardar ou drenar o trabalho conforme o contrato.", "Não emitir quando houver limite e coordenação observáveis.", DocumentationLifecycle, RulePhase.V4, "[PERF111] Paralelismo crescente entre ciclos. Unidade de custo: {0}."),
+        Create("PERF112", "Encerramento ineficiente de ciclo de serviço", RiskSeverity.Medium, "Concurrency", "Média", "Pode atrasar o encerramento do serviço e a liberação de recursos.", "O impacto depende do caminho de cancelamento e da duração da espera.", "Propagar o token e permitir que esperas e operações terminem com cancelamento.", "Não emitir quando o ciclo e as esperas observáveis respeitarem o cancelamento.", DocumentationLifecycle, RulePhase.V4, "[PERF112] Encerramento ineficiente de ciclo de serviço. Unidade de custo: {0}.")
     ];
 
     private static readonly RuleDefinition[] s_v1 =
@@ -67,7 +73,7 @@ public static class RuleCatalog
 
     private static readonly RuleDefinition[] s_v4 =
     [
-        s_all[30]
+        s_all[30], s_all[38], s_all[39], s_all[40], s_all[41], s_all[42]
     ];
 
     private static readonly RuleDefinition[] s_v5 =

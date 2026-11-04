@@ -10,8 +10,8 @@ public sealed class RuleCatalogTests
     {
         var rules = RuleCatalog.All;
 
-        Assert.Equal(38, rules.Count);
-        Assert.Equal(38, rules.Select(rule => rule.Id).Distinct(StringComparer.Ordinal).Count());
+        Assert.Equal(43, rules.Count);
+        Assert.Equal(43, rules.Select(rule => rule.Id).Distinct(StringComparer.Ordinal).Count());
         var v1 = 0;
         var v2 = 0;
         var v3 = 0;
@@ -42,7 +42,7 @@ public sealed class RuleCatalogTests
         Assert.Equal(15, v1);
         Assert.Equal(13, v2);
         Assert.Equal(2, v3);
-        Assert.Equal(1, v4);
+        Assert.Equal(6, v4);
         Assert.Equal(7, v5);
     }
 
@@ -82,9 +82,9 @@ public sealed class RuleCatalogTests
     }
 
     [Fact]
-    public void V4ContainsExactlyPerf100WithWarningSeverityAndPerformanceCategory()
+    public void V4ContainsPerf100AndLifecycleRulesWithApprovedMetadata()
     {
-        var rule = Assert.Single(RuleCatalog.V4);
+        var rule = Assert.Single(RuleCatalog.V4, item => item.Id == "PERF100");
 
         Assert.Equal("PERF100", rule.Id);
         Assert.Equal(RulePhase.V4, rule.Phase);
@@ -92,6 +92,14 @@ public sealed class RuleCatalogTests
         Assert.Equal("Performance", rule.Category);
         Assert.Equal(Microsoft.CodeAnalysis.DiagnosticSeverity.Warning, rule.Descriptor.DefaultSeverity);
         Assert.True(rule.EnabledInV4);
+
+        Assert.Equal(new[] { "PERF100", "PERF108", "PERF109", "PERF110", "PERF111", "PERF112" },
+            RuleCatalog.V4.Select(item => item.Id));
+        Assert.Equal(RiskSeverity.High, RuleCatalog.Get("PERF108").Severity);
+        Assert.Equal(RiskSeverity.High, RuleCatalog.Get("PERF109").Severity);
+        Assert.Equal(RiskSeverity.Critical, RuleCatalog.Get("PERF110").Severity);
+        Assert.Equal(RiskSeverity.Critical, RuleCatalog.Get("PERF111").Severity);
+        Assert.Equal(RiskSeverity.Medium, RuleCatalog.Get("PERF112").Severity);
     }
 
     [Fact]

@@ -482,3 +482,4 @@ $RECYCLE.BIN/
 *.swp
 
 .vscode
+.spectro/features/**/reviews/**/diff.patch
