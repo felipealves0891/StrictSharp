@@ -222,4 +222,179 @@ public sealed class Perf011AnalyzerTests
 
         Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
     }
+
+    [Fact]
+    public async Task Perf011StaysSilentForEnumerableWithoutRetainingOperation()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                private readonly IEnumerable<string> _values = new List<string>();
+
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        _values.GetEnumerator();
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf011ReportsWhenListCapacityIsOnlyAnInitialCapacity()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                private readonly List<string> _values = new(4);
+
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        _values.Add(value);
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer());
+
+        Assert.Single(diagnostics);
+        Assert.Equal("PERF011", diagnostics[0].Id);
+    }
+
+    [Fact]
+    public async Task Perf011StaysSilentWhenOwnerDisposesAndClearsCollection()
+    {
+        const string source = """
+            using System;
+            using System.Collections.Generic;
+            class Sample : IDisposable
+            {
+                private readonly List<string> _values = new();
+
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        _values.Add(value);
+                }
+
+                public void Dispose()
+                {
+                    ReleaseMarker();
+                    _values.Clear();
+                }
+
+                private static void ReleaseMarker() { }
+
+                private void Helper() { }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf011StaysSilentWhenInsertionHasAnExplicitBound()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                private readonly List<string> _values = new();
+
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                    {
+                        if (_values.Count < 4)
+                            _values.Add(value);
+                    }
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf011StaysSilentWhenInsertionHasAnInclusiveExplicitBound()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                private readonly List<string> _values = new();
+
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                    {
+                        if (_values.Count <= 4)
+                            _values.Add(value);
+                    }
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf011ReportsWhenBoundConditionIsNotProvable()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                private readonly List<string> _values = new();
+
+                void Run(string[] values, int limit)
+                {
+                    foreach (var value in values)
+                    {
+                        if (true)
+                        {
+                            if (_values.Count == 4)
+                                _values.Add(value);
+
+                            if (_values.Count < limit)
+                                _values.Add(value);
+                        }
+                    }
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer());
+
+        Assert.Equal(2, diagnostics.Length);
+        Assert.All(diagnostics, diagnostic => Assert.Equal("PERF011", diagnostic.Id));
+    }
+
+    [Fact]
+    public async Task Perf011StaysSilentForPropertyWithUnresolvedOwnership()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                private readonly ICollection<string> _values = new List<string>();
+                private ICollection<string> Values => GetValues();
+
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        Values.Add(value);
+                }
+
+                private static ICollection<string> GetValues() => new List<string>();
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
 }
