@@ -316,6 +316,29 @@ public sealed class Perf011AnalyzerTests
     }
 
     [Fact]
+    public async Task Perf011StaysSilentWhenInsertionHasAnInclusiveExplicitBound()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Sample
+            {
+                private readonly List<string> _values = new();
+
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                    {
+                        if (_values.Count <= 4)
+                            _values.Add(value);
+                    }
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
     public async Task Perf011StaysSilentForPropertyWithUnresolvedOwnership()
     {
         const string source = """
