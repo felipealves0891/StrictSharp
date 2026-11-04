@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "feature_id": "csharp-performance-analyzer-life-cycle",
+  "current_phase": "review",
+  "status": "completed",
+  "phases": {
+    "gates": {
+      "status": "completed",
+      "execution_id": "gate-20261103T235049Z",
+      "report": ".spectro/features/csharp-performance-analyzer-life-cycle/gates.json"
+    }
+  },
+  "attempts": {
+    "needs-human-review:GATE-004": 1,
+    "test-defect:GATE-004": 2,
+    "implementation-defect:GATE-004": 1,
+    "environment-failure:GATE-004": 1
+  },
+  "invalidated_executions": [
+    "gate-20261103T190132Z",
+    "gate-20261103T190533Z",
+    "gate-20261103T201517Z",
+    "gate-20261103T221004Z",
+    "gate-20261103T222430Z"
+  ],
+  "last_failure": {
+    "category": "environment-failure",
+    "stage": "gates",
+    "execution_id": "gate-20261103T222430Z",
+    "gate_ids": [
+      "GATE-004"
+    ],
+    "diagnostics": [
+      "coverage: Executando: dotnet test . --collect:XPlat Code Coverage\r\n  Determinando os projetos a serem restaurados...\r\n  Todos os projetos estão atualizados para restauração.\r\n  StrictSharp.Analyzers -> D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\src\\StrictSharp.Analyzers\\bin\\Debug\\netstandard2.1\\StrictSharp.Analyzers.dll\r\n  StrictSharp.Analyzers.Tests -> D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\tests\\StrictSharp.Analyzers.Tests\\bin\\Debug\\net10.0\\StrictSharp.Analyzers.Tests.dll\r\nExecução de teste para D:\\Felipe\\Repos\\Dotnet\\StrictSharp\\tests\\StrictSharp.Analyzers.Tests\\bin\\Debug\\net10.0\\StrictSharp.Analyzers.Tests.dll (.NETCoreApp,Version=v10.0)\r\n1 arquivos de teste no total corresponderam ao padrão especificado."
+    ],
+    "detected_at": "2026-11-03T22:41:01.698Z"
+  },
+  "last_execution_id": "gate-20261103T235049Z",
+  "updated_at": "2026-11-03T23:59:05.374Z"
+}

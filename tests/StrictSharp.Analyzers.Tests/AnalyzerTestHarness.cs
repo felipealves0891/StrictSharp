@@ -11,6 +11,13 @@ internal static class AnalyzerTestHarness
         string source,
         DiagnosticAnalyzer analyzer)
     {
+        return await AnalyzeAsync(source, ImmutableArray.Create(analyzer));
+    }
+
+    public static async Task<ImmutableArray<Diagnostic>> AnalyzeAsync(
+        string source,
+        ImmutableArray<DiagnosticAnalyzer> analyzers)
+    {
         var tree = CSharpSyntaxTree.ParseText(
             source,
             new CSharpParseOptions(LanguageVersion.CSharp14));
@@ -31,7 +38,7 @@ internal static class AnalyzerTestHarness
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
         return await compilation
-            .WithAnalyzers(ImmutableArray.Create(analyzer))
+            .WithAnalyzers(analyzers)
             .GetAnalyzerDiagnosticsAsync();
     }
 }

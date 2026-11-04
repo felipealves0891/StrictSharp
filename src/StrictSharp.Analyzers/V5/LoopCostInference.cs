@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using StrictSharp.Analyzers.Lifecycle;
 using System.Globalization;
 using System.Collections.Immutable;
 
@@ -17,6 +18,8 @@ public static class LoopCostInference
 
         var loops = node.DescendantNodesAndSelf()
             .Where(IsLoop)
+            .Where(loop => semanticModel is null
+                || !LifecycleAnalysis.IsServiceLifecycleLoop(loop, semanticModel, cancellationToken))
             .ToArray();
         var hasSort = node.DescendantNodesAndSelf()
             .OfType<InvocationExpressionSyntax>()

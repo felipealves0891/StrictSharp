@@ -45,6 +45,7 @@
     <None Include="..\..\docs\csharp-performance-analyzer-2.md" Pack="true" PackagePath="docs\"/>
     <None Include="..\..\docs\csharp-performance-analyzer-v4.md" Pack="true" PackagePath="docs\"/>
     <None Include="..\..\docs\csharp-performance-analyzer-v5.md" Pack="true" PackagePath="docs\"/>
+    <None Include="..\..\docs\csharp-performance-analyzer-life-cycle.md" Pack="true" PackagePath="docs\"/>
     <None Include=".nuspec">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

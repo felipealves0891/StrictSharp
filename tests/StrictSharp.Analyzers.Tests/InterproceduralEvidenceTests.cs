@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using StrictSharp.Analyzers.Interprocedural;
+using StrictSharp.Analyzers.Lifecycle;
 using StrictSharp.Analyzers.V5;
 using Xunit;
 
@@ -80,6 +81,39 @@ public sealed class InterproceduralEvidenceTests
     }
 
     [Fact]
+    public void PropagatesLifecycleContextToKnownCallEvidence()
+    {
+        const string source = """
+            using System.Threading;
+            using System.Threading.Tasks;
+            class Sample
+            {
+                async Task Root(CancellationToken token)
+                {
+                    while (true)
+                    {
+                        await channel.ReadAsync(token);
+                        Work();
+                    }
+                }
+
+                void Work() { _ = new byte[8]; }
+                Channel channel = new();
+            }
+            class Channel { public Task<object> ReadAsync(CancellationToken token) => Task.FromResult<object>(null); }
+            """;
+        var compilation = CreateCompilation(source);
+        var evidence = InterproceduralEvidenceAnalyzer.Analyze(
+            compilation,
+            InterproceduralGraphBuilder.Build(compilation, GetMethod(compilation, "Root"), CancellationToken.None),
+            CancellationToken.None);
+
+        Assert.Contains(evidence, item =>
+            item.Target?.Name == "Work"
+            && item.ContextKind == LifecycleExecutionContextKind.EventDriven);
+    }
+
+    [Fact]
     public void PropagatesKnownLoopMultiplierToV5CostEvidence()
     {
         const string source = "class Sample { void Root() { for (var i = 0; i < 5; i++) Work(); } void Work() { _ = new byte[8]; } }";
@@ -115,7 +149,8 @@ public sealed class InterproceduralEvidenceTests
             MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(Enumerable).Assembly.Location),
             MetadataReference.CreateFromFile(typeof(List<>).Assembly.Location),
-            MetadataReference.CreateFromFile(typeof(Thread).Assembly.Location)
+            MetadataReference.CreateFromFile(typeof(Thread).Assembly.Location),
+            MetadataReference.CreateFromFile(typeof(Task).Assembly.Location)
         };
         return CSharpCompilation.Create(
             "InterproceduralEvidenceTests",
