@@ -73,15 +73,15 @@
 
 ## Evidências
 
-- `dotnet test tests/StrictSharp.Analyzers.Tests/StrictSharp.Analyzers.Tests.csproj --no-restore --filter FullyQualifiedName~Perf011AnalyzerTests -v minimal -m:1`: aprovado, 15 testes.
-- `dotnet test tests/StrictSharp.Analyzers.Tests/StrictSharp.Analyzers.Tests.csproj --no-restore -v minimal -m:1`: aprovado, 334 testes.
+- `dotnet test tests/StrictSharp.Analyzers.Tests/StrictSharp.Analyzers.Tests.csproj --no-restore --filter FullyQualifiedName~Perf011AnalyzerTests -v minimal -m:1`: aprovado, 27 testes.
+- `dotnet test tests/StrictSharp.Analyzers.Tests/StrictSharp.Analyzers.Tests.csproj --no-restore -v minimal -m:1`: aprovado, 346 testes.
 - `dotnet build src/StrictSharp.Analyzers/StrictSharp.Analyzers.csproj --no-restore --warnaserror -v minimal -m:1`: aprovado, 0 avisos e 0 erros.
 - `dotnet list src/StrictSharp.Analyzers/StrictSharp.Analyzers.csproj package --vulnerable`: aprovado, nenhum pacote vulnerável.
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File .spectro/tools/coverage-gate.ps1 -AllowDirtyTree`: aprovado; 96,32% linhas, 85,55% branches, 95,65% novas linhas e 84,95% novos branches. O modo `-AllowDirtyTree` foi necessário devido a alterações preexistentes não commitadas.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File .spectro/tools/coverage-gate.ps1 -AllowDirtyTree`: aprovado; 96,43% linhas, 85,66% branches, 95,68% novas linhas e 85,01% novos branches. O modo `-AllowDirtyTree` foi usado somente para a medição antes do commit.
 
 ## TASK-REV-001 - Remediate FINDING-001
 
-- **Status:** pending
+- **Status:** completed
 - **Finding:** FINDING-001
 - **Severity:** High
 - **Return stage:** implement
@@ -89,4 +89,13 @@
 - **Dependencies:** none
 - **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
 - **Expected tests:** Add or update behavior-focused coverage as required.
+
+## Progresso da remediação
+
+- `TASK-REV-001` concluída: owner local sem escape, escape não resolvido e transferência para método estático cobertos por testes comportamentais.
+- Gates renovados após a correção; a evidência final está em `gates.json` e no diretório de outputs da execução.
+
+## Remediação de cobertura
+
+- Cobertura adicional para owner local vindo de factory e receptor de campo com raiz não resolvida; os cenários mantêm as decisões comportamentais da especificação e elevaram novos branches acima do mínimo configurado.
 
