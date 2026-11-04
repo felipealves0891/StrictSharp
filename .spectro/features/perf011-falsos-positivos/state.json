@@ -6,7 +6,7 @@
   "phases": {
     "gates": {
       "status": "completed",
-      "execution_id": "gate-20261104T194610Z",
+      "execution_id": "gate-20261104T195534Z",
       "report": ".spectro/features/perf011-falsos-positivos/gates.json"
     }
   },
@@ -28,6 +28,6 @@
     ],
     "detected_at": "2026-11-04T19:38:47.841Z"
   },
-  "last_execution_id": "gate-20261104T194610Z",
-  "updated_at": "2026-11-04T19:48:40.665Z"
+  "last_execution_id": "gate-20261104T195534Z",
+  "updated_at": "2026-11-04T19:58:13.275Z"
 }
