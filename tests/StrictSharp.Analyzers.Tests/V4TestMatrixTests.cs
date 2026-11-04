@@ -10,14 +10,14 @@ namespace StrictSharp.Analyzers.Tests;
 public sealed class V4TestMatrixTests
 {
     [Fact]
-    public void V4CatalogHasExactlyPerf100()
+    public void V4CatalogHasPerf100AndLifecycleRules()
     {
         var actualIds = V4AnalyzerCatalog.All
             .SelectMany(analyzer => analyzer.SupportedDiagnostics)
             .Select(descriptor => descriptor.Id);
 
         Assert.Equal(RuleCatalog.V4.Select(rule => rule.Id), actualIds);
-        Assert.Equal(new[] { "PERF100" }, actualIds);
+        Assert.Equal(new[] { "PERF100", "PERF108", "PERF109", "PERF110", "PERF111", "PERF112" }, actualIds);
         Assert.All(V4AnalyzerCatalog.All, analyzer => Assert.Single(analyzer.SupportedDiagnostics));
     }
 

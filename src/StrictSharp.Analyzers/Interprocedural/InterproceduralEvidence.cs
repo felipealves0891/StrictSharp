@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis;
 using StrictSharp.Analyzers.V5;
+using StrictSharp.Analyzers.Lifecycle;
 
 namespace StrictSharp.Analyzers.Interprocedural;
 
@@ -13,7 +14,8 @@ public readonly struct InterproceduralEvidence
         Location location,
         Location operationLocation,
         KnownCount count,
-        KnownCount multiplier)
+        KnownCount multiplier,
+        LifecycleExecutionContextKind contextKind = LifecycleExecutionContextKind.Unknown)
     {
         Kind = kind;
         Dimension = dimension;
@@ -23,6 +25,7 @@ public readonly struct InterproceduralEvidence
         OperationLocation = operationLocation;
         Count = count;
         Multiplier = multiplier;
+        ContextKind = contextKind;
     }
 
     public EvidenceKind Kind { get; }
@@ -33,4 +36,5 @@ public readonly struct InterproceduralEvidence
     public Location OperationLocation { get; }
     public KnownCount Count { get; }
     public KnownCount Multiplier { get; }
+    public LifecycleExecutionContextKind ContextKind { get; }
 }

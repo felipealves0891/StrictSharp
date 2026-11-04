@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using StrictSharp.Analyzers.Lifecycle;
 using StrictSharp.Analyzers.V5;
 using System.Collections.Immutable;
 
@@ -20,6 +21,7 @@ public static class InterproceduralEvidenceAnalyzer
             cancellationToken.ThrowIfCancellationRequested();
             var semanticModel = compilation.GetSemanticModel(callSite.Invocation.SyntaxTree);
             var multiplier = GetLoopMultiplier(callSite.Invocation, semanticModel, cancellationToken);
+            var contextKind = GetLifecycleContextKind(callSite.Invocation, semanticModel, cancellationToken);
 
             if (callSite.Flow == CallFlowKind.Blocking && IsInsideLoop(callSite.Invocation))
                 evidence.Add(new InterproceduralEvidence(
@@ -30,7 +32,8 @@ public static class InterproceduralEvidenceAnalyzer
                     callSite.Location,
                     callSite.Location,
                     KnownCount.Exact(1),
-                    multiplier));
+                    multiplier,
+                    contextKind));
 
             if (callSite.State != CallTargetState.Known || callSite.Target is null)
                 continue;
@@ -53,7 +56,8 @@ public static class InterproceduralEvidenceAnalyzer
                         callSite.Location,
                         operation.Location,
                         KnownCount.Exact(1),
-                        multiplier));
+                        multiplier,
+                        contextKind));
 
                 evidence.Add(new InterproceduralEvidence(
                     operation.Kind,
@@ -63,7 +67,8 @@ public static class InterproceduralEvidenceAnalyzer
                     callSite.Location,
                     operation.Location,
                     KnownCount.Exact(1),
-                    multiplier));
+                    multiplier,
+                    contextKind));
             }
         }
 
@@ -83,7 +88,8 @@ public static class InterproceduralEvidenceAnalyzer
                 duplicate.Location,
                 duplicate.Location,
                 KnownCount.Exact(callCount.Value),
-                KnownCount.Exact(callCount.Value)));
+                KnownCount.Exact(callCount.Value),
+                LifecycleExecutionContextKind.Unknown));
         }
 
         if (graph.ContainsCycle && graph.CallSites.Length > 0)
@@ -97,7 +103,8 @@ public static class InterproceduralEvidenceAnalyzer
                 recursive.Location,
                 recursive.Location,
                 KnownCount.Unknown,
-                KnownCount.Unknown));
+                KnownCount.Unknown,
+                LifecycleExecutionContextKind.Unknown));
         }
 
         return evidence.ToImmutable();
@@ -144,6 +151,9 @@ public static class InterproceduralEvidenceAnalyzer
             if (!IsLoop(ancestor))
                 continue;
 
+            if (LifecycleAnalysis.IsServiceLifecycleLoop(ancestor, semanticModel, cancellationToken))
+                continue;
+
             foundLoop = true;
             if (!LoopCostInference.TryGetKnownIterationCount(ancestor, semanticModel, out var count, cancellationToken)
                 || count == 0
@@ -159,6 +169,21 @@ public static class InterproceduralEvidenceAnalyzer
     private static bool IsInsideLoop(SyntaxNode node)
     {
         return node.Ancestors().Any(IsLoop);
+    }
+
+    private static LifecycleExecutionContextKind GetLifecycleContextKind(
+        SyntaxNode node,
+        SemanticModel semanticModel,
+        CancellationToken cancellationToken)
+    {
+        var method = node.AncestorsAndSelf().OfType<MethodDeclarationSyntax>().FirstOrDefault();
+        if (method is null)
+            return LifecycleExecutionContextKind.Unknown;
+
+        return LifecycleAnalysis.TryCreateContext(method, semanticModel, cancellationToken, out var context)
+            && context.Loop.Span.Contains(node.Span)
+            ? context.ExecutionKind
+            : LifecycleExecutionContextKind.Unknown;
     }
 
     private static bool IsLoop(SyntaxNode node)

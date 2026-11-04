@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "feature_id": "csharp-performance-analyzer-life-cycle",
+  "execution_id": "gate-20261103T235049Z",
+  "project_root": "D:\\Felipe\\Repos\\Dotnet\\StrictSharp",
+  "code_revision": "6c3c015d108d3bc503d06e9c7aa066b8f6164112",
+  "config_hash": "sha256:43df27bfa7d9b1b56ada6e92b9310b2e79c2d5e89c4993ef4682f5c0e91d519a",
+  "artifact_hashes": {
+    "spec.md": "7ba8117adb362fd52a871c497b787b01015dbdbf80c7ae5ef246f1b4c210b256",
+    "clarifications.md": "b774893d43c583150c94dd112105cd063eb39438ff7f763d5e909b796889aaa7",
+    "plan.md": "8b99ec75e9a260c8595ea6b3a159c144c0dc21983991712efb95fdac64c9135a",
+    "tasks.md": "a3c15d67482bb69db1904e7f8660cab5f54fd3e64ac6b96505319786840aba91"
+  },
+  "started_at": "2026-11-03T23:50:49.151Z",
+  "duration_ms": 496112,
+  "gates": [
+    {
+      "id": "GATE-001",
+      "name": "build",
+      "required": true,
+      "status": "passed",
+      "command": "dotnet build --no-restore -v d",
+      "exit_code": 0,
+      "duration_ms": 10729,
+      "diagnostics": [],
+      "evidence": [
+        ".spectro/features/csharp-performance-analyzer-life-cycle/outputs/gate-20261103T235049Z/evidence/01-build.log"
+      ],
+      "output_directory": ".spectro/features/csharp-performance-analyzer-life-cycle/outputs/gate-20261103T235049Z/build",
+      "output_files": [],
+      "output_file_count": 0
+    },
+    {
+      "id": "GATE-002",
+      "name": "test",
+      "required": true,
+      "status": "passed",
+      "command": "dotnet test --no-restore --no-build",
+      "exit_code": 0,
+      "duration_ms": 15200,
+      "diagnostics": [],
+      "evidence": [
+        ".spectro/features/csharp-performance-analyzer-life-cycle/outputs/gate-20261103T235049Z/evidence/02-test.log"
+      ],
+      "output_directory": ".spectro/features/csharp-performance-analyzer-life-cycle/outputs/gate-20261103T235049Z/test",
+      "output_files": [],
+      "output_file_count": 0
+    },
+    {
+      "id": "GATE-003",
+      "name": "security",
+      "required": true,
+      "status": "passed",
+      "command": "dotnet list package --vulnerable",
+      "exit_code": 0,
+      "duration_ms": 3986,
+      "diagnostics": [],
+      "evidence": [
+        ".spectro/features/csharp-performance-analyzer-life-cycle/outputs/gate-20261103T235049Z/evidence/03-security.log"
+      ],
+      "output_directory": ".spectro/features/csharp-performance-analyzer-life-cycle/outputs/gate-20261103T235049Z/security",
+      "output_files": [],
+      "output_file_count": 0
+    },
+    {
+      "id": "GATE-004",
+      "name": "coverage",
+      "required": true,
+      "status": "passed",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \".spectro/tools/coverage-gate.ps1\" -Project \".\" -BaseBranch \"origin/main\" -MinLineCoverage 90 -MinBranchCoverage 75 -MinNewLineCoverage 90 -MinNewBranchCoverage 85",
+      "exit_code": 0,
+      "duration_ms": 462906,
+      "diagnostics": [],
+      "evidence": [
+        ".spectro/features/csharp-performance-analyzer-life-cycle/outputs/gate-20261103T235049Z/evidence/04-coverage.log"
+      ],
+      "output_directory": ".spectro/features/csharp-performance-analyzer-life-cycle/outputs/gate-20261103T235049Z/coverage",
+      "output_files": [],
+      "output_file_count": 0
+    }
+  ],
+  "result": "passed"
+}
