@@ -73,11 +73,11 @@
 
 ## Evidências
 
-- `dotnet test tests/StrictSharp.Analyzers.Tests/StrictSharp.Analyzers.Tests.csproj --no-restore --filter FullyQualifiedName~Perf011AnalyzerTests -v minimal -m:1`: aprovado, 24 testes.
-- `dotnet test tests/StrictSharp.Analyzers.Tests/StrictSharp.Analyzers.Tests.csproj --no-restore -v minimal -m:1`: aprovado, 344 testes.
+- `dotnet test tests/StrictSharp.Analyzers.Tests/StrictSharp.Analyzers.Tests.csproj --no-restore --filter FullyQualifiedName~Perf011AnalyzerTests -v minimal -m:1`: aprovado, 27 testes.
+- `dotnet test tests/StrictSharp.Analyzers.Tests/StrictSharp.Analyzers.Tests.csproj --no-restore -v minimal -m:1`: aprovado, 346 testes.
 - `dotnet build src/StrictSharp.Analyzers/StrictSharp.Analyzers.csproj --no-restore --warnaserror -v minimal -m:1`: aprovado, 0 avisos e 0 erros.
 - `dotnet list src/StrictSharp.Analyzers/StrictSharp.Analyzers.csproj package --vulnerable`: aprovado, nenhum pacote vulnerável.
-- `pwsh -NoProfile -ExecutionPolicy Bypass -File .spectro/tools/coverage-gate.ps1 -AllowDirtyTree`: linhas e branches globais aprovados; novas linhas aprovadas (95,57%), mas novos branches em 84,88%, abaixo do mínimo de 85%. O runner oficial também bloqueia a cobertura quando o working tree está sujo.
+- `pwsh -NoProfile -ExecutionPolicy Bypass -File .spectro/tools/coverage-gate.ps1 -AllowDirtyTree`: aprovado; 96,43% linhas, 85,66% branches, 95,68% novas linhas e 85,01% novos branches. O modo `-AllowDirtyTree` foi usado somente para a medição antes do commit.
 
 ## TASK-REV-001 - Remediate FINDING-001
 
@@ -94,4 +94,8 @@
 
 - `TASK-REV-001` concluída: owner local sem escape, escape não resolvido e transferência para método estático cobertos por testes comportamentais.
 - Gates renovados após a correção; a evidência final está em `gates.json` e no diretório de outputs da execução.
+
+## Remediação de cobertura
+
+- Cobertura adicional para owner local vindo de factory e receptor de campo com raiz não resolvida; os cenários mantêm as decisões comportamentais da especificação e elevaram novos branches acima do mínimo configurado.
 

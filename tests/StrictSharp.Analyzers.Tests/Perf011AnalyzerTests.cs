@@ -618,4 +618,58 @@ public sealed class Perf011AnalyzerTests
 
         Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
     }
+
+    [Fact]
+    public async Task Perf011StaysSilentWhenLocalOwnerComesFromUnknownFactory()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Holder
+            {
+                internal readonly List<string> Values = new();
+            }
+
+            class Sample
+            {
+                private static Holder CreateHolder() => new();
+
+                void Run(string[] values)
+                {
+                    var holder = CreateHolder();
+                    foreach (var value in values)
+                        holder.Values.Add(value);
+                }
+            }
+            """;
+
+        Assert.Empty(await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer()));
+    }
+
+    [Fact]
+    public async Task Perf011ReportsWhenFieldOwnerIsReturnedByUnknownFactory()
+    {
+        const string source = """
+            using System.Collections.Generic;
+            class Holder
+            {
+                internal readonly List<string> Values = new();
+            }
+
+            class Sample
+            {
+                private static Holder CreateHolder() => new();
+
+                void Run(string[] values)
+                {
+                    foreach (var value in values)
+                        CreateHolder().Values.Add(value);
+                }
+            }
+            """;
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf011Analyzer());
+
+        Assert.Single(diagnostics);
+        Assert.Equal("PERF011", diagnostics[0].Id);
+    }
 }
