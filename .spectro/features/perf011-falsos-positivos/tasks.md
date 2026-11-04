@@ -78,3 +78,15 @@
 - `dotnet build src/StrictSharp.Analyzers/StrictSharp.Analyzers.csproj --no-restore --warnaserror -v minimal -m:1`: aprovado, 0 avisos e 0 erros.
 - `dotnet list src/StrictSharp.Analyzers/StrictSharp.Analyzers.csproj package --vulnerable`: aprovado, nenhum pacote vulnerável.
 - `pwsh -NoProfile -ExecutionPolicy Bypass -File .spectro/tools/coverage-gate.ps1 -AllowDirtyTree`: aprovado; 96,32% linhas, 85,55% branches, 95,65% novas linhas e 84,95% novos branches. O modo `-AllowDirtyTree` foi necessário devido a alterações preexistentes não commitadas.
+
+## TASK-REV-001 - Remediate FINDING-001
+
+- **Status:** pending
+- **Finding:** FINDING-001
+- **Severity:** High
+- **Return stage:** implement
+- **Description:** Completar a análise local da PERF011 para owner transitório e escapes/transferências reconhecíveis para singleton, cache, closure/delegate, evento ou campo externo; quando o ciclo de vida não puder ser demonstrado, omitir a suspeita. Adicionar testes positivos e negativos para AC-001 e AC-004 e renovar os gates.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.
+
