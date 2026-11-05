@@ -65,6 +65,57 @@ public sealed class V5LoopCostInferenceTests
     }
 
     [Fact]
+    public void RecognizesRepeatedStableListSearchAsAnOpportunity()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key)) _ = key; }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.True(opportunity.IsKnown);
+        Assert.Contains("Busca linear repetida", opportunity.Explanation, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeSingleLinearTraversalAsAnOpportunity()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values) { foreach (var value in values) _ = value; }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeSearchWithUnresolvedKeyShape()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key + 1)) _ = key; }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeMutableListAsAStableSearchSource()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) { values.Add(key); if (values.Contains(key)) _ = key; } }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeHashSetAsLinearSearchOpportunity()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.HashSet<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key)) _ = key; }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
     public void ClassifiesKnownSortAsLinearithmic()
     {
         var method = ParseMethod("void M(System.Collections.Generic.List<int> items) { items.Sort(); }");

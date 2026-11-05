@@ -6,7 +6,7 @@ A V5 do StrictSharp classifica evidências estruturais de custo no código C#. E
 
 | ID | Dimensão | Severidade | Escopo |
 |---|---|---|---|
-| `PERF101` | Complexidade | High | Classifica loops e ordenações observáveis como `O(1)`, `O(n)`, `O(n log n)`, `O(n²)` ou desconhecido. |
+| `PERF101` | Complexidade | High | Reporta loops e ordenações observáveis como `O(1)`, `O(n)`, `O(n log n)`, `O(n²)` ou desconhecido somente quando houver oportunidade estrutural acionável demonstrável. |
 | `PERF102` | Alocação | High | Identifica alocações que podem ser multiplicadas por loops constantes. |
 | `PERF103` | Memória | High | Estima payload de arrays e buffers quando elemento e tamanho são conhecidos. |
 | `PERF104` | Repetição | High | Expõe multiplicadores estruturais de loops e chamadas locais conhecidas. |
@@ -28,6 +28,8 @@ Quando os limites forem resolvidos estaticamente, a evidência pode informar 1.0
 
 ## Limites
 
+- `PERF101` não emite warning apenas por classificar um percurso como `O(n)`; sem alternativa estrutural demonstrável, o resultado permanece silencioso.
+- A oportunidade inicial reconhecida pela `PERF101` é uma busca linear repetida em `List<T>` estável, com chave local/parâmetro compatível e alternativa baseada em hash semanticamente compatível; formas ambíguas permanecem silenciosas.
 - Limites dinâmicos de loops, entradas desconhecidas, dispatch, corpos ausentes e chamadas externas não resolvidas permanecem desconhecidos ou condicionais.
 - I/O não informa duração, latência, disponibilidade ou volume real transferido.
 - Concorrência não informa capacidade do ThreadPool, simultaneidade efetiva, throughput ou tamanho de fila em runtime.
