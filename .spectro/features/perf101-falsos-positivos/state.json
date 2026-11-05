@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
   "feature_id": "perf101-falsos-positivos",
-  "current_phase": "gates",
-  "status": "waiting_input",
+  "current_phase": "implement",
+  "status": "running",
   "phases": {
     "gates": {
-      "status": "failed",
-      "execution_id": "gate-20261105T140036Z",
+      "status": "invalidated",
+      "execution_id": "gate-20261105T141138Z",
       "report": ".spectro/features/perf101-falsos-positivos/gates.json"
     }
   },
@@ -17,7 +17,8 @@
   "invalidated_executions": [
     "gate-20261105T133129Z",
     "gate-20261105T134418Z",
-    "gate-20261105T140036Z"
+    "gate-20261105T140036Z",
+    "gate-20261105T141138Z"
   ],
   "last_failure": {
     "category": "environment-failure",
@@ -31,7 +32,6 @@
     ],
     "detected_at": "2026-11-05T14:01:13.443Z"
   },
-  "last_execution_id": "gate-20261105T140036Z",
-  "updated_at": "2026-11-05T14:01:13.444Z",
-  "invalidation_reason": "Recovery invalidated evidence for gate-20261105T140036Z."
+  "last_execution_id": "gate-20261105T141138Z",
+  "updated_at": "2026-11-05T14:12:18.980Z"
 }

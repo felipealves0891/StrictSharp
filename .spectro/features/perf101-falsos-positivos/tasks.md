@@ -20,16 +20,16 @@
 
 ## Progresso
 
-- Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`
-- Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-REV-001`
+- Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`
+- Em andamento: `TASK-REV-001` — remediação semântica residual identificada na revisão final.
 
-## TASK-REV-001 - Remediate FINDING-001
+## TASK-REV-001 - Remediate FINDING-001 and FINDING-003
 
-- **Status:** completed
-- **Finding:** FINDING-001
+- **Status:** in_progress
+- **Finding:** FINDING-001, FINDING-003
 - **Severity:** High
 - **Return stage:** implement
-- **Description:** Restringir a inferência de oportunidade da PERF101 para provar compatibilidade semântica e escopo da oportunidade: silenciar ordem/duplicidade/propriedade/mutação indireta/aliases, usos incompatíveis de IndexOf e custo de construção não demonstrável; adicionar testes de regressão e renovar gates.
+- **Description:** Restringir a inferência de oportunidade da PERF101 para provar compatibilidade semântica em todos os usos da fonte no método: silenciar ordem/duplicidade/propriedade/mutação indireta/aliases, usos incompatíveis de IndexOf e custo de construção não demonstrável; adicionar testes de regressão e renovar gates.
 - **Dependencies:** none
 - **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
 - **Expected tests:** Add or update behavior-focused coverage as required.

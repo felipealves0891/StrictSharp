@@ -51,6 +51,16 @@ public sealed class V5AnalyzerTests
     }
 
     [Fact]
+    public async Task Perf101StaysSilentWhenSourceIsUsedAfterTheSearch()
+    {
+        const string source = "using System.Collections.Generic; class Sample { int M(List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key)) _ = key; return values[0]; } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf101Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
     public async Task Perf103ReportsKnownArrayPayload()
     {
         const string source = "class Sample { void M() { var buffer = new byte[100]; } }";

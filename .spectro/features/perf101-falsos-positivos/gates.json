@@ -1,9 +1,9 @@
 {
   "schema_version": "1.0",
   "feature_id": "perf101-falsos-positivos",
-  "execution_id": "gate-20261105T140036Z",
+  "execution_id": "gate-20261105T141138Z",
   "project_root": "D:\\Felipe\\Repos\\Dotnet\\StrictSharp",
-  "code_revision": "871cc5a47bf7e5f8fd31d99d934a3e24d928694a",
+  "code_revision": "3753a38636913b870a73a752047b8d3ff1f36157",
   "config_hash": "sha256:43df27bfa7d9b1b56ada6e92b9310b2e79c2d5e89c4993ef4682f5c0e91d519a",
   "artifact_hashes": {
     "spec.md": "a68a698170e262deca8505dce7974bfe0916ac013ba29eb879cd500ef23968d7",
@@ -11,8 +11,8 @@
     "plan.md": "97f734e9e13ce8119931a74ffd8b249178450bb30ef0f73e4b9f717f2752175d",
     "tasks.md": "8de6a7582ef0226fc187fcb958643a63f91386570a3f05dbc9594bb8055044d6"
   },
-  "started_at": "2026-11-05T14:00:36.176Z",
-  "duration_ms": 16392,
+  "started_at": "2026-11-05T14:11:38.356Z",
+  "duration_ms": 40620,
   "gates": [
     {
       "id": "GATE-001",
@@ -21,12 +21,12 @@
       "status": "passed",
       "command": "dotnet build --no-restore -v d",
       "exit_code": 0,
-      "duration_ms": 1437,
+      "duration_ms": 6742,
       "diagnostics": [],
       "evidence": [
-        ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T140036Z/evidence/01-build.log"
+        ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T141138Z/evidence/01-build.log"
       ],
-      "output_directory": ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T140036Z/build",
+      "output_directory": ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T141138Z/build",
       "output_files": [],
       "output_file_count": 0
     },
@@ -37,12 +37,12 @@
       "status": "passed",
       "command": "dotnet test --no-restore --no-build",
       "exit_code": 0,
-      "duration_ms": 11117,
+      "duration_ms": 11211,
       "diagnostics": [],
       "evidence": [
-        ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T140036Z/evidence/02-test.log"
+        ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T141138Z/evidence/02-test.log"
       ],
-      "output_directory": ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T140036Z/test",
+      "output_directory": ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T141138Z/test",
       "output_files": [],
       "output_file_count": 0
     },
@@ -53,12 +53,12 @@
       "status": "passed",
       "command": "dotnet list package --vulnerable",
       "exit_code": 0,
-      "duration_ms": 2977,
+      "duration_ms": 4591,
       "diagnostics": [],
       "evidence": [
-        ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T140036Z/evidence/03-security.log"
+        ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T141138Z/evidence/03-security.log"
       ],
-      "output_directory": ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T140036Z/security",
+      "output_directory": ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T141138Z/security",
       "output_files": [],
       "output_file_count": 0
     },
@@ -66,20 +66,18 @@
       "id": "GATE-004",
       "name": "coverage",
       "required": true,
-      "status": "failed",
+      "status": "passed",
       "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \".spectro/tools/coverage-gate.ps1\" -Project \".\" -BaseBranch \"origin/main\" -MinLineCoverage 90 -MinBranchCoverage 75 -MinNewLineCoverage 90 -MinNewBranchCoverage 85",
-      "exit_code": 1,
-      "duration_ms": 807,
-      "diagnostics": [
-        "ERRO: Working tree possui altera��es tracked n�o commitadas. Commit antes de medir ou use -AllowDirtyTree (n�o recomendado).\r\nRESULTADO: false"
-      ],
+      "exit_code": 0,
+      "duration_ms": 17796,
+      "diagnostics": [],
       "evidence": [
-        ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T140036Z/evidence/04-coverage.log"
+        ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T141138Z/evidence/04-coverage.log"
       ],
-      "output_directory": ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T140036Z/coverage",
+      "output_directory": ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T141138Z/coverage",
       "output_files": [],
       "output_file_count": 0
     }
   ],
-  "result": "failed"
+  "result": "passed"
 }

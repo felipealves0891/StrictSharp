@@ -190,6 +190,16 @@ public sealed class V5LoopCostInferenceTests
     }
 
     [Fact]
+    public void DoesNotRecognizeSourceUsedAfterSearch()
+    {
+        var (method, model) = CompileMethod("int M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key)) _ = key; return values[0]; }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
     public void DoesNotRecognizeFactoryCallAsStableListSource()
     {
         var source = "class Holder { public System.Collections.Generic.List<int> GetValues() => new(); } void M(Holder holder, int[] keys) { foreach (var key in keys) if (holder.GetValues().Contains(key)) _ = key; }";

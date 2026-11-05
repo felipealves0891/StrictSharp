@@ -16,7 +16,7 @@ public static class ComplexityOpportunityInference
         foreach (var invocation in method.DescendantNodes().OfType<InvocationExpressionSyntax>())
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (IsRepeatedStableListSearch(invocation, semanticModel))
+            if (IsRepeatedStableListSearch(invocation, semanticModel, method))
             {
                 if (recognizedInvocation is not null)
                     return ComplexityOpportunity.None;
@@ -43,7 +43,8 @@ public static class ComplexityOpportunityInference
 
     private static bool IsRepeatedStableListSearch(
         InvocationExpressionSyntax invocation,
-        SemanticModel semanticModel)
+        SemanticModel semanticModel,
+        SyntaxNode containingMethod)
     {
         if (!RuleAnalysis.IsInsideLoop(invocation)
             || invocation.Expression is not MemberAccessExpressionSyntax member
@@ -56,7 +57,7 @@ public static class ComplexityOpportunityInference
             || invocation.ArgumentList.Arguments.Count != 1
             || member.Expression is not IdentifierNameSyntax
             || !RuleAnalysis.IsStableSourceInContainingLoop(member.Expression, invocation, semanticModel)
-            || HasOtherSourceUse(member.Expression, invocation, semanticModel))
+            || HasOtherSourceUse(member.Expression, containingMethod, semanticModel))
             return false;
 
         var argument = invocation.ArgumentList.Arguments[0].Expression;
@@ -78,28 +79,16 @@ public static class ComplexityOpportunityInference
 
     private static bool HasOtherSourceUse(
         ExpressionSyntax source,
-        InvocationExpressionSyntax currentInvocation,
+        SyntaxNode containingMethod,
         SemanticModel semanticModel)
     {
         if (semanticModel.GetSymbolInfo(source).Symbol is not { } sourceSymbol)
             return true;
 
-        var loop = currentInvocation.Ancestors().FirstOrDefault(ancestor => ancestor is ForStatementSyntax
-            or ForEachStatementSyntax
-            or ForEachVariableStatementSyntax
-            or WhileStatementSyntax
-            or DoStatementSyntax);
-        if (loop is null)
-            return true;
-
-        foreach (var identifier in loop.DescendantNodes().OfType<IdentifierNameSyntax>())
+        foreach (var identifier in containingMethod.DescendantNodes().OfType<IdentifierNameSyntax>())
         {
             if (!SymbolEqualityComparer.Default.Equals(semanticModel.GetSymbolInfo(identifier).Symbol, sourceSymbol)
                 || identifier.Span == source.Span)
-                continue;
-
-            if (currentInvocation.Expression is MemberAccessExpressionSyntax currentMember
-                && currentMember.Expression.Span.Contains(identifier.Span))
                 continue;
 
             return true;
