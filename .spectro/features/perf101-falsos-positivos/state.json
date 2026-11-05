@@ -1,12 +1,12 @@
 {
   "schema_version": "1.0",
   "feature_id": "perf101-falsos-positivos",
-  "current_phase": "implement",
-  "status": "running",
+  "current_phase": "review",
+  "status": "completed",
   "phases": {
     "gates": {
-      "status": "invalidated",
-      "execution_id": "gate-20261105T141138Z",
+      "status": "completed",
+      "execution_id": "gate-20261105T154010Z",
       "report": ".spectro/features/perf101-falsos-positivos/gates.json"
     }
   },
@@ -32,6 +32,6 @@
     ],
     "detected_at": "2026-11-05T14:01:13.443Z"
   },
-  "last_execution_id": "gate-20261105T141138Z",
-  "updated_at": "2026-11-05T14:12:18.980Z"
+  "last_execution_id": "gate-20261105T154010Z",
+  "updated_at": "2026-11-05T15:40:52.887Z"
 }

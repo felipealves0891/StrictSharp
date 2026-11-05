@@ -21,11 +21,11 @@
 ## Progresso
 
 - Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`
-- Em andamento: `TASK-REV-001` — remediação semântica residual identificada na revisão final.
+- Concluída: `TASK-REV-001` — remediação semântica residual validada na revisão final.
 
 ## TASK-REV-001 - Remediate FINDING-001 and FINDING-003
 
-- **Status:** in_progress
+- **Status:** completed
 - **Finding:** FINDING-001, FINDING-003
 - **Severity:** High
 - **Return stage:** implement
