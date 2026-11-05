@@ -159,14 +159,34 @@ public sealed class V5LoopCostInferenceTests
     }
 
     [Fact]
-    public void RecognizesStableListPropertySource()
+    public void DoesNotRecognizePropertyAsStableListSource()
     {
         var source = "class Holder { public System.Collections.Generic.List<int> Values { get; } = new(); } void M(Holder holder, int[] keys) { foreach (var key in keys) if (holder.Values.Contains(key)) _ = key; }";
         var (method, model) = CompileMethod(source);
 
         var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
 
-        Assert.True(opportunity.IsKnown);
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeIndexLookupAsHashOpportunity()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key)) _ = values.IndexOf(key); }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeSourcePassedToUnresolvedMutation()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) { if (values.Contains(key)) Mutate(values); } }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
     }
 
     [Fact]

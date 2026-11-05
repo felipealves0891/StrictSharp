@@ -12,14 +12,33 @@ public static class ComplexityOpportunityInference
         SemanticModel semanticModel,
         CancellationToken cancellationToken)
     {
+        InvocationExpressionSyntax? recognizedInvocation = null;
         foreach (var invocation in method.DescendantNodes().OfType<InvocationExpressionSyntax>())
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (IsRepeatedStableListSearch(invocation, semanticModel))
-                return ComplexityOpportunity.RepeatedListSearch;
+            {
+                if (recognizedInvocation is not null)
+                    return ComplexityOpportunity.None;
+
+                recognizedInvocation = invocation;
+            }
         }
 
-        return ComplexityOpportunity.None;
+        if (recognizedInvocation is null || HasUnrelatedLoop(method, recognizedInvocation))
+            return ComplexityOpportunity.None;
+
+        return ComplexityOpportunity.RepeatedListSearch;
+    }
+
+    private static bool HasUnrelatedLoop(SyntaxNode method, InvocationExpressionSyntax recognizedInvocation)
+    {
+        return method.DescendantNodes().Any(node => (node is ForStatementSyntax
+            or ForEachStatementSyntax
+            or ForEachVariableStatementSyntax
+            or WhileStatementSyntax
+            or DoStatementSyntax)
+            && !node.Span.Contains(recognizedInvocation.Span));
     }
 
     private static bool IsRepeatedStableListSearch(
@@ -29,13 +48,15 @@ public static class ComplexityOpportunityInference
         if (!RuleAnalysis.IsInsideLoop(invocation)
             || invocation.Expression is not MemberAccessExpressionSyntax member
             || semanticModel.GetSymbolInfo(invocation).Symbol is not IMethodSymbol method
-            || method.Name is not ("Contains" or "IndexOf")
+            || method.Name != "Contains"
             || method.ContainingType is not INamedTypeSymbol listType
             || listType.Name != "List"
             || listType.ContainingNamespace.ToDisplayString() != "System.Collections.Generic"
             || listType.TypeArguments.Length != 1
             || invocation.ArgumentList.Arguments.Count != 1
-            || !RuleAnalysis.IsStableSourceInContainingLoop(member.Expression, invocation, semanticModel))
+            || member.Expression is not IdentifierNameSyntax
+            || !RuleAnalysis.IsStableSourceInContainingLoop(member.Expression, invocation, semanticModel)
+            || HasOtherSourceUse(member.Expression, invocation, semanticModel))
             return false;
 
         var argument = invocation.ArgumentList.Arguments[0].Expression;
@@ -53,6 +74,38 @@ public static class ComplexityOpportunityInference
 
         var keyType = semanticModel.GetTypeInfo(argument).Type;
         return SymbolEqualityComparer.Default.Equals(keyType, listType.TypeArguments[0]);
+    }
+
+    private static bool HasOtherSourceUse(
+        ExpressionSyntax source,
+        InvocationExpressionSyntax currentInvocation,
+        SemanticModel semanticModel)
+    {
+        if (semanticModel.GetSymbolInfo(source).Symbol is not { } sourceSymbol)
+            return true;
+
+        var loop = currentInvocation.Ancestors().FirstOrDefault(ancestor => ancestor is ForStatementSyntax
+            or ForEachStatementSyntax
+            or ForEachVariableStatementSyntax
+            or WhileStatementSyntax
+            or DoStatementSyntax);
+        if (loop is null)
+            return true;
+
+        foreach (var identifier in loop.DescendantNodes().OfType<IdentifierNameSyntax>())
+        {
+            if (!SymbolEqualityComparer.Default.Equals(semanticModel.GetSymbolInfo(identifier).Symbol, sourceSymbol)
+                || identifier.Span == source.Span)
+                continue;
+
+            if (currentInvocation.Expression is MemberAccessExpressionSyntax currentMember
+                && currentMember.Expression.Span.Contains(identifier.Span))
+                continue;
+
+            return true;
+        }
+
+        return false;
     }
 
     private static ISymbol? GetSourceSymbol(ExpressionSyntax source, SemanticModel semanticModel)

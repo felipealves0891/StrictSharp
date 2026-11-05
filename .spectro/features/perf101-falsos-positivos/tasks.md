@@ -7,7 +7,7 @@
 | `TASK-002` | Implementar serviço estático de inferência para o padrão conservador aprovado: busca linear repetida na mesma coleção, chave estável e alternativa compatível; silenciar padrões incompletos ou ambíguos. | `FR-002`, `FR-003`, `NFR-001`, `NFR-003`, `CON-004` | `AC-002`, `AC-003`, `AC-004`, `AC-006` | `TASK-001` | Novo serviço em `src/StrictSharp.Analyzers/V5/` e testes unitários | Alto: equivalência semântica e custo de construção podem não ser resolvíveis estaticamente. | completed |
 | `TASK-003` | Integrar a oportunidade ao `Perf101Analyzer`, preservando `LoopCostInference`, `InterproceduralCostInference`, `V5DiagnosticAnalysis` para as demais regras e o contrato `PERF101`. | `FR-001`, `FR-004`, `NFR-002`, `CON-001`, `CON-002` | `AC-001`, `AC-005`, `AC-008` | `TASK-001`, `TASK-002` | `src/StrictSharp.Analyzers/Analyzers/Perf101Analyzer.cs` | Médio: filtro no ponto errado pode alterar o comportamento de outros diagnósticos. | completed |
 | `TASK-004` | Adicionar e ajustar testes positivos, negativos e de exceção para serviço e analyzer, incluindo percurso linear necessário, ausência de oportunidade, busca repetida compatível, semântica ambígua, desconhecidos e mensagem sem alegações de medição. | `FR-002`, `FR-003`, `FR-004`, `FR-005`, `NFR-001`, `NFR-003` | `AC-001`–`AC-007` | `TASK-002`, `TASK-003` | `tests/StrictSharp.Analyzers.Tests/V5*Tests.cs`, `V5AnalyzerTests.cs` | Médio: testes podem cristalizar um padrão mais amplo que o escopo aprovado. | completed |
-| `TASK-005` | Atualizar documentação da `PERF101`, executar matriz V5 e gates configurados, revisar diff e registrar evidências de build, testes, cobertura e segurança. | `FR-005`, `NFR-002`, `CON-001`, `CON-002` | `AC-007`, `AC-008` | `TASK-004` | `docs/perf101-falsos-positivos.md`, documentação V5, evidências Spectro | Baixo: cobertura ou gates podem revelar caminhos não cobertos. | blocked |
+| `TASK-005` | Atualizar documentação da `PERF101`, executar matriz V5 e gates configurados, revisar diff e registrar evidências de build, testes, cobertura e segurança. | `FR-005`, `NFR-002`, `CON-001`, `CON-002` | `AC-007`, `AC-008` | `TASK-004` | `docs/perf101-falsos-positivos.md`, documentação V5, evidências Spectro | Baixo: cobertura ou gates podem revelar caminhos não cobertos. | pending |
 
 ## Regras de execução
 
@@ -21,4 +21,15 @@
 ## Progresso
 
 - Concluídas: `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`
-- Bloqueadas: `TASK-005` — gate de segurança sem acesso ao feed de vulnerabilidades; build, testes e cobertura passaram.
+- Pendentes: `TASK-005` — renovar os gates após a correção da revisão.
+
+## TASK-REV-001 - Remediate FINDING-001
+
+- **Status:** in_progress
+- **Finding:** FINDING-001
+- **Severity:** High
+- **Return stage:** implement
+- **Description:** Restringir a inferência de oportunidade da PERF101 para provar compatibilidade semântica e escopo da oportunidade: silenciar ordem/duplicidade/propriedade/mutação indireta/aliases, usos incompatíveis de IndexOf e custo de construção não demonstrável; adicionar testes de regressão e renovar gates.
+- **Dependencies:** none
+- **Completion criteria:** Finding is resolved and relevant gates/review evidence are renewed.
+- **Expected tests:** Add or update behavior-focused coverage as required.

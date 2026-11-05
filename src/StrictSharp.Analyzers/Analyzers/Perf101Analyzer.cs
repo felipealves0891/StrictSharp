@@ -25,7 +25,7 @@ public sealed class Perf101Analyzer : RuleAnalyzerBase
         var method = (IMethodSymbol)context.SemanticModel.GetDeclaredSymbol(context.Node, context.CancellationToken)!;
         evidence = InterproceduralCostInference.Merge(evidence, InterproceduralCostInference.Analyze(context.SemanticModel.Compilation, method, context.CancellationToken));
         var opportunity = ComplexityOpportunityInference.Analyze(context.Node, context.SemanticModel, context.CancellationToken);
-        if (!opportunity.IsKnown)
+        if (!opportunity.IsKnown || evidence.Items.Length != 1)
             return;
 
         var actionableEvidence = evidence.Items
