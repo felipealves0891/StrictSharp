@@ -229,7 +229,7 @@ Identificar padrões de retenção potencialmente ilimitada em coleções estát
 
 **Exceção**: retenção explicitamente delimitada ou necessária durante toda a vida da aplicação.
 
-Observação: muitos vazamentos dependem do fluxo de vida real e só podem ser reportados como suspeitas. A primeira entrega reconhece adições repetidas a coleções mantidas em campos, dentro de loops, quando não há remoção ou limpeza observável no método. Retenção delimitada, transferência de propriedade e ciclos de vida administrados externamente ficam fora do diagnóstico.
+Observação: muitos vazamentos dependem do fluxo de vida real e só podem ser reportados como suspeitas. A regra reconhece adições repetidas a coleções ou inscrições mantidas por owners semanticamente reconhecidos, dentro de loops, quando não há remoção, limpeza, limite efetivo ou ciclo de vida administrado observável. Capacidade inicial de `List<T>` não é limite máximo; retenção delimitada, transferência de propriedade e ciclos de vida administrados externamente ficam fora do diagnóstico quando demonstráveis.
 
 
 #### PERF012 — Cópias desnecessárias de coleções e buffers

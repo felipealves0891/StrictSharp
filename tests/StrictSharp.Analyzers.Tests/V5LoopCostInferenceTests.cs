@@ -65,6 +65,152 @@ public sealed class V5LoopCostInferenceTests
     }
 
     [Fact]
+    public void RecognizesRepeatedStableListSearchAsAnOpportunity()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key)) _ = key; }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.True(opportunity.IsKnown);
+        Assert.Contains("Busca linear repetida", opportunity.Explanation, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeSingleLinearTraversalAsAnOpportunity()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values) { foreach (var value in values) _ = value; }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeSearchWithUnresolvedKeyShape()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key + 1)) _ = key; }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeMutableListAsAStableSearchSource()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) { values.Add(key); if (values.Contains(key)) _ = key; } }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeHashSetAsLinearSearchOpportunity()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.HashSet<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key)) _ = key; }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Theory]
+    [InlineData("void M(System.Collections.Generic.List<int> values, int key) { values.Contains(key); }")]
+    [InlineData("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) Missing(key); }")]
+    [InlineData("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) values.Add(key); }")]
+    public void DoesNotRecognizeNonRepeatedListSearchShapes(string source)
+    {
+        var (method, model) = CompileMethod(source);
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizePropertyAsStableLookupKey()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key.GetHashCode())) _ = key; }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeSourceAndLookupKeyWithTheSameSymbol()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<System.Collections.Generic.List<int>> values) { foreach (var value in values) if (values.Contains(values)) _ = value; }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeUnresolvedLookupKey()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(Missing)) _ = key; }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizePropertyAsStableListSource()
+    {
+        var source = "class Holder { public System.Collections.Generic.List<int> Values { get; } = new(); } void M(Holder holder, int[] keys) { foreach (var key in keys) if (holder.Values.Contains(key)) _ = key; }";
+        var (method, model) = CompileMethod(source);
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeIndexLookupAsHashOpportunity()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key)) _ = values.IndexOf(key); }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeSourcePassedToUnresolvedMutation()
+    {
+        var (method, model) = CompileMethod("void M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) { if (values.Contains(key)) Mutate(values); } }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeSourceUsedAfterSearch()
+    {
+        var (method, model) = CompileMethod("int M(System.Collections.Generic.List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key)) _ = key; return values[0]; }");
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
+    public void DoesNotRecognizeFactoryCallAsStableListSource()
+    {
+        var source = "class Holder { public System.Collections.Generic.List<int> GetValues() => new(); } void M(Holder holder, int[] keys) { foreach (var key in keys) if (holder.GetValues().Contains(key)) _ = key; }";
+        var (method, model) = CompileMethod(source);
+
+        var opportunity = ComplexityOpportunityInference.Analyze(method, model, CancellationToken.None);
+
+        Assert.False(opportunity.IsKnown);
+    }
+
+    [Fact]
     public void ClassifiesKnownSortAsLinearithmic()
     {
         var method = ParseMethod("void M(System.Collections.Generic.List<int> items) { items.Sort(); }");
@@ -280,7 +426,7 @@ public sealed class V5LoopCostInferenceTests
         var method = tree.GetRoot()
             .DescendantNodes()
             .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>()
-            .Single();
+            .Single(candidate => candidate.Identifier.ValueText == "M");
         return (method, compilation.GetSemanticModel(tree));
     }
 

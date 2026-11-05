@@ -6,15 +6,58 @@ namespace StrictSharp.Analyzers.Tests;
 public sealed class V5AnalyzerTests
 {
     [Fact]
-    public async Task Perf101ReportsKnownLoopComplexity()
+    public async Task Perf101StaysSilentForNecessaryLinearTraversal()
     {
         const string source = "class Sample { void M(int[] items) { foreach (var item in items) _ = item; } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf101Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf101ReportsOnlyDemonstrableRepeatedStableListSearch()
+    {
+        const string source = "using System.Collections.Generic; class Sample { void M(List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key)) _ = key; } }";
 
         var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf101Analyzer());
 
         var diagnostic = Assert.Single(diagnostics);
         Assert.Equal("PERF101", diagnostic.Id);
         Assert.Equal(Microsoft.CodeAnalysis.DiagnosticSeverity.Warning, diagnostic.Severity);
+        Assert.Contains("Busca linear repetida", diagnostic.GetMessage(), StringComparison.Ordinal);
+        Assert.Contains("O(n)", diagnostic.GetMessage(), StringComparison.Ordinal);
+        Assert.DoesNotContain("%", diagnostic.GetMessage(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Perf101StaysSilentWhenLookupKeyShapeIsNotResolved()
+    {
+        const string source = "using System.Collections.Generic; class Sample { void M(List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key + 1)) _ = key; } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf101Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf101StaysSilentWhenOpportunityIsNotTheOnlyComplexityEvidence()
+    {
+        const string source = "using System.Collections.Generic; class Sample { void M(List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key)) _ = key; for (var i = 0; i < 10; i++) _ = i; } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf101Analyzer());
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public async Task Perf101StaysSilentWhenSourceIsUsedAfterTheSearch()
+    {
+        const string source = "using System.Collections.Generic; class Sample { int M(List<int> values, int[] keys) { foreach (var key in keys) if (values.Contains(key)) _ = key; return values[0]; } }";
+
+        var diagnostics = await AnalyzerTestHarness.AnalyzeAsync(source, new Perf101Analyzer());
+
+        Assert.Empty(diagnostics);
     }
 
     [Fact]

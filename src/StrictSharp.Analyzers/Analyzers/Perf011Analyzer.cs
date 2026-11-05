@@ -2,6 +2,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using StrictSharp.Analyzers.Infrastructure;
+using StrictSharp.Analyzers.Retention;
 using StrictSharp.Analyzers.Rules;
 
 namespace StrictSharp.Analyzers.Analyzers;
@@ -16,54 +17,11 @@ public sealed class Perf011Analyzer : RuleAnalyzerBase
         context.RegisterSyntaxNodeAction(static context =>
         {
             if (context.Node is not InvocationExpressionSyntax invocation
-                || invocation.Expression is not MemberAccessExpressionSyntax member
-                || member.Name.Identifier.ValueText is not ("Add" or "AddRange" or "Subscribe"))
+                || !Perf011RetentionAnalysis.ShouldReport(invocation, context.SemanticModel))
                 return;
 
-            if (member.Expression is not IdentifierNameSyntax receiver
-                || context.SemanticModel.GetSymbolInfo(receiver).Symbol is not IFieldSymbol field
-                || !IsRetainingOperation(member, field, context.SemanticModel)
-                || !RuleAnalysis.IsInsideLoop(invocation)
-                || HasReleaseOperation(invocation, field, context.SemanticModel))
-                return;
-
+            var receiver = (MemberAccessExpressionSyntax)invocation.Expression;
             RuleAnalysis.Report(RuleCatalog.Get("PERF011"), context, receiver.GetLocation());
         }, Microsoft.CodeAnalysis.CSharp.SyntaxKind.InvocationExpression);
-    }
-
-    private static bool IsRetainingOperation(
-        MemberAccessExpressionSyntax member,
-        IFieldSymbol field,
-        SemanticModel model)
-    {
-        var receiverType = field.Type;
-        if (member.Name.Identifier.ValueText is "Add" or "AddRange")
-            return RuleAnalysis.IsRetainingCollection(receiverType);
-
-        return member.Name.Identifier.ValueText == "Subscribe"
-            && RuleAnalysis.IsObservableSource(receiverType);
-    }
-
-    private static bool HasReleaseOperation(
-        InvocationExpressionSyntax invocation,
-        IFieldSymbol field,
-        SemanticModel model)
-    {
-        var containingMethod = invocation.Ancestors().OfType<BaseMethodDeclarationSyntax>().FirstOrDefault();
-        if (containingMethod is null)
-            return false;
-
-        foreach (var release in containingMethod.DescendantNodes().OfType<InvocationExpressionSyntax>())
-        {
-            if (release.Expression is not MemberAccessExpressionSyntax member
-                || member.Expression is not IdentifierNameSyntax receiver
-                || !SymbolEqualityComparer.Default.Equals(model.GetSymbolInfo(receiver).Symbol, field))
-                continue;
-
-            if (member.Name.Identifier.ValueText is "Clear" or "Remove" or "RemoveAll" or "Dequeue" or "Pop")
-                return true;
-        }
-
-        return false;
     }
 }

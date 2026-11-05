@@ -34,6 +34,22 @@ public readonly struct CostEvidence
     public string Limitations { get; }
     public bool HasUnknownBoundary => !Complexity.IsKnown || !Count.IsKnown || !Multiplier.IsKnown || !Payload.IsKnown;
 
+    public CostEvidence WithOpportunity(ComplexityOpportunity opportunity)
+    {
+        if (!opportunity.IsKnown)
+            return this;
+
+        return new CostEvidence(
+            Dimension,
+            Complexity,
+            Count,
+            Multiplier,
+            Payload,
+            $"{Explanation} Oportunidade: {opportunity.Explanation}",
+            Assumptions,
+            $"{Limitations} {opportunity.Limitations}");
+    }
+
     public static CostEvidence Unknown(CostDimension dimension, string explanation, string limitation)
     {
         return new CostEvidence(

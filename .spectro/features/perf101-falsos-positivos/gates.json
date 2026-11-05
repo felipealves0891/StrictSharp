@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0",
+  "feature_id": "perf101-falsos-positivos",
+  "execution_id": "gate-20261105T154433Z",
+  "project_root": "D:\\Felipe\\Repos\\Dotnet\\StrictSharp",
+  "code_revision": "c529405fe16ffbfc9353c838c163f3d0888372be",
+  "config_hash": "sha256:43df27bfa7d9b1b56ada6e92b9310b2e79c2d5e89c4993ef4682f5c0e91d519a",
+  "artifact_hashes": {
+    "spec.md": "a68a698170e262deca8505dce7974bfe0916ac013ba29eb879cd500ef23968d7",
+    "clarifications.md": "f3982a00482a9e4ef0512ec07b686cbb2f2ee36e04e21ef85f04cee35e8acafd",
+    "plan.md": "97f734e9e13ce8119931a74ffd8b249178450bb30ef0f73e4b9f717f2752175d",
+    "tasks.md": "b7570843dee8c3d7046ad797d9d7dd1548d24246f3d6299d68ef2ef9f6dc5599"
+  },
+  "started_at": "2026-11-05T15:44:33.844Z",
+  "duration_ms": 36633,
+  "gates": [
+    {
+      "id": "GATE-001",
+      "name": "build",
+      "required": true,
+      "status": "passed",
+      "command": "dotnet build --no-restore -v d",
+      "exit_code": 0,
+      "duration_ms": 5791,
+      "diagnostics": [],
+      "evidence": [
+        ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T154433Z/evidence/01-build.log"
+      ],
+      "output_directory": ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T154433Z/build",
+      "output_files": [],
+      "output_file_count": 0
+    },
+    {
+      "id": "GATE-002",
+      "name": "test",
+      "required": true,
+      "status": "passed",
+      "command": "dotnet test --no-restore --no-build",
+      "exit_code": 0,
+      "duration_ms": 10218,
+      "diagnostics": [],
+      "evidence": [
+        ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T154433Z/evidence/02-test.log"
+      ],
+      "output_directory": ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T154433Z/test",
+      "output_files": [],
+      "output_file_count": 0
+    },
+    {
+      "id": "GATE-003",
+      "name": "security",
+      "required": true,
+      "status": "passed",
+      "command": "dotnet list package --vulnerable",
+      "exit_code": 0,
+      "duration_ms": 2916,
+      "diagnostics": [],
+      "evidence": [
+        ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T154433Z/evidence/03-security.log"
+      ],
+      "output_directory": ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T154433Z/security",
+      "output_files": [],
+      "output_file_count": 0
+    },
+    {
+      "id": "GATE-004",
+      "name": "coverage",
+      "required": true,
+      "status": "passed",
+      "command": "pwsh -NoProfile -ExecutionPolicy Bypass -File \".spectro/tools/coverage-gate.ps1\" -Project \".\" -BaseBranch \"origin/main\" -MinLineCoverage 90 -MinBranchCoverage 75 -MinNewLineCoverage 90 -MinNewBranchCoverage 85",
+      "exit_code": 0,
+      "duration_ms": 17651,
+      "diagnostics": [],
+      "evidence": [
+        ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T154433Z/evidence/04-coverage.log"
+      ],
+      "output_directory": ".spectro/features/perf101-falsos-positivos/outputs/gate-20261105T154433Z/coverage",
+      "output_files": [],
+      "output_file_count": 0
+    }
+  ],
+  "result": "passed"
+}
