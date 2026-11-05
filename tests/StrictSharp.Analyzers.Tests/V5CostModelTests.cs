@@ -87,4 +87,14 @@ public sealed class V5CostModelTests
         var merged = InterproceduralCostInference.Merge(set, set);
         Assert.Equal(2, merged.Items.Length);
     }
+
+    [Fact]
+    public void CostEvidenceWithoutOpportunityRemainsUnchanged()
+    {
+        var evidence = CostEvidence.Unknown(CostDimension.Complexity, "unknown", "unresolved");
+
+        var result = evidence.WithOpportunity(ComplexityOpportunity.None);
+
+        Assert.Equal(evidence, result);
+    }
 }
